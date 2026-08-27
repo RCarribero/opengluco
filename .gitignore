@@ -1,0 +1,80 @@
+# ============================================================
+# OpenGluco Ecosystem - Git Ignore
+# ============================================================
+
+# ---- Gradle Build Outputs ----
+.gradle/
+build/
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# ---- Local Properties (SDK path, machine-specific) ----
+local.properties
+
+# ---- IDE / Editor ----
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+*.swp
+*.swo
+*~
+
+# ---- Kotlin ----
+.kotlin/
+
+# ---- Android Signing / Credentials ----
+*.jks
+*.keystore
+*.p12
+*.pem
+*.key
+keystore.properties
+signing.properties
+
+# ---- Environment / Secrets ----
+.env.local
+.env.production
+.env.secrets
+secrets/
+credentials/
+
+# ---- OS Generated ----
+.DS_Store
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+
+# ---- APK / AAB / Debug Artifacts ----
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# ---- Crash / Profiling Logs ----
+*.hprof
+*.log
+hs_err_pid*
+
+# ---- Agents / AI Generated Workspaces ----
+.agents/auditor_*/
+.agents/challenger_*/
+.agents/explorer_*/
+.agents/orchestrator_*/
+.agents/reviewer_*/
+.agents/sentinel/
+.agents/spec_miner_*/
+.agents/test_writer_*/
+.agents/victory_auditor_*/
+.agents/worker_*/
+
+# ---- Test Results (regenerable) ----
+**/test-results/
+**/reports/
+
+# ---- Misc ----
+captures/
+.externalNativeBuild/
+.cxx/
+output.json

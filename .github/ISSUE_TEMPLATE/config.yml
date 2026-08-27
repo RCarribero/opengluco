@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Politica de Seguridad y Reporte de Vulnerabilidades
+    url: https://github.com/opengluco/opengluco-ecosystem/security/advisories/new
+    about: Reporte de seguridad confidencial para datos de salud y criptografia.
+  - name: Preguntas y Discusion Comunitaria
+    url: https://github.com/opengluco/opengluco-ecosystem/discussions
+    about: Consultas de uso, configuracion de dispositivos o dudas generales.

@@ -1,0 +1,47 @@
+name: OpenGluco CI
+
+on:
+  push:
+    branches: [ "master", "main", "develop" ]
+  pull_request:
+    branches: [ "master", "main", "develop" ]
+
+jobs:
+  test:
+    name: Build & Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run Core Model Tests
+        run: ./gradlew :core:model:testDebugUnitTest
+
+      - name: Run Core Network Tests
+        run: ./gradlew :core:network:testDebugUnitTest
+
+      - name: Run Core Data Tests
+        run: ./gradlew :core:data:testDebugUnitTest
+
+      - name: Run Mobile Tests
+        run: ./gradlew :app-mobile:testDebugUnitTest
+
+      - name: Run Wear Tests
+        run: ./gradlew :app-wear:testDebugUnitTest
+
+      - name: Run Auto Tests
+        run: ./gradlew :app-auto:testDebugUnitTest
+
+      - name: Assemble Debug APKs
+        run: ./gradlew assembleDebug --stacktrace

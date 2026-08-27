@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Silueta monocromática de la cinta continua médica (Option A3 Ribbon Drop) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,2.5 C11.3,2.5 10.7,2.9 10.3,3.5 C8.5,6.4 5.0,11.8 5.0,15.5 C5.0,19.4 8.1,22.5 12.0,22.5 C15.9,22.5 19.0,19.4 19.0,15.5 C19.0,11.8 15.5,6.4 13.7,3.5 C13.3,2.9 12.7,2.5 12,2.5 Z M12,6.2 C13.5,8.8 16.5,13.2 16.5,15.5 C16.5,18.0 14.5,20.0 12.0,20.0 C9.5,20.0 7.5,18.0 7.5,15.5 C7.5,13.2 10.5,8.8 12,6.2 Z" />
+</vector>

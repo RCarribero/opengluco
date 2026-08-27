@@ -1,0 +1,52 @@
+name: OpenGluco Release Build
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-release:
+    name: Build OpenGluco Artifacts
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run Unit Tests
+        run: ./gradlew testDebugUnitTest
+
+      - name: Build Release APKs and Bundles
+        run: ./gradlew assembleRelease --stacktrace
+
+      - name: Upload Mobile APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: opengluco-mobile-release
+          path: app-mobile/build/outputs/apk/release/*.apk
+          if-no-files-found: warn
+
+      - name: Upload Wear APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: opengluco-wear-release
+          path: app-wear/build/outputs/apk/release/*.apk
+          if-no-files-found: warn
+
+      - name: Upload Auto APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: opengluco-auto-release
+          path: app-auto/build/outputs/apk/release/*.apk
+          if-no-files-found: warn

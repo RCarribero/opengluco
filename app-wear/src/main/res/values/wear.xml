@@ -1,0 +1,5 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string-array name="android_wear_capabilities" tools:keep="@string-array/android_wear_capabilities">
+        <item>libre_auth_capability</item>
+    </string-array>
+</resources>
