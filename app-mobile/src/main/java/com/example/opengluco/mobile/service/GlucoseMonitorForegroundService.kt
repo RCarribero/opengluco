@@ -134,7 +134,15 @@ class GlucoseMonitorForegroundService : Service() {
             patientName = name
         )
 
-        // 2. Evaluar alarmas clínicas y disparar si se supera un umbral
+        // 2. Actualizar los Widgets de escritorio (Compacto y con Gráfica)
+        com.example.opengluco.mobile.widget.GlucoseWidgetUpdater.updateAllWidgets(
+            context = applicationContext,
+            latestMeasurement = latest,
+            history = allToSave,
+            patientName = name
+        )
+
+        // 3. Evaluar alarmas clínicas y disparar si se supera un umbral
         val alarms = alarmRepository.getAllAlarms()
         val timestamps = alarmRepository.getLastFiredTimestamps()
         val result = AlarmEvaluator.evaluate(

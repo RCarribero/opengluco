@@ -74,6 +74,32 @@
             </intent-filter>
         </receiver>
 
+        <!-- Widget 1: Widget Compacto de Glucosa y Tendencia (2x2 / 2x1) -->
+        <receiver
+            android:name=".widget.GlucoseCompactWidgetProvider"
+            android:exported="true"
+            android:label="OpenGluco Compacto">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_glucose_compact_info" />
+        </receiver>
+
+        <!-- Widget 2: Widget Ampliado con Gráfica de Curva (4x2 / 3x2) -->
+        <receiver
+            android:name=".widget.GlucoseChartWidgetProvider"
+            android:exported="true"
+            android:label="OpenGluco Gráfica">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_glucose_chart_info" />
+        </receiver>
+
     </application>
 
 </manifest>

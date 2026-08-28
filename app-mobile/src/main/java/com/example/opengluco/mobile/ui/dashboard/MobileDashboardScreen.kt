@@ -227,7 +227,14 @@ fun MobileDashboardScreen(
             patientName = name
         )
 
-        // 2. Evaluar alarmas configuradas
+        // 2. Actualizar Widgets de escritorio
+        com.example.opengluco.mobile.widget.GlucoseWidgetUpdater.updateAllWidgets(
+            context = context,
+            latestMeasurement = em,
+            patientName = name
+        )
+
+        // 3. Evaluar alarmas configuradas
         scope.launch {
             val alarms = alarmRepo.getAllAlarms()
             val timestamps = alarmRepo.getLastFiredTimestamps()
@@ -271,6 +278,12 @@ fun MobileDashboardScreen(
                 }
             }
             preferencesRepository.saveHistoricalReadings(allToSave, patient.patientId)
+            com.example.opengluco.mobile.widget.GlucoseWidgetUpdater.updateAllWidgets(
+                context = context,
+                latestMeasurement = patient.effectiveMeasurement,
+                history = allToSave,
+                patientName = patient.fullName.ifBlank { "Paciente" }
+            )
             isLoading = false
         }
     }
