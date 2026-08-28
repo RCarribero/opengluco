@@ -8,6 +8,12 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
@@ -30,6 +36,13 @@
             </intent-filter>
         </activity>
 
+        <!-- Servicio permanente en primer plano para monitorización 24/7 y alarmas sin suspensión -->
+        <service
+            android:name=".service.GlucoseMonitorForegroundService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
         <!-- FileProvider para compartir y exportar informes médicos en CSV -->
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -47,6 +60,17 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="com.example.opengluco.DISMISS_ALARM" />
+            </intent-filter>
+        </receiver>
+
+        <!-- BootReceiver para arranque automático del servicio tras reinicio del teléfono -->
+        <receiver
+            android:name=".service.BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
             </intent-filter>
         </receiver>
 

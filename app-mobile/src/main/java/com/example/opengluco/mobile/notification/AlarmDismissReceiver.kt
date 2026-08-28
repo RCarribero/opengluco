@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.mobile.notification
+package com.example.opengluco.mobile.notification
 
 import android.app.NotificationManager
 import android.content.BroadcastReceiver
@@ -14,6 +14,7 @@ class AlarmDismissReceiver : BroadcastReceiver() {
             if (notificationId != -1) {
                 val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                 notificationManager.cancel(notificationId)
+                MobileAlarmNotificationHelper.stopEmergencyAlarmSound()
             }
         }
     }

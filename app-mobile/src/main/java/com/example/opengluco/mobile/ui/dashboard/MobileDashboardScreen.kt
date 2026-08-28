@@ -44,10 +44,15 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Watch
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Power
 import androidx.compose.runtime.DisposableEffect
 import com.example.opengluco.core.model.QrPairingPayload
 import com.example.opengluco.core.data.QrAuthHelper
 import com.example.opengluco.mobile.ui.qr.MobilePairingHelper
+import com.example.opengluco.mobile.service.GlucoseMonitorForegroundService
+import com.example.opengluco.mobile.ui.dashboard.components.BatteryOptimizationBanner
+import com.example.opengluco.mobile.ui.dashboard.components.BatteryOptimizationDialog
+import com.example.opengluco.mobile.ui.dashboard.components.BatteryOptimizationHelper
 import com.example.opengluco.mobile.notification.MobileAlarmNotificationHelper
 import com.google.android.gms.wearable.MessageClient
 import com.google.android.gms.wearable.Wearable
@@ -174,6 +179,8 @@ fun MobileDashboardScreen(
     var showTargetRangeDialog by remember { mutableStateOf(false) }
     var autoDiscoveredPairingPayload by remember { mutableStateOf<QrPairingPayload?>(null) }
     var autoPairingSuccess by remember { mutableStateOf(false) }
+    var isBatteryIgnored by remember { mutableStateOf(false) }
+    var showBatteryDialog by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     val settings by preferencesRepository.userSettingsFlow.collectAsState(initial = null)
@@ -287,8 +294,10 @@ fun MobileDashboardScreen(
     }
 
     LaunchedEffect(Unit) {
-        // Registrar canales de notificacion y worker de alarmas en background
+        // Registrar canales de notificacion, servicio foreground y worker de alarmas
         MobileAlarmNotificationHelper.createChannels(context)
+        isBatteryIgnored = BatteryOptimizationHelper.isBatteryOptimizationIgnored(context)
+        GlucoseMonitorForegroundService.startService(context)
         com.example.opengluco.mobile.service.GlucoseAlarmWorker.enqueue(context)
 
         loadData(silent = false)
@@ -441,6 +450,12 @@ fun MobileDashboardScreen(
                             onLogout()
                         }
                     },
+                    onOpenBatteryDialog = {
+                        scope.launch {
+                            drawerState.close()
+                            showBatteryDialog = true
+                        }
+                    },
                     onCloseDrawer = {
                         scope.launch { drawerState.close() }
                     }
@@ -533,6 +548,12 @@ fun MobileDashboardScreen(
                 ) {
                     item {
                         Spacer(modifier = Modifier.height(4.dp))
+                    }
+
+                    if (!isBatteryIgnored) {
+                        item {
+                            BatteryOptimizationBanner(onClick = { showBatteryDialog = true })
+                        }
                     }
 
                     // 1. HERO SECTION: DUAL FLOATING ORBS (GLUCOSA & TENDENCIA)
@@ -1190,6 +1211,20 @@ fun MobileDashboardScreen(
                 }
             )
         }
+
+        // Modal de Asistente de Optimización de Batería (Samsung / Android)
+        if (showBatteryDialog) {
+            BatteryOptimizationDialog(
+                onDismiss = {
+                    showBatteryDialog = false
+                    isBatteryIgnored = BatteryOptimizationHelper.isBatteryOptimizationIgnored(context)
+                },
+                onConfigureClick = {
+                    BatteryOptimizationHelper.requestIgnoreBatteryOptimization(context)
+                    showBatteryDialog = false
+                }
+            )
+        }
     }
 }
 }
@@ -1207,6 +1242,7 @@ private fun SettingsDrawerContent(
     onOpenTargetRange: () -> Unit,
     alarmsCount: Int,
     onOpenAlarms: () -> Unit,
+    onOpenBatteryDialog: () -> Unit,
     onOpenReports: () -> Unit,
     onOpenQrScanner: () -> Unit,
     onExportCsv: () -> Unit,
@@ -1369,6 +1405,16 @@ private fun SettingsDrawerContent(
                     badge = if (alarmsCount > 0) "$alarmsCount activas" else null,
                     badgeColor = colors.mint,
                     onClick = onOpenAlarms
+                )
+
+                DrawerDivider()
+
+                // Fila: Protección de Batería (Alarmas 24/7)
+                DrawerNavigationRow(
+                    icon = Icons.Default.Power,
+                    title = "Protección de Batería (24/7)",
+                    subtitle = "Evitar suspensión en segundo plano",
+                    onClick = onOpenBatteryDialog
                 )
             }
 

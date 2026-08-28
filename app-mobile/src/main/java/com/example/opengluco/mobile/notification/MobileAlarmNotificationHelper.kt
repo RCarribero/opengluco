@@ -6,35 +6,38 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.media.AudioAttributes
-import android.media.RingtoneManager
+import android.media.AudioManager
+import android.media.MediaPlayer
+import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.example.opengluco.core.model.AlarmSeverity
 import com.example.opengluco.core.model.AlarmType
 import com.example.opengluco.core.model.GlucoseAlarm
 import com.example.opengluco.mobile.MainActivity
+import com.example.opengluco.mobile.R
 
 object MobileAlarmNotificationHelper {
-    private const val CHANNEL_URGENT = "cgm_urgent_alarms_v2"
-    private const val CHANNEL_ALERT = "cgm_alert_alarms_v2"
-    private const val CHANNEL_INFO = "cgm_info_alarms_v2"
-    private const val CHANNEL_LIVE_STATUS = "cgm_live_status_v2"
+    const val CHANNEL_URGENT = "cgm_urgent_alarms_v4"
+    const val CHANNEL_ALERT = "cgm_alert_alarms_v4"
+    const val CHANNEL_INFO = "cgm_info_alarms_v4"
+    const val CHANNEL_LIVE_STATUS = "cgm_live_status_v4"
 
-    private const val NOTIFICATION_ID_LIVE_STATUS = 9001
+    const val NOTIFICATION_ID_LIVE_STATUS = 9001
+
+    private var emergencyMediaPlayer: MediaPlayer? = null
 
     fun createChannels(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-            val alarmSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-                ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            val urgentSoundUri = Uri.parse("android.resource://${context.packageName}/${R.raw.alarm_urgent_medical}")
+            val alertSoundUri = Uri.parse("android.resource://${context.packageName}/${R.raw.alarm_alert}")
 
             val urgentAudioAttributes = AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_ALARM)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .build()
-
-            val notificationSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
             val alertAudioAttributes = AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
@@ -43,25 +46,25 @@ object MobileAlarmNotificationHelper {
 
             val urgentChannel = NotificationChannel(
                 CHANNEL_URGENT,
-                "Alarmas Urgentes",
+                "Alarmas Urgentes (Sirena Médica)",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Alertas críticas de hipoglucemia e hiperglucemia urgente con sonido de alarma"
+                description = "Alertas críticas de hipoglucemia e hiperglucemia urgente con sonido estroboscópico"
                 vibrationPattern = longArrayOf(0, 600, 150, 600, 150, 600)
                 enableVibration(true)
-                setSound(alarmSoundUri, urgentAudioAttributes)
+                setSound(urgentSoundUri, urgentAudioAttributes)
                 lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
             }
 
             val alertChannel = NotificationChannel(
                 CHANNEL_ALERT,
-                "Alarmas de Glucosa",
+                "Alarmas de Glucosa Fuera de Rango",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Alertas de glucosa fuera de rango objetivo con tono sonoro"
+                description = "Alertas sonoras de glucosa fuera de rango objetivo"
                 vibrationPattern = longArrayOf(0, 300, 200, 300)
                 enableVibration(true)
-                setSound(notificationSoundUri, alertAudioAttributes)
+                setSound(alertSoundUri, alertAudioAttributes)
                 lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
             }
 
@@ -77,7 +80,7 @@ object MobileAlarmNotificationHelper {
 
             val liveStatusChannel = NotificationChannel(
                 CHANNEL_LIVE_STATUS,
-                "Monitor de Glucosa",
+                "Monitor de Glucosa en Tiempo Real",
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
                 description = "Muestra la última lectura en tiempo real en la barra de notificaciones"
@@ -94,18 +97,14 @@ object MobileAlarmNotificationHelper {
     }
 
     /**
-     * Actualiza la tarjeta continua en la barra de notificaciones con la lectura en tiempo real.
+     * Construye la notificación persistente continua para el Foreground Service.
      */
-    fun updateLiveGlucoseNotification(
+    fun buildLiveGlucoseNotification(
         context: Context,
         glucoseValueMgDl: Double,
         trendArrow: String = "->",
         patientName: String = ""
-    ) {
-        if (glucoseValueMgDl <= 0.0) return
-
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
+    ): android.app.Notification {
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
@@ -119,10 +118,10 @@ object MobileAlarmNotificationHelper {
         val pendingIntent = PendingIntent.getActivity(context, 0, intent, flags)
 
         val headerText = if (patientName.isNotBlank()) "OpenGluco • $patientName" else "OpenGluco"
-        val bodyText = "${glucoseValueMgDl.toInt()} $trendArrow mg/dL"
+        val bodyText = if (glucoseValueMgDl > 0.0) "${glucoseValueMgDl.toInt()} $trendArrow mg/dL" else "Conectando al sensor..."
 
-        val builder = NotificationCompat.Builder(context, CHANNEL_LIVE_STATUS)
-            .setSmallIcon(com.example.opengluco.mobile.R.drawable.ic_notification_glucose)
+        return NotificationCompat.Builder(context, CHANNEL_LIVE_STATUS)
+            .setSmallIcon(R.drawable.ic_notification_glucose)
             .setContentTitle(headerText)
             .setContentText(bodyText)
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -130,8 +129,22 @@ object MobileAlarmNotificationHelper {
             .setOnlyAlertOnce(true)
             .setContentIntent(pendingIntent)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .build()
+    }
 
-        notificationManager.notify(NOTIFICATION_ID_LIVE_STATUS, builder.build())
+    /**
+     * Actualiza la tarjeta continua en la barra de notificaciones.
+     */
+    fun updateLiveGlucoseNotification(
+        context: Context,
+        glucoseValueMgDl: Double,
+        trendArrow: String = "->",
+        patientName: String = ""
+    ) {
+        if (glucoseValueMgDl <= 0.0) return
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notification = buildLiveGlucoseNotification(context, glucoseValueMgDl, trendArrow, patientName)
+        notificationManager.notify(NOTIFICATION_ID_LIVE_STATUS, notification)
     }
 
     fun triggerAlarm(context: Context, alarm: GlucoseAlarm, glucoseValueMgDl: Double) {
@@ -194,9 +207,8 @@ object MobileAlarmNotificationHelper {
         }
 
         val soundUri = when (alarm.severity) {
-            AlarmSeverity.URGENT -> RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-                ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-            AlarmSeverity.ALERT -> RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            AlarmSeverity.URGENT -> Uri.parse("android.resource://${context.packageName}/${R.raw.alarm_urgent_medical}")
+            AlarmSeverity.ALERT -> Uri.parse("android.resource://${context.packageName}/${R.raw.alarm_alert}")
             AlarmSeverity.INFORMATIVE -> null
         }
 
@@ -216,9 +228,42 @@ object MobileAlarmNotificationHelper {
         }
 
         notificationManager.notify(notificationId, builder.build())
+
+        // En alarmas urgentes, reproducir audio forzado por canal de alarma
+        if (alarm.severity == AlarmSeverity.URGENT) {
+            playEmergencyAlarmSound(context)
+        }
+    }
+
+    private fun playEmergencyAlarmSound(context: Context) {
+        try {
+            stopEmergencyAlarmSound()
+            val uri = Uri.parse("android.resource://${context.packageName}/${R.raw.alarm_urgent_medical}")
+            emergencyMediaPlayer = MediaPlayer().apply {
+                setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_ALARM)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .setLegacyStreamType(AudioManager.STREAM_ALARM)
+                        .build()
+                )
+                setDataSource(context, uri)
+                prepare()
+                start()
+            }
+        } catch (_: Exception) {}
+    }
+
+    fun stopEmergencyAlarmSound() {
+        try {
+            emergencyMediaPlayer?.stop()
+            emergencyMediaPlayer?.release()
+            emergencyMediaPlayer = null
+        } catch (_: Exception) {}
     }
 
     fun dismissAlarm(context: Context, alarmId: String) {
+        stopEmergencyAlarmSound()
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.cancel(alarmId.hashCode())
     }
