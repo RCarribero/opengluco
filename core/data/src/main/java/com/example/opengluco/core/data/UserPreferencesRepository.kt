@@ -355,9 +355,17 @@ class UserPreferencesRepository(private val context: Context) {
 
     suspend fun getHistoricalReadingsList(days: Int, patientId: String? = null): List<GlucoseMeasurement> = withContext(Dispatchers.IO) {
         val targetFile = getHistoryFileForPatient(patientId ?: currentLoadedPatientId)
+        val fallbackFile = File(context.filesDir, "glucose_history.json")
+        val anyHistoryFile = context.filesDir.listFiles { _, name -> name.startsWith("glucose_history") && name.endsWith(".json") }?.firstOrNull()
+        val fileToRead = when {
+            targetFile.exists() -> targetFile
+            fallbackFile.exists() -> fallbackFile
+            anyHistoryFile != null -> anyHistoryFile
+            else -> null
+        }
         val all = try {
-            if (targetFile.exists()) {
-                val text = targetFile.readText()
+            if (fileToRead != null && fileToRead.exists()) {
+                val text = fileToRead.readText()
                 val decrypted = KeystoreCryptoHelper.decrypt(text)
                 val toParse = if (decrypted.isNotBlank()) decrypted else text
                 if (toParse.isNotBlank()) json.decodeFromString<List<GlucoseMeasurement>>(toParse) else emptyList()

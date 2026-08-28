@@ -34,17 +34,6 @@ object WidgetChartRenderer {
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
 
-        if (readings.isEmpty()) {
-            val emptyPaint = Paint().apply {
-                color = COLOR_GRID_TEXT
-                textSize = 24f
-                isAntiAlias = true
-                textAlign = Paint.Align.CENTER
-            }
-            canvas.drawText("Sin datos recientes", width / 2f, height / 2f + 8f, emptyPaint)
-            return bitmap
-        }
-
         val paddingLeft = 10f
         val paddingRight = 20f
         val paddingTop = 16f
@@ -88,6 +77,17 @@ object WidgetChartRenderer {
         }
         canvas.drawLine(paddingLeft, yTargetHigh, width - paddingRight, yTargetHigh, gridLinePaint)
         canvas.drawLine(paddingLeft, yTargetLow, width - paddingRight, yTargetLow, gridLinePaint)
+
+        if (readings.isEmpty()) {
+            val emptyPaint = Paint().apply {
+                color = COLOR_GRID_TEXT
+                textSize = 18f
+                isAntiAlias = true
+                textAlign = Paint.Align.CENTER
+            }
+            canvas.drawText("Esperando telemetría...", width / 2f, height / 2f + 6f, emptyPaint)
+            return bitmap
+        }
 
         // 3. Trazar la Curva Continua de Glucosa con Filtro Fisiológico y Catmull-Rom
         val consolidated = com.example.opengluco.core.model.CgmCurveSmoother.consolidateTemporalBuckets(readings)
@@ -178,6 +178,32 @@ object WidgetChartRenderer {
                 isAntiAlias = true
             }
             canvas.drawCircle(lastX, lastY, 2.5f, innerDotPaint)
+        } else if (sortedReadings.size == 1) {
+            val single = sortedReadings.first()
+            val y = yForValue(single.numericValue)
+            val x = width / 2f
+
+            val curveColor = when {
+                single.numericValue <= 55 -> COLOR_URGENT_LOW
+                single.numericValue < targetLowMgDl -> COLOR_LOW
+                single.numericValue > 249 -> COLOR_VERY_HIGH
+                single.numericValue > targetHighMgDl -> COLOR_HIGH
+                else -> COLOR_MINT
+            }
+
+            val auraPaint = Paint().apply {
+                color = curveColor and 0x40FFFFFF
+                style = Paint.Style.FILL
+                isAntiAlias = true
+            }
+            canvas.drawCircle(x, y, 14f, auraPaint)
+
+            val pointPaint = Paint().apply {
+                color = curveColor
+                style = Paint.Style.FILL
+                isAntiAlias = true
+            }
+            canvas.drawCircle(x, y, 7f, pointPaint)
         }
 
         return bitmap

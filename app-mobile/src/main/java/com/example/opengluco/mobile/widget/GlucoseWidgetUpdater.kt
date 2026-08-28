@@ -50,8 +50,9 @@ object GlucoseWidgetUpdater {
             val unit = settings?.unit ?: GlucoseUnit.MGDL
             val targetLow = settings?.lowThreshold ?: 70
             val targetHigh = settings?.highThreshold ?: 180
+            val patientId = settings?.selectedPatientId
 
-            val effectiveReadings = history ?: prefs.getHistoricalReadings(90).first()
+            val effectiveReadings = history ?: prefs.getHistoricalReadingsList(90, patientId = patientId)
             val effectiveLatest = latestMeasurement ?: effectiveReadings.lastOrNull()
 
             val displayPatient = patientName ?: "OpenGluco"
@@ -219,22 +220,30 @@ object GlucoseWidgetUpdater {
             views.setTextColor(R.id.widget_chart_status_badge, clinicalColor)
 
             views.setTextViewText(R.id.widget_chart_time, timeFormatted)
-
-            // Renderizar gráfica Sparkline en Bitmap
-            val chartBitmap = WidgetChartRenderer.renderSparkline(
-                readings = history,
-                width = 440,
-                height = 190,
-                targetLowMgDl = targetLow,
-                targetHighMgDl = targetHigh
-            )
-            views.setImageViewBitmap(R.id.widget_chart_image, chartBitmap)
         } else {
             views.setTextViewText(R.id.widget_chart_value, "---")
             views.setTextViewText(R.id.widget_chart_arrow, "→")
             views.setTextViewText(R.id.widget_chart_status_badge, "Sin datos")
             views.setTextViewText(R.id.widget_chart_time, "--:--")
         }
+
+        // Renderizar siempre la gráfica Sparkline (con datos reales o con zona objetivo base)
+        val chartReadings = if (history.isNotEmpty()) {
+            history
+        } else if (measurement != null && measurement.numericValue > 0.0) {
+            listOf(measurement)
+        } else {
+            emptyList()
+        }
+
+        val chartBitmap = WidgetChartRenderer.renderSparkline(
+            readings = chartReadings,
+            width = 440,
+            height = 190,
+            targetLowMgDl = targetLow,
+            targetHighMgDl = targetHigh
+        )
+        views.setImageViewBitmap(R.id.widget_chart_image, chartBitmap)
 
         return views
     }
