@@ -36,7 +36,7 @@
             android:id="@+id/widget_compact_time"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="--:--"
+            android:text="14:00"
             android:textColor="#64748B"
             android:textSize="11sp" />
     </LinearLayout>
@@ -53,7 +53,7 @@
             android:id="@+id/widget_compact_value"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="---"
+            android:text="104"
             android:textColor="#4ADE80"
             android:textSize="38sp"
             android:textStyle="bold" />

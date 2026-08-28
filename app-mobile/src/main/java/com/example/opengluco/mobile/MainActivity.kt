@@ -8,10 +8,17 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.NavHost
@@ -38,7 +45,22 @@ class MainActivity : ComponentActivity() {
         val preferencesRepository = UserPreferencesRepository(applicationContext)
 
         setContent {
-            val settings by preferencesRepository.userSettingsFlow.collectAsState(initial = UserSettings())
+            val settingsState by preferencesRepository.userSettingsFlow.collectAsState(initial = null)
+
+            // Esperar a que DataStore cargue para evitar cualquier salto visual al login
+            if (settingsState == null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xFF0F172A)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Color(0xFF4ADE80))
+                }
+                return@setContent
+            }
+
+            val settings = settingsState ?: UserSettings()
             val isDark = settings.isDarkMode
 
             // Solicitar permiso de notificaciones en Android 13+ (API 33+)
@@ -63,7 +85,8 @@ class MainActivity : ComponentActivity() {
             LibreMobileTheme(darkTheme = isDark) {
                 MobileAppNavigation(
                     repository = repository,
-                    preferencesRepository = preferencesRepository
+                    preferencesRepository = preferencesRepository,
+                    initialSettings = settings
                 )
             }
         }
@@ -73,10 +96,11 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MobileAppNavigation(
     repository: OpenGlucoRepository,
-    preferencesRepository: UserPreferencesRepository
+    preferencesRepository: UserPreferencesRepository,
+    initialSettings: UserSettings
 ) {
     val navController = rememberNavController()
-    val settings by preferencesRepository.userSettingsFlow.collectAsState(initial = UserSettings())
+    val settings by preferencesRepository.userSettingsFlow.collectAsState(initial = initialSettings)
 
     val startDestination = if (settings.token.isNotBlank()) "dashboard" else "login"
 
