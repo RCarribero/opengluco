@@ -50,9 +50,9 @@ import com.example.opengluco.core.model.QrPairingPayload
 import com.example.opengluco.core.data.QrAuthHelper
 import com.example.opengluco.mobile.ui.qr.MobilePairingHelper
 import com.example.opengluco.mobile.service.GlucoseMonitorForegroundService
-import com.example.opengluco.mobile.ui.dashboard.components.BatteryOptimizationBanner
-import com.example.opengluco.mobile.ui.dashboard.components.BatteryOptimizationDialog
-import com.example.opengluco.mobile.ui.dashboard.components.BatteryOptimizationHelper
+import com.example.opengluco.mobile.ui.dashboard.components.ConfigurationDiagnosticsDialog
+import com.example.opengluco.mobile.ui.dashboard.components.SystemDiagnosticsHelper
+import com.example.opengluco.mobile.ui.dashboard.components.SystemDiagnosticsState
 import com.example.opengluco.mobile.notification.MobileAlarmNotificationHelper
 import com.google.android.gms.wearable.MessageClient
 import com.google.android.gms.wearable.Wearable
@@ -177,12 +177,11 @@ fun MobileDashboardScreen(
     var currentSensor by remember { mutableStateOf<com.example.opengluco.core.model.SensorInfo?>(null) }
     var selectedChartTimeframe by remember { mutableStateOf(DashboardTimeframe.H24) }
     var showTargetRangeDialog by remember { mutableStateOf(false) }
+    val context = LocalContext.current
     var autoDiscoveredPairingPayload by remember { mutableStateOf<QrPairingPayload?>(null) }
     var autoPairingSuccess by remember { mutableStateOf(false) }
-    var isBatteryIgnored by remember { mutableStateOf(false) }
-    var showBatteryDialog by remember { mutableStateOf(false) }
-
-    val context = LocalContext.current
+    var diagnosticsState by remember { mutableStateOf(SystemDiagnosticsHelper.checkDiagnostics(context)) }
+    var showDiagnosticsDialog by remember { mutableStateOf(false) }
     val settings by preferencesRepository.userSettingsFlow.collectAsState(initial = null)
     val periodReadings by preferencesRepository.getHistoricalReadings(90).collectAsState(initial = emptyList())
     val alarmRepo = remember { AlarmRepository(context) }
@@ -296,9 +295,15 @@ fun MobileDashboardScreen(
     LaunchedEffect(Unit) {
         // Registrar canales de notificacion, servicio foreground y worker de alarmas
         MobileAlarmNotificationHelper.createChannels(context)
-        isBatteryIgnored = BatteryOptimizationHelper.isBatteryOptimizationIgnored(context)
         GlucoseMonitorForegroundService.startService(context)
         com.example.opengluco.mobile.service.GlucoseAlarmWorker.enqueue(context)
+
+        // Autodetección al abrir la aplicación: si hay cualquier problema de permisos o batería, abrir Pop-Up
+        val currentDiagnostics = SystemDiagnosticsHelper.checkDiagnostics(context)
+        diagnosticsState = currentDiagnostics
+        if (currentDiagnostics.hasAnyIssue) {
+            showDiagnosticsDialog = true
+        }
 
         loadData(silent = false)
         while (true) {
@@ -450,12 +455,6 @@ fun MobileDashboardScreen(
                             onLogout()
                         }
                     },
-                    onOpenBatteryDialog = {
-                        scope.launch {
-                            drawerState.close()
-                            showBatteryDialog = true
-                        }
-                    },
                     onCloseDrawer = {
                         scope.launch { drawerState.close() }
                     }
@@ -548,12 +547,6 @@ fun MobileDashboardScreen(
                 ) {
                     item {
                         Spacer(modifier = Modifier.height(4.dp))
-                    }
-
-                    if (!isBatteryIgnored) {
-                        item {
-                            BatteryOptimizationBanner(onClick = { showBatteryDialog = true })
-                        }
                     }
 
                     // 1. HERO SECTION: DUAL FLOATING ORBS (GLUCOSA & TENDENCIA)
@@ -1212,16 +1205,13 @@ fun MobileDashboardScreen(
             )
         }
 
-        // Modal de Asistente de Optimización de Batería (Samsung / Android)
-        if (showBatteryDialog) {
-            BatteryOptimizationDialog(
-                onDismiss = {
-                    showBatteryDialog = false
-                    isBatteryIgnored = BatteryOptimizationHelper.isBatteryOptimizationIgnored(context)
-                },
-                onConfigureClick = {
-                    BatteryOptimizationHelper.requestIgnoreBatteryOptimization(context)
-                    showBatteryDialog = false
+        // Pop-Up Emergente de Diagnósticos y Permisos del Sistema
+        if (showDiagnosticsDialog) {
+            ConfigurationDiagnosticsDialog(
+                diagnostics = diagnosticsState,
+                onDismiss = { showDiagnosticsDialog = false },
+                onRefreshState = {
+                    diagnosticsState = SystemDiagnosticsHelper.checkDiagnostics(context)
                 }
             )
         }
@@ -1242,7 +1232,6 @@ private fun SettingsDrawerContent(
     onOpenTargetRange: () -> Unit,
     alarmsCount: Int,
     onOpenAlarms: () -> Unit,
-    onOpenBatteryDialog: () -> Unit,
     onOpenReports: () -> Unit,
     onOpenQrScanner: () -> Unit,
     onExportCsv: () -> Unit,
@@ -1405,16 +1394,6 @@ private fun SettingsDrawerContent(
                     badge = if (alarmsCount > 0) "$alarmsCount activas" else null,
                     badgeColor = colors.mint,
                     onClick = onOpenAlarms
-                )
-
-                DrawerDivider()
-
-                // Fila: Protección de Batería (Alarmas 24/7)
-                DrawerNavigationRow(
-                    icon = Icons.Default.Power,
-                    title = "Protección de Batería (24/7)",
-                    subtitle = "Evitar suspensión en segundo plano",
-                    onClick = onOpenBatteryDialog
                 )
             }
 
