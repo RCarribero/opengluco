@@ -1832,8 +1832,13 @@ fun MobileGlucoseChart(
     val colors = ClinicalTheme.colors
     val haptic = LocalHapticFeedback.current
 
-    val validMeasurements = remember(history) {
+    val rawValidMeasurements = remember(history) {
         history.filter { it.numericValue > 0 }.sortedBy { it.getEpochMillis() }
+    }
+
+    val validMeasurements = remember(rawValidMeasurements) {
+        val consolidated = com.example.opengluco.core.model.CgmCurveSmoother.consolidateTemporalBuckets(rawValidMeasurements)
+        com.example.opengluco.core.model.CgmCurveSmoother.smoothMeasurements(consolidated)
     }
 
     if (validMeasurements.size < 2) {
@@ -2073,29 +2078,29 @@ fun MobileGlucoseChart(
 
                 fun getLevelColor(valMg: Double): Color = com.example.opengluco.mobile.ui.theme.getGlucoseValueColor(valMg, targetLow, targetHigh, alarms, colors)
 
-                // 4. Sombreado de area bajo la curva con cortes fijos (sin fusion de color)
-                val fillAlpha = if (colors.isDark) 0.32f else 0.22f
-                for (i in 0 until points.size - 1) {
-                    val p0 = points[i]
-                    val p1 = points[i + 1]
+                val pointPairs = points.map { Pair(it.x, it.y) }
+                val splineSegments = com.example.opengluco.core.model.CgmCurveSmoother.computeCatmullRomSpline(pointPairs)
+
+                // 4. Sombreado de área bajo la curva con segmentos suaves Catmull-Rom
+                val fillAlpha = if (colors.isDark) 0.30f else 0.20f
+                for (i in splineSegments.indices) {
+                    val seg = splineSegments[i]
                     val v0 = validMeasurements[i].numericValue
                     val v1 = validMeasurements[i + 1].numericValue
-
                     val midVal = (v0 + v1) / 2.0
                     val segmentColor = getLevelColor(midVal)
 
                     val segmentFill = Path().apply {
-                        moveTo(p0.x, height)
-                        lineTo(p0.x, p0.y)
-                        val controlPointX = (p0.x + p1.x) / 2f
-                        cubicTo(controlPointX, p0.y, controlPointX, p1.y, p1.x, p1.y)
-                        lineTo(p1.x, height)
+                        moveTo(seg.startX, height)
+                        lineTo(seg.startX, seg.startY)
+                        cubicTo(seg.cp1X, seg.cp1Y, seg.cp2X, seg.cp2Y, seg.endX, seg.endY)
+                        lineTo(seg.endX, height)
                         close()
                     }
 
                     val fillBrush = Brush.verticalGradient(
                         colors = listOf(segmentColor.copy(alpha = fillAlpha), Color.Transparent),
-                        startY = minOf(p0.y, p1.y),
+                        startY = minOf(seg.startY, seg.endY),
                         endY = height
                     )
 
@@ -2105,20 +2110,17 @@ fun MobileGlucoseChart(
                     )
                 }
 
-                // 5. Trazo de curva Bézier continua con cortes fijos y colores solidos
-                for (i in 0 until points.size - 1) {
-                    val p0 = points[i]
-                    val p1 = points[i + 1]
+                // 5. Trazo de curva Catmull-Rom continua y suave (libre de dientes de sierra)
+                for (i in splineSegments.indices) {
+                    val seg = splineSegments[i]
                     val v0 = validMeasurements[i].numericValue
                     val v1 = validMeasurements[i + 1].numericValue
-
                     val midVal = (v0 + v1) / 2.0
                     val segmentColor = getLevelColor(midVal)
 
                     val segmentStroke = Path().apply {
-                        moveTo(p0.x, p0.y)
-                        val controlPointX = (p0.x + p1.x) / 2f
-                        cubicTo(controlPointX, p0.y, controlPointX, p1.y, p1.x, p1.y)
+                        moveTo(seg.startX, seg.startY)
+                        cubicTo(seg.cp1X, seg.cp1Y, seg.cp2X, seg.cp2Y, seg.endX, seg.endY)
                     }
 
                     drawPath(

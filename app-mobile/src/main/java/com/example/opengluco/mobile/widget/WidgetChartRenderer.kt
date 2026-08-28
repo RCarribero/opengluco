@@ -89,34 +89,36 @@ object WidgetChartRenderer {
         canvas.drawLine(paddingLeft, yTargetHigh, width - paddingRight, yTargetHigh, gridLinePaint)
         canvas.drawLine(paddingLeft, yTargetLow, width - paddingRight, yTargetLow, gridLinePaint)
 
-        // 3. Trazar la Curva Continua de Glucosa
-        val sortedReadings = readings.takeLast(36) // Últimas 3-6 horas
+        // 3. Trazar la Curva Continua de Glucosa con Filtro Fisiológico y Catmull-Rom
+        val consolidated = com.example.opengluco.core.model.CgmCurveSmoother.consolidateTemporalBuckets(readings)
+        val smoothed = com.example.opengluco.core.model.CgmCurveSmoother.smoothMeasurements(consolidated)
+        val sortedReadings = smoothed.takeLast(36) // Últimas 3-6 horas
+
         if (sortedReadings.size >= 2) {
             val stepX = plotWidth / (sortedReadings.size - 1).toFloat()
+
+            val points = sortedReadings.mapIndexed { index, m ->
+                val x = paddingLeft + index * stepX
+                val y = yForValue(m.numericValue)
+                Pair(x, y)
+            }
+
+            val splineSegments = com.example.opengluco.core.model.CgmCurveSmoother.computeCatmullRomSpline(points)
 
             val linePath = Path()
             val fillPath = Path()
 
-            sortedReadings.forEachIndexed { index, m ->
-                val x = paddingLeft + index * stepX
-                val y = yForValue(m.numericValue)
+            fillPath.moveTo(points.first().first, height - paddingBottom)
+            fillPath.lineTo(points.first().first, points.first().second)
+            linePath.moveTo(points.first().first, points.first().second)
 
-                if (index == 0) {
-                    linePath.moveTo(x, y)
-                    fillPath.moveTo(x, height - paddingBottom)
-                    fillPath.lineTo(x, y)
-                } else {
-                    val prevIndex = index - 1
-                    val prevX = paddingLeft + prevIndex * stepX
-                    val prevY = yForValue(sortedReadings[prevIndex].numericValue)
-                    val midX = (prevX + x) / 2f
-                    linePath.cubicTo(midX, prevY, midX, y, x, y)
-                    fillPath.cubicTo(midX, prevY, midX, y, x, y)
-                }
+            for (seg in splineSegments) {
+                linePath.cubicTo(seg.cp1X, seg.cp1Y, seg.cp2X, seg.cp2Y, seg.endX, seg.endY)
+                fillPath.cubicTo(seg.cp1X, seg.cp1Y, seg.cp2X, seg.cp2Y, seg.endX, seg.endY)
             }
 
-            val lastX = paddingLeft + (sortedReadings.size - 1) * stepX
-            fillPath.lineTo(lastX, height - paddingBottom)
+            val lastPoint = points.last()
+            fillPath.lineTo(lastPoint.first, height - paddingBottom)
             fillPath.close()
 
             // Relleno suave con gradiente vertical
@@ -154,6 +156,7 @@ object WidgetChartRenderer {
             canvas.drawPath(linePath, curvePaint)
 
             // 4. Aura y Punto en la Última Medición
+            val lastX = lastPoint.first
             val lastY = yForValue(latestValue)
             val auraPaint = Paint().apply {
                 color = curveColor and 0x40FFFFFF
