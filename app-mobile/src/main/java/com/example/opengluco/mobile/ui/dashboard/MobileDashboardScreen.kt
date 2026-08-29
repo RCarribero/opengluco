@@ -366,8 +366,8 @@ fun MobileDashboardScreen(
     }
 
     // Calculo dinamico de estadisticas reales a partir de los datos acumulados en UserPreferencesRepository
-    val targetLow = selectedPatient?.targetLow ?: settings?.lowThreshold ?: 70
-    val targetHigh = selectedPatient?.targetHigh ?: settings?.highThreshold ?: 180
+    val targetLow = settings?.lowThreshold ?: selectedPatient?.targetLow ?: 70
+    val targetHigh = settings?.highThreshold ?: selectedPatient?.targetHigh ?: 180
 
     val availableDataDays = remember(combinedHistory) {
         ClinicalReportsCalculator.calculateAvailableDays(combinedHistory)
@@ -442,29 +442,6 @@ fun MobileDashboardScreen(
                     onOpenAlarms = {
                         scope.launch { drawerState.close() }
                         showAlarmsManagementDialog = true
-                    },
-                    onSyncWithWatch = {
-                        scope.launch {
-                            MobileAlarmSyncHelper.syncAlarmsToWear(context, alarmRepo)
-                            if (settings != null && settings!!.token.isNotBlank()) {
-                                try {
-                                    val sessionJson = QrAuthHelper.createSessionExchange(
-                                        sessionId = "manual-sync-${System.currentTimeMillis()}",
-                                        email = settings!!.email,
-                                        token = settings!!.token,
-                                        userId = settings!!.userId
-                                    )
-                                    val dataClient = Wearable.getMessageClient(context)
-                                    val nodeClient = Wearable.getNodeClient(context)
-                                    nodeClient.connectedNodes.addOnSuccessListener { nodes ->
-                                        for (node in nodes) {
-                                            dataClient.sendMessage(node.id, "/opengluco_auth_sync", sessionJson.toByteArray(Charsets.UTF_8))
-                                        }
-                                    }
-                                } catch (_: Exception) {}
-                            }
-                            android.widget.Toast.makeText(context, "Alarmas y sesión sincronizadas con tu Smartwatch", android.widget.Toast.LENGTH_SHORT).show()
-                        }
                     },
                     onOpenDiagnostics = {
                         scope.launch { drawerState.close() }
@@ -1273,7 +1250,6 @@ private fun SettingsDrawerContent(
     onOpenTargetRange: () -> Unit,
     alarmsCount: Int,
     onOpenAlarms: () -> Unit,
-    onSyncWithWatch: () -> Unit,
     onOpenDiagnostics: () -> Unit,
     onOpenReports: () -> Unit,
     onOpenQrScanner: () -> Unit,
@@ -1289,12 +1265,12 @@ private fun SettingsDrawerContent(
             .fillMaxSize()
             .background(colors.background)
     ) {
-        // 1. Header Superior Moderno
+        // Header Superior Limpio y Elegante
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(colors.surfaceOrb)
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .padding(horizontal = 18.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -1306,7 +1282,7 @@ private fun SettingsDrawerContent(
                     color = colors.textPrimary
                 )
                 Text(
-                    text = "Preferencias clínicas y sincronización",
+                    text = selectedPatient?.fullName ?: "OpenGluco",
                     fontSize = 12.sp,
                     color = colors.textSecondary
                 )
@@ -1335,7 +1311,7 @@ private fun SettingsDrawerContent(
                 .background(colors.surfaceBorder)
         )
 
-        // 2. Contenido Scrollable con Espaciado Generoso
+        // Contenido Scrollable Limpio
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -1343,7 +1319,7 @@ private fun SettingsDrawerContent(
                 .padding(horizontal = 16.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Hero Card: Paciente y Sensor
+            // Mini Perfil de Sensor y Conexión
             Card(
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = colors.surfaceCard),
@@ -1358,17 +1334,16 @@ private fun SettingsDrawerContent(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(42.dp)
+                            .size(40.dp)
                             .clip(CircleShape)
-                            .background(colors.mint.copy(alpha = 0.15f))
-                            .border(1.5.dp, colors.mint.copy(alpha = 0.40f), CircleShape),
+                            .background(colors.mint.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Person,
+                            imageVector = Icons.Default.Sensors,
                             contentDescription = null,
                             tint = colors.mint,
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                     }
 
@@ -1376,161 +1351,45 @@ private fun SettingsDrawerContent(
 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = selectedPatient?.fullName ?: "Paciente Conectado",
-                            fontSize = 15.sp,
+                            text = sensor?.sensorModelName ?: "FreeStyle Libre 3",
+                            fontSize = 14.5.sp,
                             fontWeight = FontWeight.Bold,
                             color = colors.textPrimary
                         )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(6.dp)
-                                    .clip(CircleShape)
-                                    .background(colors.mint)
-                            )
-                            Spacer(modifier = Modifier.width(5.dp))
-                            Text(
-                                text = "${sensor?.sensorModelName ?: "FreeStyle Libre 3"} • ${sensor?.getRemainingDays() ?: 14} días restantes",
-                                fontSize = 11.5.sp,
-                                color = colors.textSecondary
-                            )
-                        }
+                        Text(
+                            text = "${sensor?.getRemainingDays() ?: 14} días restantes • Conectado",
+                            fontSize = 11.5.sp,
+                            color = colors.mint
+                        )
                     }
                 }
             }
 
-            // SECCIÓN: PREFERENCIAS CLÍNICAS
-            DrawerSectionCard(title = "Preferencias Clínicas") {
-                // Selector de Tema
-                Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
-                    Text(
-                        text = "Tema de la Aplicación",
-                        fontSize = 13.5.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = colors.textPrimary
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(colors.surfaceOrb)
-                            .border(1.dp, colors.surfaceBorder, RoundedCornerShape(10.dp))
-                            .padding(3.dp),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(if (!isDarkMode) colors.mint else Color.Transparent)
-                                .clickable { onToggleDarkMode(false) }
-                                .padding(vertical = 8.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    Icons.Default.LightMode,
-                                    contentDescription = null,
-                                    tint = if (!isDarkMode) Color.Black else colors.textSecondary,
-                                    modifier = Modifier.size(15.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "Claro",
-                                    fontSize = 12.sp,
-                                    fontWeight = if (!isDarkMode) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (!isDarkMode) Color.Black else colors.textSecondary
-                                )
-                            }
-                        }
+            // 1. PREFERENCIAS CLÍNICAS
+            SettingsGroupCard(title = "Preferencias Clínicas") {
+                // Switch Modo Oscuro
+                SettingsSwitchRow(
+                    icon = if (isDarkMode) Icons.Default.DarkMode else Icons.Default.LightMode,
+                    title = "Modo Oscuro OLED",
+                    subtitle = if (isDarkMode) "Fondo negro puro #000000" else "Tema claro clínico",
+                    checked = isDarkMode,
+                    onCheckedChange = onToggleDarkMode
+                )
 
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(if (isDarkMode) colors.mint else Color.Transparent)
-                                .clickable { onToggleDarkMode(true) }
-                                .padding(vertical = 8.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    Icons.Default.DarkMode,
-                                    contentDescription = null,
-                                    tint = if (isDarkMode) Color.Black else colors.textSecondary,
-                                    modifier = Modifier.size(15.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "Oscuro OLED",
-                                    fontSize = 12.sp,
-                                    fontWeight = if (isDarkMode) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isDarkMode) Color.Black else colors.textSecondary
-                                )
-                            }
-                        }
+                SettingsDivider()
+
+                // Unidad de Medida
+                SettingsValueRow(
+                    icon = Icons.Default.Tune,
+                    title = "Unidad de Glucosa",
+                    subtitle = if (currentUnit == GlucoseUnit.MGDL) "Miligramos por decilitro" else "Milimoles por litro",
+                    value = currentUnit.label,
+                    onClick = {
+                        onToggleUnit(if (currentUnit == GlucoseUnit.MGDL) GlucoseUnit.MMOL else GlucoseUnit.MGDL)
                     }
-                }
+                )
 
-                DrawerDivider()
-
-                // Selector de Unidades
-                Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)) {
-                    Text(
-                        text = "Unidad de Medición",
-                        fontSize = 13.5.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = colors.textPrimary
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(colors.surfaceOrb)
-                            .border(1.dp, colors.surfaceBorder, RoundedCornerShape(10.dp))
-                            .padding(3.dp),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(if (currentUnit == GlucoseUnit.MGDL) colors.mint else Color.Transparent)
-                                .clickable { onToggleUnit(GlucoseUnit.MGDL) }
-                                .padding(vertical = 8.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "mg/dL (ES / US)",
-                                fontSize = 12.sp,
-                                fontWeight = if (currentUnit == GlucoseUnit.MGDL) FontWeight.Bold else FontWeight.Medium,
-                                color = if (currentUnit == GlucoseUnit.MGDL) Color.Black else colors.textSecondary
-                            )
-                        }
-
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(if (currentUnit == GlucoseUnit.MMOL) colors.mint else Color.Transparent)
-                                .clickable { onToggleUnit(GlucoseUnit.MMOL) }
-                                .padding(vertical = 8.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "mmol/L (Intl)",
-                                fontSize = 12.sp,
-                                fontWeight = if (currentUnit == GlucoseUnit.MMOL) FontWeight.Bold else FontWeight.Medium,
-                                color = if (currentUnit == GlucoseUnit.MMOL) Color.Black else colors.textSecondary
-                            )
-                        }
-                    }
-                }
-
-                DrawerDivider()
+                SettingsDivider()
 
                 // Rango Objetivo
                 val targetRangeLabel = if (currentUnit == GlucoseUnit.MMOL) {
@@ -1539,168 +1398,67 @@ private fun SettingsDrawerContent(
                     "$targetLow - $targetHigh mg/dL"
                 }
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(onClick = onOpenTargetRange)
-                        .padding(horizontal = 14.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(34.dp)
-                            .clip(CircleShape)
-                            .background(colors.mint.copy(alpha = 0.15f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            Icons.Default.Tune,
-                            contentDescription = null,
-                            tint = colors.mint,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Rango Objetivo",
-                            fontSize = 13.5.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = colors.textPrimary
-                        )
-                        Text(
-                            text = "Límites deseados para glucosa en rango",
-                            fontSize = 11.sp,
-                            color = colors.textSecondary
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(colors.surfaceOrb)
-                            .border(1.dp, colors.mint.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
-                            .padding(horizontal = 10.dp, vertical = 5.dp)
-                    ) {
-                        Text(
-                            text = targetRangeLabel,
-                            fontSize = 11.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = colors.mint
-                        )
-                    }
-                }
+                SettingsValueRow(
+                    icon = Icons.Default.Tune,
+                    title = "Rango Objetivo",
+                    subtitle = "Límites deseados para glucosa en rango",
+                    value = targetRangeLabel,
+                    onClick = onOpenTargetRange
+                )
             }
 
-            // SECCIÓN: ALARMAS Y SINCRONIZACIÓN SMARTWATCH
-            DrawerSectionCard(title = "Alarmas y Smartwatch") {
-                DrawerNavigationRow(
+            // 2. ALARMAS Y DISPOSITIVOS
+            SettingsGroupCard(title = "Alarmas y Dispositivos") {
+                SettingsValueRow(
                     icon = Icons.Default.Notifications,
                     title = "Alarmas de Glucosa",
-                    subtitle = if (alarmsCount > 0) "$alarmsCount configuradas (Baja, Alta, Urgente)" else "Sin configurar",
-                    badge = if (alarmsCount > 0) "$alarmsCount activas" else null,
-                    badgeColor = colors.mint,
+                    subtitle = "Sincronización automática con Smartwatch",
+                    value = if (alarmsCount > 0) "$alarmsCount activas" else "Configurar",
+                    valueColor = colors.mint,
                     onClick = onOpenAlarms
                 )
 
-                DrawerDivider()
+                SettingsDivider()
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(onClick = onSyncWithWatch)
-                        .padding(horizontal = 14.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(34.dp)
-                            .clip(CircleShape)
-                            .background(colors.arcticCyan.copy(alpha = 0.15f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            Icons.Default.Watch,
-                            contentDescription = null,
-                            tint = colors.arcticCyan,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Sincronizar Smartwatch",
-                            fontSize = 13.5.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = colors.textPrimary
-                        )
-                        Text(
-                            text = "Enviar sesión y todas las $alarmsCount alarmas al reloj",
-                            fontSize = 11.sp,
-                            color = colors.textSecondary
-                        )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(colors.arcticCyan)
-                            .padding(horizontal = 10.dp, vertical = 5.dp)
-                    ) {
-                        Text(
-                            text = "Sincronizar",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.Black
-                        )
-                    }
-                }
+                SettingsNavigationRow(
+                    icon = Icons.Default.Tune,
+                    title = "Permisos y Diagnósticos",
+                    subtitle = "Optimización de batería y notificaciones",
+                    onClick = onOpenDiagnostics
+                )
             }
 
-            // SECCIÓN: HERRAMIENTAS Y DISPOSITIVOS
-            DrawerSectionCard(title = "Herramientas y Dispositivos") {
-                DrawerNavigationRow(
+            // 3. HERRAMIENTAS Y ANÁLISIS
+            SettingsGroupCard(title = "Herramientas y Análisis") {
+                SettingsNavigationRow(
                     icon = Icons.Default.Assessment,
                     title = "Informes Clínicos",
                     subtitle = "6 informes ATTD / AGP exportables",
                     onClick = onOpenReports
                 )
 
-                DrawerDivider()
+                SettingsDivider()
 
-                DrawerNavigationRow(
+                SettingsNavigationRow(
                     icon = Icons.Default.QrCodeScanner,
                     title = "Vincular Reloj / Coche",
                     subtitle = "Emparejamiento seguro mediante código QR",
                     onClick = onOpenQrScanner
                 )
-
-                DrawerDivider()
-
-                DrawerNavigationRow(
-                    icon = Icons.Default.Tune,
-                    title = "Diagnósticos del Sistema",
-                    subtitle = "Permisos de batería y notificaciones",
-                    onClick = onOpenDiagnostics
-                )
             }
 
-            // SECCIÓN: PRIVACIDAD Y PORTABILIDAD (RGPD)
-            DrawerSectionCard(title = "Privacidad y Datos (RGPD)") {
-                DrawerNavigationRow(
+            // 4. PRIVACIDAD Y DATOS (RGPD)
+            SettingsGroupCard(title = "Privacidad y Portabilidad") {
+                SettingsNavigationRow(
                     icon = Icons.Default.Assessment,
                     title = "Exportar Historial (CSV)",
                     subtitle = "Portabilidad de datos clínicos (Art. 20)",
                     onClick = onExportCsv
                 )
 
-                DrawerDivider()
+                SettingsDivider()
 
-                DrawerNavigationRow(
+                SettingsNavigationRow(
                     icon = Icons.Default.Delete,
                     title = "Borrar Datos Locales",
                     subtitle = "Supresión irreversible en dispositivo (Art. 17)",
@@ -1709,27 +1467,27 @@ private fun SettingsDrawerContent(
                 )
             }
 
-            // SECCIÓN: MARCO LEGAL Y REGULATORIO
-            DrawerSectionCard(title = "Cumplimiento y Legal") {
-                DrawerNavigationRow(
+            // 5. MARCO LEGAL Y REGULATORIO
+            SettingsGroupCard(title = "Legal y Cumplimiento") {
+                SettingsNavigationRow(
                     icon = Icons.Default.Close,
                     title = "Descargo Médico",
                     subtitle = "MDR UE 2017/745 / FDA MDDS",
                     onClick = { onShowLegalNotice(LegalNoticeType.MEDICAL_DISCLAIMER) }
                 )
 
-                DrawerDivider()
+                SettingsDivider()
 
-                DrawerNavigationRow(
+                SettingsNavigationRow(
                     icon = Icons.Default.Close,
                     title = "Marcas Registradas",
                     subtitle = "Abbott Laboratories / FreeStyle",
                     onClick = { onShowLegalNotice(LegalNoticeType.TRADEMARKS) }
                 )
 
-                DrawerDivider()
+                SettingsDivider()
 
-                DrawerNavigationRow(
+                SettingsNavigationRow(
                     icon = Icons.Default.Close,
                     title = "Privacidad de Salud",
                     subtitle = "Cifrado local AES-256 (Art. 9 RGPD)",
@@ -1741,11 +1499,11 @@ private fun SettingsDrawerContent(
             Card(
                 shape = RoundedCornerShape(14.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = colors.urgentCrimson.copy(alpha = if (colors.isDark) 0.12f else 0.08f)
+                    containerColor = colors.urgentCrimson.copy(alpha = if (colors.isDark) 0.10f else 0.06f)
                 ),
                 border = androidx.compose.foundation.BorderStroke(
                     1.dp,
-                    colors.urgentCrimson.copy(alpha = 0.40f)
+                    colors.urgentCrimson.copy(alpha = 0.35f)
                 ),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1774,14 +1532,16 @@ private fun SettingsDrawerContent(
                 }
             }
 
-            // FOOTER LEGAL PERMANENTE
+            // DISCLAIMER LEGAL PERMANENTE
             Text(
                 text = "Visualizador secundario pasivo. No es un dispositivo médico ni sustituye al lector oficial ni a la consulta profesional.",
                 fontSize = 10.sp,
                 lineHeight = 14.sp,
                 color = colors.textMuted,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp)
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -1790,7 +1550,7 @@ private fun SettingsDrawerContent(
 }
 
 @Composable
-private fun DrawerSectionCard(
+private fun SettingsGroupCard(
     title: String,
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -1817,7 +1577,135 @@ private fun DrawerSectionCard(
 }
 
 @Composable
-private fun DrawerNavigationRow(
+private fun SettingsSwitchRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    val colors = ClinicalTheme.colors
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCheckedChange(!checked) }
+            .padding(horizontal = 14.dp, vertical = 11.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(34.dp)
+                .clip(CircleShape)
+                .background(colors.mint.copy(alpha = 0.15f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = colors.mint,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                fontSize = 13.5.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = colors.textPrimary
+            )
+            Text(
+                text = subtitle,
+                fontSize = 11.sp,
+                color = colors.textSecondary
+            )
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        androidx.compose.material3.Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = androidx.compose.material3.SwitchDefaults.colors(
+                checkedThumbColor = if (colors.isDark) Color.Black else Color.White,
+                checkedTrackColor = colors.mint,
+                uncheckedThumbColor = colors.textSecondary,
+                uncheckedTrackColor = colors.surfaceOrb
+            )
+        )
+    }
+}
+
+@Composable
+private fun SettingsValueRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    subtitle: String,
+    value: String,
+    valueColor: Color? = null,
+    onClick: () -> Unit
+) {
+    val colors = ClinicalTheme.colors
+    val resolvedValueColor = valueColor ?: colors.mint
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 11.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(34.dp)
+                .clip(CircleShape)
+                .background(colors.mint.copy(alpha = 0.15f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = colors.mint,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                fontSize = 13.5.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = colors.textPrimary
+            )
+            Text(
+                text = subtitle,
+                fontSize = 11.sp,
+                color = colors.textSecondary
+            )
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .background(resolvedValueColor.copy(alpha = 0.15f))
+                .padding(horizontal = 8.dp, vertical = 4.dp)
+        ) {
+            Text(
+                text = value,
+                fontSize = 11.5.sp,
+                fontWeight = FontWeight.Bold,
+                color = resolvedValueColor
+            )
+        }
+        Spacer(modifier = Modifier.width(6.dp))
+        Text(
+            text = "›",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = colors.textSecondary
+        )
+    }
+}
+
+@Composable
+private fun SettingsNavigationRow(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     title: String,
     subtitle: String? = null,
@@ -1831,7 +1719,7 @@ private fun DrawerNavigationRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 12.dp),
+            .padding(horizontal = 14.dp, vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
@@ -1892,7 +1780,7 @@ private fun DrawerNavigationRow(
 }
 
 @Composable
-private fun DrawerDivider() {
+private fun SettingsDivider() {
     val colors = ClinicalTheme.colors
     Box(
         modifier = Modifier
