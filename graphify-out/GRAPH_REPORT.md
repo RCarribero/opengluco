@@ -1,16 +1,16 @@
 # Graph Report - librelinkup-ecosystem-master  (2026-08-29)
 
 ## Corpus Check
-- 132 files · ~75,515 words
+- 132 files · ~75,643 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1032 nodes · 1854 edges · 85 communities (61 shown, 24 thin omitted)
+- 1032 nodes · 1855 edges · 85 communities (61 shown, 24 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 43 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `3dd2df09`
+- Built from commit: `2adc6e1c`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -338,6 +338,6 @@ _Questions this graph is uniquely positioned to answer:_
 - **What connects `H24`, `H12`, `H6` to the rest of the system?**
   _198 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `MobileDashboardScreen.kt` be split into smaller, more focused modules?**
-  _Cohesion score 0.0519311911716975 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05225576111652061 - nodes in this community are weakly interconnected._
 - **Should `OpenGlucoRepository` be split into smaller, more focused modules?**
   _Cohesion score 0.07142857142857142 - nodes in this community are weakly interconnected._

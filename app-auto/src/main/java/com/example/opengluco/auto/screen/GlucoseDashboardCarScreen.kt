@@ -47,15 +47,34 @@ class GlucoseDashboardCarScreen(carContext: CarContext) : Screen(carContext) {
                 repository.setSession(settings.token, settings.userId)
 
                 val connRes = repository.getConnections()
-                val patients = connRes.getOrNull().orEmpty()
-                allPatients = patients
-                if (patients.isNotEmpty()) {
-                    val p = patients.find { it.patientId == settings.selectedPatientId } ?: patients.first()
-                    loadPatientDetails(p)
-                } else {
-                    isLoading = false
-                    invalidate()
-                }
+                connRes.fold(
+                    onSuccess = { patients ->
+                        allPatients = patients
+                        if (patients.isNotEmpty()) {
+                            val p = patients.find { it.patientId == settings.selectedPatientId } ?: patients.first()
+                            loadPatientDetails(p)
+                        } else {
+                            isLoading = false
+                            lastUpdated = "Sin pacientes vinculados"
+                            invalidate()
+                        }
+                    },
+                    onFailure = { error ->
+                        // Fallback a lecturas cacheadas localmente
+                        val localHistory = preferencesRepository.getHistoricalReadings(1).first()
+                        if (localHistory.isNotEmpty()) {
+                            val lastM = localHistory.lastOrNull()
+                            lastMeasurement = lastM
+                            lastUpdated = "Sin red • ${lastM?.getDisplayTime() ?: "Local"}"
+                            isLoading = false
+                            invalidate()
+                        } else {
+                            isLoading = false
+                            lastUpdated = if (error is com.example.opengluco.core.data.NetworkException) "Sin conexión a Internet" else "Error al conectar"
+                            invalidate()
+                        }
+                    }
+                )
             } else {
                 isLoading = false
                 invalidate()

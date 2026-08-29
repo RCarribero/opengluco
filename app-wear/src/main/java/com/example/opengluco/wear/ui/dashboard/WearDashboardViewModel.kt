@@ -134,7 +134,41 @@ class WearDashboardViewModel(
                 loadPatientDetails(targetPatient, patients)
             },
             onFailure = { error ->
-                _uiState.value = WearDashboardUiState.Error(error.message ?: "Error al conectar con OpenGluco")
+                if (error is com.example.opengluco.core.data.AuthExpiredException) {
+                    _uiState.value = WearDashboardUiState.NeedsLogin
+                    return@fold
+                }
+
+                // Fallback a lecturas locales si hay un error de red
+                val localHistory = preferencesRepository.getHistoricalReadings(1).first()
+                if (localHistory.isNotEmpty()) {
+                    val lastM = localHistory.lastOrNull()
+                    val dummyPatient = ConnectionItem(
+                        id = userSettings.selectedPatientId.ifBlank { "local" },
+                        patientId = userSettings.selectedPatientId.ifBlank { "local" },
+                        firstName = "Paciente",
+                        glucoseItem = lastM
+                    )
+                    _uiState.value = WearDashboardUiState.Success(
+                        selectedPatient = dummyPatient,
+                        allPatients = listOf(dummyPatient),
+                        currentMeasurement = lastM,
+                        graphHistory = localHistory,
+                        sensor = null,
+                        unit = userSettings.unit,
+                        lowThreshold = userSettings.lowThreshold,
+                        highThreshold = userSettings.highThreshold,
+                        lastUpdatedText = "Sin red • ${lastM?.getDisplayTime() ?: "Local"}",
+                        isRefreshing = false
+                    )
+                } else {
+                    val msg = if (error is com.example.opengluco.core.data.NetworkException) {
+                        "Sin conexión con el servidor"
+                    } else {
+                        error.message ?: "Error al conectar con OpenGluco"
+                    }
+                    _uiState.value = WearDashboardUiState.Error(msg)
+                }
             }
         )
     }

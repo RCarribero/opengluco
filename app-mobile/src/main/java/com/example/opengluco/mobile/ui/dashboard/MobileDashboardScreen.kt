@@ -55,6 +55,13 @@ import com.example.opengluco.mobile.ui.dashboard.components.UpdateAvailableDialo
 import androidx.compose.runtime.DisposableEffect
 import com.example.opengluco.core.model.QrPairingPayload
 import com.example.opengluco.core.data.QrAuthHelper
+import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.PersonOff
+import androidx.compose.material.icons.filled.LockReset
+import androidx.compose.material.icons.filled.WarningAmber
+import com.example.opengluco.core.model.ClinicalErrorType
+import com.example.opengluco.core.data.NetworkException
+import com.example.opengluco.core.data.AuthExpiredException
 import com.example.opengluco.mobile.ui.qr.MobilePairingHelper
 import com.example.opengluco.mobile.service.MobileAlarmSyncHelper
 import com.example.opengluco.mobile.service.GlucoseMonitorForegroundService
@@ -81,6 +88,7 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
@@ -297,6 +305,8 @@ fun MobileDashboardScreen(
         }
     }
 
+    var clinicalError by remember { mutableStateOf<ClinicalErrorType>(ClinicalErrorType.None) }
+
     fun loadPatientData(patient: ConnectionItem, silent: Boolean = false) {
         if (!silent && history.isEmpty()) {
             isLoading = true
@@ -306,25 +316,44 @@ fun MobileDashboardScreen(
             preferencesRepository.setSelectedPatient(patient.patientId)
             evaluateAndNotify(patient)
             val graphRes = repository.getPatientGraph(patient.patientId)
-            val graphDataObj = graphRes.getOrNull()
-            val graphData = graphDataObj?.graphData.orEmpty()
-            history = graphData
-            currentSensor = graphDataObj?.activeSensors?.firstOrNull() ?: graphDataObj?.connection?.sensor ?: patient.sensor
+            graphRes.fold(
+                onSuccess = { graphDataObj ->
+                    val graphData = graphDataObj.graphData
+                    history = graphData
+                    currentSensor = graphDataObj.activeSensors?.firstOrNull() ?: graphDataObj.connection?.sensor ?: patient.sensor
 
-            // Guardar lecturas continuas y última medición en el caché histórico persistente del paciente
-            val allToSave = mutableListOf<GlucoseMeasurement>()
-            allToSave.addAll(graphData)
-            patient.effectiveMeasurement?.let { em ->
-                if (allToSave.none { it.timestamp == em.timestamp && !it.timestamp.isNullOrBlank() }) {
-                    allToSave.add(em)
+                    // Si la llamada tuvo éxito, limpiar error de red previo
+                    if (clinicalError is ClinicalErrorType.NetworkError) {
+                        clinicalError = ClinicalErrorType.None
+                    }
+
+                    // Guardar lecturas continuas y última medición en el caché histórico persistente del paciente
+                    val allToSave = mutableListOf<GlucoseMeasurement>()
+                    allToSave.addAll(graphData)
+                    patient.effectiveMeasurement?.let { em ->
+                        if (allToSave.none { it.timestamp == em.timestamp && !it.timestamp.isNullOrBlank() }) {
+                            allToSave.add(em)
+                        }
+                    }
+                    preferencesRepository.saveHistoricalReadings(allToSave, patient.patientId)
+                    com.example.opengluco.mobile.widget.GlucoseWidgetUpdater.updateAllWidgets(
+                        context = context,
+                        latestMeasurement = patient.effectiveMeasurement,
+                        history = allToSave,
+                        patientName = patient.fullName.ifBlank { "Paciente" }
+                    )
+                },
+                onFailure = { error ->
+                    when (error) {
+                        is AuthExpiredException -> clinicalError = ClinicalErrorType.AuthExpired(error.message ?: "Sesión caducada")
+                        is NetworkException -> {
+                            if (history.isEmpty()) clinicalError = ClinicalErrorType.NetworkError(error.message ?: "Sin conexión a Internet")
+                        }
+                        else -> {
+                            if (history.isEmpty()) clinicalError = ClinicalErrorType.Generic(error.message ?: "Error al obtener datos del sensor")
+                        }
+                    }
                 }
-            }
-            preferencesRepository.saveHistoricalReadings(allToSave, patient.patientId)
-            com.example.opengluco.mobile.widget.GlucoseWidgetUpdater.updateAllWidgets(
-                context = context,
-                latestMeasurement = patient.effectiveMeasurement,
-                history = allToSave,
-                patientName = patient.fullName.ifBlank { "Paciente" }
             )
             isLoading = false
         }
@@ -336,13 +365,32 @@ fun MobileDashboardScreen(
         }
         scope.launch {
             val res = repository.getConnections()
-            val freshPatients = res.getOrNull().orEmpty()
-            if (freshPatients.isNotEmpty()) {
-                patients = freshPatients
-                val savedId = settings?.selectedPatientId.orEmpty()
-                val targetPatient = freshPatients.find { it.patientId == savedId } ?: freshPatients.first()
-                loadPatientData(targetPatient, silent)
-            }
+            res.fold(
+                onSuccess = { freshPatients ->
+                    if (freshPatients.isNotEmpty()) {
+                        clinicalError = ClinicalErrorType.None
+                        patients = freshPatients
+                        val savedId = settings?.selectedPatientId.orEmpty()
+                        val targetPatient = freshPatients.find { it.patientId == savedId } ?: freshPatients.first()
+                        loadPatientData(targetPatient, silent)
+                    } else {
+                        clinicalError = ClinicalErrorType.NoPatients()
+                    }
+                },
+                onFailure = { error ->
+                    when (error) {
+                        is AuthExpiredException -> {
+                            clinicalError = ClinicalErrorType.AuthExpired(error.message ?: "Sesión caducada")
+                        }
+                        is NetworkException -> {
+                            clinicalError = ClinicalErrorType.NetworkError(error.message ?: "Sin conexión a Internet")
+                        }
+                        else -> {
+                            clinicalError = ClinicalErrorType.Generic(error.message ?: "Error al conectar con los servidores")
+                        }
+                    }
+                }
+            )
             isLoading = false
         }
     }
@@ -560,6 +608,145 @@ fun MobileDashboardScreen(
                 ) {
                     item {
                         Spacer(modifier = Modifier.height(4.dp))
+                    }
+
+                    // BANNER DE ESTADO CLÍNICO / CONECTIVIDAD / SESIÓN
+                    if (clinicalError is ClinicalErrorType.AuthExpired) {
+                        item {
+                            Card(
+                                shape = RoundedCornerShape(14.dp),
+                                colors = CardDefaults.cardColors(containerColor = colors.urgentCrimson.copy(alpha = if (colors.isDark) 0.16f else 0.10f)),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, colors.urgentCrimson.copy(alpha = 0.45f)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.LockReset,
+                                        contentDescription = null,
+                                        tint = colors.urgentCrimson,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "Sesión Caducada",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 13.sp,
+                                            color = colors.urgentCrimson
+                                        )
+                                        Text(
+                                            text = "Tus credenciales de LibreLinkUp han expirado. Vuelve a iniciar sesión.",
+                                            fontSize = 11.5.sp,
+                                            color = colors.textSecondary,
+                                            lineHeight = 15.sp
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Button(
+                                        onClick = {
+                                            scope.launch {
+                                                preferencesRepository.clearSession()
+                                                onLogout()
+                                            }
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = colors.urgentCrimson),
+                                        shape = RoundedCornerShape(8.dp)
+                                    ) {
+                                        Text("Reconectar", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+                        }
+                    } else if (clinicalError is ClinicalErrorType.NetworkError) {
+                        item {
+                            Card(
+                                shape = RoundedCornerShape(12.dp),
+                                colors = CardDefaults.cardColors(containerColor = colors.highAmber.copy(alpha = if (colors.isDark) 0.15f else 0.10f)),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, colors.highAmber.copy(alpha = 0.40f)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.CloudOff,
+                                        contentDescription = null,
+                                        tint = colors.highAmber,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Text(
+                                        text = "Sin conexión a Internet • Mostrando datos locales",
+                                        fontSize = 11.5.sp,
+                                        color = colors.highAmber,
+                                        modifier = Modifier.weight(1f),
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    TextButton(onClick = { loadData(silent = false) }) {
+                                        Text(
+                                            text = "Reintentar",
+                                            fontSize = 11.5.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = colors.highAmber
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    } else if (clinicalError is ClinicalErrorType.NoPatients) {
+                        item {
+                            Card(
+                                shape = RoundedCornerShape(14.dp),
+                                colors = CardDefaults.cardColors(containerColor = colors.surfaceCard),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, colors.surfaceBorder),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.PersonOff,
+                                        contentDescription = null,
+                                        tint = colors.mint,
+                                        modifier = Modifier.size(36.dp)
+                                    )
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Text(
+                                        text = "Sin Pacientes Vinculados",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp,
+                                        color = colors.textPrimary
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Esta cuenta de LibreLinkUp no tiene pacientes asignados. Comparte la glucosa desde la app FreeStyle Libre del paciente a este email.",
+                                        fontSize = 11.5.sp,
+                                        color = colors.textSecondary,
+                                        textAlign = TextAlign.Center,
+                                        lineHeight = 15.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    Button(
+                                        onClick = { loadData(silent = false) },
+                                        colors = ButtonDefaults.buttonColors(containerColor = colors.mint),
+                                        shape = RoundedCornerShape(10.dp)
+                                    ) {
+                                        Text("Comprobar de Nuevo", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     // 1. HERO SECTION: DUAL FLOATING ORBS (GLUCOSA & TENDENCIA)
@@ -929,6 +1116,25 @@ fun MobileDashboardScreen(
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.SemiBold,
                                             color = colors.textPrimary
+                                        )
+                                    }
+                                }
+
+                                if (!isSensorActive || sensorDays <= 0) {
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(colors.lowCoral.copy(alpha = 0.12f))
+                                            .border(1.dp, colors.lowCoral.copy(alpha = 0.35f), RoundedCornerShape(10.dp))
+                                            .padding(10.dp)
+                                    ) {
+                                        Text(
+                                            text = "Sensor finalizado o no detectado. Si acabas de aplicar un sensor nuevo, inicia el escaneo en la aplicación oficial de FreeStyle Libre y aguarda el período de calentamiento de 60 minutos.",
+                                            fontSize = 11.sp,
+                                            color = colors.lowCoral,
+                                            lineHeight = 15.sp
                                         )
                                     }
                                 }

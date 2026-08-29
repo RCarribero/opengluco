@@ -28,6 +28,9 @@ enum class OpenGlucoRegion(val baseUrl: String) {
     JP("https://api-jp.libreview.io/")
 }
 
+class NetworkException(message: String = "Sin conexión a Internet", cause: Throwable? = null) : Exception(message, cause)
+class AuthExpiredException(message: String = "Sesión caducada. Vuelve a iniciar sesión.", cause: Throwable? = null) : Exception(message, cause)
+
 /**
  * Repositorio de datos para conexion e interoperabilidad directa con los servidores de Abbott Laboratories (LibreView).
  */
@@ -106,12 +109,18 @@ class OpenGlucoRepository(
                     sessionToken = finalData.authTicket?.token
                     userId = finalData.user?.id
                     Result.success(finalData)
+                } else if (body?.status == 2) {
+                    Result.failure(AuthExpiredException("Credenciales o token no válidos"))
                 } else {
                     Result.failure(Exception(body?.error?.message ?: "Error de autenticación (${body?.status})"))
                 }
+            } else if (response.code() == 401 || response.code() == 403) {
+                Result.failure(AuthExpiredException("Credenciales incorrectas (HTTP ${response.code()})"))
             } else {
                 Result.failure(Exception("HTTP Error ${response.code()}: ${response.message()}"))
             }
+        } catch (e: java.io.IOException) {
+            Result.failure(NetworkException("Sin conexión a Internet", e))
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -133,12 +142,18 @@ class OpenGlucoRepository(
                 if (body != null && body.status == 0 && data != null) {
                     body.ticket?.token?.let { sessionToken = it }
                     Result.success(data)
+                } else if (body?.status == 2) {
+                    Result.failure(AuthExpiredException())
                 } else {
                     Result.failure(Exception(body?.error?.message ?: "Error al obtener conexiones"))
                 }
+            } else if (response.code() == 401) {
+                Result.failure(AuthExpiredException())
             } else {
                 Result.failure(Exception("HTTP Error ${response.code()}"))
             }
+        } catch (e: java.io.IOException) {
+            Result.failure(NetworkException("Sin conexión a Internet", e))
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -152,12 +167,18 @@ class OpenGlucoRepository(
                 val data = body?.data
                 if (body != null && body.status == 0 && data != null) {
                     Result.success(data)
+                } else if (body?.status == 2) {
+                    Result.failure(AuthExpiredException())
                 } else {
                     Result.failure(Exception(body?.error?.message ?: "Error al obtener mediciones"))
                 }
+            } else if (response.code() == 401) {
+                Result.failure(AuthExpiredException())
             } else {
                 Result.failure(Exception("HTTP Error ${response.code()}"))
             }
+        } catch (e: java.io.IOException) {
+            Result.failure(NetworkException("Sin conexión a Internet", e))
         } catch (e: Exception) {
             Result.failure(e)
         }

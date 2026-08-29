@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.core.model
+package com.example.opengluco.core.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -205,3 +205,15 @@ data class GlucoseMeasurement(
         return timestamp?.takeLast(11)?.trim() ?: factoryTimestamp ?: "Ahora"
     }
 }
+
+// --- ESTADOS CLÍNICOS DE ERROR Y CONECTIVIDAD ---
+
+sealed interface ClinicalErrorType {
+    object None : ClinicalErrorType
+    data class NetworkError(val message: String = "Sin conexión a Internet") : ClinicalErrorType
+    data class AuthExpired(val message: String = "Sesión caducada") : ClinicalErrorType
+    data class NoSensor(val message: String = "Sin sensor activo o en calentamiento") : ClinicalErrorType
+    data class NoPatients(val message: String = "No hay pacientes vinculados a esta cuenta") : ClinicalErrorType
+    data class Generic(val message: String) : ClinicalErrorType
+}
+
