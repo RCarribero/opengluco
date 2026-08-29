@@ -478,7 +478,7 @@ fun MobileDashboardScreen(
                     selectedPatient?.fullName ?: "Paciente"
                 )
             },
-            onShowLegalNotice = { type -> activeLegalNotice = type },
+            onRequestDeleteData = { activeLegalNotice = LegalNoticeType.DELETE_CONFIRMATION },
             onCheckUpdates = { checkAppUpdates(manual = true) },
             onLogout = {
                 scope.launch {
@@ -1256,13 +1256,14 @@ private fun MobileSettingsScreen(
     onOpenReports: () -> Unit,
     onOpenQrScanner: () -> Unit,
     onExportCsv: () -> Unit,
-    onShowLegalNotice: (LegalNoticeType) -> Unit,
+    onRequestDeleteData: () -> Unit,
     onCheckUpdates: () -> Unit,
     onLogout: () -> Unit,
     onBack: () -> Unit
 ) {
     val colors = ClinicalTheme.colors
     val context = LocalContext.current
+    var activeLegalNotice by remember { mutableStateOf(LegalNoticeType.NONE) }
 
     Scaffold(
         containerColor = colors.background,
@@ -1453,7 +1454,7 @@ private fun MobileSettingsScreen(
                     title = "Borrar Datos Locales",
                     subtitle = "Supresión irreversible en dispositivo (Art. 17)",
                     titleColor = colors.urgentCrimson,
-                    onClick = { onShowLegalNotice(LegalNoticeType.DELETE_CONFIRMATION) }
+                    onClick = onRequestDeleteData
                 )
             }
 
@@ -1463,7 +1464,7 @@ private fun MobileSettingsScreen(
                     icon = Icons.Default.Info,
                     title = "Descargo Médico",
                     subtitle = "MDR UE 2017/745 / FDA MDDS",
-                    onClick = { onShowLegalNotice(LegalNoticeType.MEDICAL_DISCLAIMER) }
+                    onClick = { activeLegalNotice = LegalNoticeType.MEDICAL_DISCLAIMER }
                 )
 
                 SettingsDivider()
@@ -1472,7 +1473,7 @@ private fun MobileSettingsScreen(
                     icon = Icons.Default.Shield,
                     title = "Marcas Registradas",
                     subtitle = "Abbott Laboratories / FreeStyle",
-                    onClick = { onShowLegalNotice(LegalNoticeType.TRADEMARKS) }
+                    onClick = { activeLegalNotice = LegalNoticeType.TRADEMARKS }
                 )
 
                 SettingsDivider()
@@ -1481,7 +1482,7 @@ private fun MobileSettingsScreen(
                     icon = Icons.Default.Lock,
                     title = "Privacidad de Salud",
                     subtitle = "Cifrado local AES-256 (Art. 9 RGPD)",
-                    onClick = { onShowLegalNotice(LegalNoticeType.PRIVACY_GDPR) }
+                    onClick = { activeLegalNotice = LegalNoticeType.PRIVACY_GDPR }
                 )
             }
 
@@ -1562,6 +1563,15 @@ private fun MobileSettingsScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
         }
+    }
+
+    // Diálogos Legales — se muestran directamente sobre esta pantalla de Ajustes
+    if (activeLegalNotice != LegalNoticeType.NONE) {
+        LegalNoticeDialog(
+            type = activeLegalNotice,
+            onDismiss = { activeLegalNotice = LegalNoticeType.NONE },
+            onConfirmDelete = { /* La confirmación de borrado la gestiona MobileDashboardScreen via onRequestDeleteData */ }
+        )
     }
 }
 
