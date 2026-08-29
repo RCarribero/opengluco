@@ -78,3 +78,5 @@ captures/
 .externalNativeBuild/
 .cxx/
 output.json
+tools/gem_knowledge_export/
+
