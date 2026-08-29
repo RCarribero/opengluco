@@ -761,12 +761,8 @@ fun MobileDashboardScreen(
                                 targetLow = targetLow,
                                 targetHigh = targetHigh,
                                 alarms = configuredAlarms,
-                                onGlucoseOrbClick = {
-                                    activeModal = DetailModalType.GLUCOSE_STATS
-                                },
-                                onTrendOrbClick = {
-                                    activeModal = DetailModalType.TREND_INFO
-                                }
+                                onGlucoseOrbClick = {},
+                                onTrendOrbClick = {}
                             )
 
                             Spacer(modifier = Modifier.height(4.dp))
@@ -1048,13 +1044,13 @@ fun MobileDashboardScreen(
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            text = sensorModel,
+                                            text = "FreeStyle Sensor",
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 15.sp,
                                             color = colors.textPrimary
                                         )
                                         Text(
-                                            text = "$sensorDays días restantes",
+                                            text = "$sensorModel • $sensorDays días restantes",
                                             fontSize = 12.sp,
                                             fontWeight = FontWeight.SemiBold,
                                             color = if (sensorDays <= 2) colors.lowCoral else colors.mint

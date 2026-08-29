@@ -11,8 +11,8 @@ android {
         applicationId = "com.example.opengluco.auto"
         minSdk = 29
         targetSdk = 34
-        versionCode = 7
-        versionName = "1.1.5"
+        versionCode = 8
+        versionName = "1.1.6"
     }
 
     buildTypes {

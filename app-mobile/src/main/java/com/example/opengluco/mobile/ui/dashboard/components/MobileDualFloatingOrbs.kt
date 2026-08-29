@@ -66,7 +66,7 @@ fun MobileDualFloatingOrbs(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // --- ESFERA IZQUIERDA: NIVEL DE GLUCOSA ---
+        // --- ESFERA IZQUIERDA: NIVEL DE GLUCOSA (PASIVA / SIN ACCIÓN AL PULSAR) ---
         Box(
             modifier = Modifier
                 .size(120.dp)
@@ -75,10 +75,6 @@ fun MobileDualFloatingOrbs(
                 .border(1.dp, colors.surfaceBorder, CircleShape)
                 .semantics {
                     contentDescription = glucoseDesc
-                }
-                .clickable {
-                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onGlucoseOrbClick()
                 },
             contentAlignment = Alignment.Center
         ) {
