@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>/ — graphify tree viewer</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f9f9f9;
+      color: #333;
+    }
+    h1 {
+      margin: 20px 0 0 24px;
+      font-size: 2.2rem;
+      font-weight: bold;
+      color: #1e3a56;
+    }
+    .controls {
+      margin: 20px 0 15px 24px;
+    }
+    button {
+      margin-right: 10px;
+      padding: 8px 18px;
+      background: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s ease-in-out;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    button:active {
+      background: #004085;
+    }
+    #tree-container {
+      width: calc(100vw - 48px); /* Adjust for body margin/padding */
+      height: 85vh;
+      overflow: auto;
+      border-radius: 8px;
+      background: #fff;
+      margin-left: 24px;
+      margin-right: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      border: 1px solid #ddd;
+    }
+    svg {
+      background: #fff;
+      border-radius: 8px;
+      display: block; /* Important for D3 */
+    }
+    .node circle {
+      stroke-width: 2.5px;
+    }
+    .node text { /* Base style for the <text> container */
+      font: 13px 'Segoe UI', sans-serif;
+      paint-order: stroke fill; /* Ensures text is readable over lines */
+      stroke: #fff; /* White halo */
+      stroke-width: 3px; /* Halo thickness */
+      stroke-linejoin: round;
+      stroke-opacity: 0.85; /* Halo opacity */
+    }
+    .link {
+      fill: none;
+      stroke-opacity: 0.7;
+      stroke-width: 2px;
+    }
+  </style>
+</head>
+<body>
+  <h1>/ — Knowledge Graph</h1>
+  <div class="controls">
+    <button onclick="expandAll()">Expand All</button>
+    <button onclick="collapseAll()">Collapse All</button>
+    <button onclick="resetView()">Reset View</button>
+  </div>
+  <div id="tree-container">
+    <svg id="tree-svg" width="6000" height="8000"></svg>
+  </div>
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script>
+    const initialJsonData = {"name":"/","total_count":578,"children":[{"name":"app-auto","total_count":24,"children":[{"name":"src","total_count":23,"children":[{"name":"main","total_count":14,"children":[{"name":"java","total_count":14,"children":[{"name":"com","total_count":14,"children":[{"name":"example","total_count":14,"children":[{"name":"opengluco","total_count":14,"children":[{"name":"auto","total_count":14,"children":[{"name":"GlucoseCarAppService.kt","total_count":3,"children":[{"name":".createHostValidator()","total_count":1,"children":[]},{"name":".onCreateSession()","total_count":1,"children":[]},{"name":"GlucoseCarAppService","total_count":1,"children":[]}]},{"name":"GlucoseCarSession.kt","total_count":2,"children":[{"name":".onCreateScreen()","total_count":1,"children":[]},{"name":"GlucoseCarSession","total_count":1,"children":[]}]},{"name":"screen","total_count":9,"children":[{"name":"GlucoseDashboardCarScreen.kt","total_count":5,"children":[{"name":".loadGlucoseData()","total_count":1,"children":[]},{"name":".loadPatientDetails()","total_count":1,"children":[]},{"name":".onGetTemplate()","total_count":1,"children":[]},{"name":".selectPatient()","total_count":1,"children":[]},{"name":"GlucoseDashboardCarScreen","total_count":1,"children":[]}]},{"name":"PatientListCarScreen.kt","total_count":2,"children":[{"name":".onGetTemplate()","total_count":1,"children":[]},{"name":"PatientListCarScreen","total_count":1,"children":[]}]},{"name":"QrLoginCarScreen.kt","total_count":2,"children":[{"name":".onGetTemplate()","total_count":1,"children":[]},{"name":"QrLoginCarScreen","total_count":1,"children":[]}]}]}]}]}]}]}]}]},{"name":"test","total_count":9,"children":[{"name":"java","total_count":9,"children":[{"name":"com","total_count":9,"children":[{"name":"example","total_count":9,"children":[{"name":"opengluco","total_count":9,"children":[{"name":"auto","total_count":9,"children":[{"name":"AutoClinicalSafetyTest.kt","total_count":3,"children":[{"name":".testExemptionMddsGuarantee_zeroBolusCalculatorsInAuto()","total_count":1,"children":[]},{"name":".testGlanceableStatusFormatting()","total_count":1,"children":[]},{"name":"AutoClinicalSafetyTest","total_count":1,"children":[]}]},{"name":"AutoManifestAndSecurityTest.kt","total_count":3,"children":[{"name":".testAndroidManifestDeclaresNetworkSecurityConfigAndDisallowsBackup()","total_count":1,"children":[]},{"name":".testNetworkSecurityConfigFileExistsAndIsRestrictive()","total_count":1,"children":[]},{"name":"AutoManifestAndSecurityTest","total_count":1,"children":[]}]},{"name":"GlucoseDashboardLegalTest.kt","total_count":3,"children":[{"name":".testLegalDisclaimerConstants()","total_count":1,"children":[]},{"name":".testPaneRowCapacityWithLegalDisclaimer()","total_count":1,"children":[]},{"name":"GlucoseDashboardLegalTest","total_count":1,"children":[]}]}]}]}]}]}]}]}]},{"name":"build.gradle.kts","total_count":1,"children":[]}]},{"name":"app-mobile","total_count":123,"children":[{"name":"src","total_count":122,"children":[{"name":"main","total_count":112,"children":[{"name":"java","total_count":112,"children":[{"name":"com","total_count":112,"children":[{"name":"example","total_count":112,"children":[{"name":"opengluco","total_count":112,"children":[{"name":"mobile","total_count":112,"children":[{"name":"MainActivity.kt","total_count":3,"children":[{"name":".onCreate()","total_count":1,"children":[]},{"name":"MainActivity","total_count":1,"children":[]},{"name":"MobileAppNavigation()","total_count":1,"children":[]}]},{"name":"notification","total_count":10,"children":[{"name":"AlarmDismissReceiver.kt","total_count":2,"children":[{"name":".onReceive()","total_count":1,"children":[]},{"name":"AlarmDismissReceiver","total_count":1,"children":[]}]},{"name":"MobileAlarmNotificationHelper.kt","total_count":8,"children":[{"name":".buildLiveGlucoseNotification()","total_count":1,"children":[]},{"name":".createChannels()","total_count":1,"children":[]},{"name":".dismissAlarm()","total_count":1,"children":[]},{"name":".playEmergencyAlarmSound()","total_count":1,"children":[]},{"name":".stopEmergencyAlarmSound()","total_count":1,"children":[]},{"name":".triggerAlarm()","total_count":1,"children":[]},{"name":".updateLiveGlucoseNotification()","total_count":1,"children":[]},{"name":"MobileAlarmNotificationHelper","total_count":1,"children":[]}]}]},{"name":"service","total_count":15,"children":[{"name":"BootReceiver.kt","total_count":2,"children":[{"name":".onReceive()","total_count":1,"children":[]},{"name":"BootReceiver","total_count":1,"children":[]}]},{"name":"GlucoseAlarmWorker.kt","total_count":4,"children":[{"name":".cancel()","total_count":1,"children":[]},{"name":".doWork()","total_count":1,"children":[]},{"name":".enqueue()","total_count":1,"children":[]},{"name":"GlucoseAlarmWorker","total_count":1,"children":[]}]},{"name":"GlucoseMonitorForegroundService.kt","total_count":9,"children":[{"name":".fetchAndEvaluateTelemetry()","total_count":1,"children":[]},{"name":".onBind()","total_count":1,"children":[]},{"name":".onCreate()","total_count":1,"children":[]},{"name":".onDestroy()","total_count":1,"children":[]},{"name":".onStartCommand()","total_count":1,"children":[]},{"name":".startService()","total_count":1,"children":[]},{"name":".startTelemetryLoop()","total_count":1,"children":[]},{"name":".stopService()","total_count":1,"children":[]},{"name":"GlucoseMonitorForegroundService","total_count":1,"children":[]}]}]},{"name":"ui","total_count":71,"children":[{"name":"auth","total_count":1,"children":[{"name":"MobileLoginScreen.kt","total_count":1,"children":[{"name":"MobileLoginScreen()","total_count":1,"children":[]}]}]},{"name":"dashboard","total_count":50,"children":[{"name":"components","total_count":28,"children":[{"name":"ConfigurationDiagnosticsDialog.kt","total_count":9,"children":[{"name":".checkDiagnostics()","total_count":1,"children":[]},{"name":".openAppSettings()","total_count":1,"children":[]},{"name":".openExactAlarmSettings()","total_count":1,"children":[]},{"name":".openNotificationSettings()","total_count":1,"children":[]},{"name":".requestIgnoreBatteryOptimization()","total_count":1,"children":[]},{"name":"ConfigurationDiagnosticsDialog()","total_count":1,"children":[]},{"name":"DiagnosticItemCard()","total_count":1,"children":[]},{"name":"SystemDiagnosticsHelper","total_count":1,"children":[]},{"name":"SystemDiagnosticsState","total_count":1,"children":[]}]},{"name":"LegalComplianceComponents.kt","total_count":8,"children":[{"name":"DELETE_CONFIRMATION","total_count":1,"children":[]},{"name":"LegalNoticeDialog()","total_count":1,"children":[]},{"name":"LegalNoticeType","total_count":1,"children":[]},{"name":"LegalSectionBox()","total_count":1,"children":[]},{"name":"MEDICAL_DISCLAIMER","total_count":1,"children":[]},{"name":"NONE","total_count":1,"children":[]},{"name":"PRIVACY_GDPR","total_count":1,"children":[]},{"name":"TRADEMARKS","total_count":1,"children":[]}]},{"name":"MobileDualFloatingOrbs.kt","total_count":1,"children":[{"name":"MobileDualFloatingOrbs()","total_count":1,"children":[]}]},{"name":"MobileStatDetailModal.kt","total_count":7,"children":[{"name":"DetailModalType","total_count":1,"children":[]},{"name":"GLUCOSE_STATS","total_count":1,"children":[]},{"name":"MobileStatDetailModal()","total_count":1,"children":[]},{"name":"NONE","total_count":1,"children":[]},{"name":"SENSOR_INFO","total_count":1,"children":[]},{"name":"StatRow()","total_count":1,"children":[]},{"name":"TREND_INFO","total_count":1,"children":[]}]},{"name":"PatientSelectorComponents.kt","total_count":2,"children":[{"name":"PatientHeaderChip()","total_count":1,"children":[]},{"name":"PatientSelectorModal()","total_count":1,"children":[]}]},{"name":"TargetRangeDialog.kt","total_count":1,"children":[{"name":"TargetRangeDialog()","total_count":1,"children":[]}]}]},{"name":"MobileDashboardScreen.kt","total_count":22,"children":[{"name":".next()","total_count":1,"children":[]},{"name":"DailyStatItem()","total_count":1,"children":[]},{"name":"DashboardTimeframe","total_count":1,"children":[]},{"name":"DAY","total_count":1,"children":[]},{"name":"DrawerActionToggleCard()","total_count":1,"children":[]},{"name":"DrawerDivider()","total_count":1,"children":[]},{"name":"DrawerNavigationRow()","total_count":1,"children":[]},{"name":"DrawerSectionCard()","total_count":1,"children":[]},{"name":"formatChartTime()","total_count":1,"children":[]},{"name":"H1","total_count":1,"children":[]},{"name":"H12","total_count":1,"children":[]},{"name":"H2","total_count":1,"children":[]},{"name":"H24","total_count":1,"children":[]},{"name":"H6","total_count":1,"children":[]},{"name":"MetricPeriod","total_count":1,"children":[]},{"name":"MobileDashboardScreen()","total_count":1,"children":[]},{"name":"MobileGlucoseChart()","total_count":1,"children":[]},{"name":"MONTH","total_count":1,"children":[]},{"name":"SettingsDrawerContent()","total_count":1,"children":[]},{"name":"SettingsOptionRow()","total_count":1,"children":[]},{"name":"THREE_MONTHS","total_count":1,"children":[]},{"name":"WEEK","total_count":1,"children":[]}]}]},{"name":"qr","total_count":9,"children":[{"name":"MobilePairingHelper.kt","total_count":2,"children":[{"name":".transferSessionToDevice()","total_count":1,"children":[]},{"name":"MobilePairingHelper","total_count":1,"children":[]}]},{"name":"QrScannerScreen.kt","total_count":7,"children":[{"name":"CameraPreview()","total_count":1,"children":[]},{"name":"decodeQrFromImage()","total_count":1,"children":[]},{"name":"QrScannerScreen()","total_count":1,"children":[]},{"name":"rotateYUV420Degree180()","total_count":1,"children":[]},{"name":"rotateYUV420Degree270()","total_count":1,"children":[]},{"name":"rotateYUV420Degree90()","total_count":1,"children":[]},{"name":"transferSessionToDevice()","total_count":1,"children":[]}]}]},{"name":"settings","total_count":5,"children":[{"name":"AlarmConfigSection.kt","total_count":5,"children":[{"name":"AlarmCard()","total_count":1,"children":[]},{"name":"AlarmConfigSection()","total_count":1,"children":[]},{"name":"AlarmCreationDialog()","total_count":1,"children":[]},{"name":"AlarmSubsection()","total_count":1,"children":[]},{"name":"ClinicalRangeVisualCard()","total_count":1,"children":[]}]}]},{"name":"theme","total_count":6,"children":[{"name":"Color.kt","total_count":5,"children":[{"name":"ClinicalColorScheme","total_count":1,"children":[]},{"name":"ClinicalTheme","total_count":1,"children":[]},{"name":"getClinicalStatusColor()","total_count":1,"children":[]},{"name":"getGlucoseStatusColor()","total_count":1,"children":[]},{"name":"getGlucoseValueColor()","total_count":1,"children":[]}]},{"name":"Theme.kt","total_count":1,"children":[{"name":"LibreMobileTheme()","total_count":1,"children":[]}]}]}]},{"name":"widget","total_count":13,"children":[{"name":"GlucoseChartWidgetProvider.kt","total_count":3,"children":[{"name":".onEnabled()","total_count":1,"children":[]},{"name":".onUpdate()","total_count":1,"children":[]},{"name":"GlucoseChartWidgetProvider","total_count":1,"children":[]}]},{"name":"GlucoseCompactWidgetProvider.kt","total_count":3,"children":[{"name":".onEnabled()","total_count":1,"children":[]},{"name":".onUpdate()","total_count":1,"children":[]},{"name":"GlucoseCompactWidgetProvider","total_count":1,"children":[]}]},{"name":"GlucoseWidgetUpdater.kt","total_count":5,"children":[{"name":".buildChartRemoteViews()","total_count":1,"children":[]},{"name":".buildCompactRemoteViews()","total_count":1,"children":[]},{"name":".formatTime24h()","total_count":1,"children":[]},{"name":".updateAllWidgets()","total_count":1,"children":[]},{"name":"GlucoseWidgetUpdater","total_count":1,"children":[]}]},{"name":"WidgetChartRenderer.kt","total_count":2,"children":[{"name":".renderSparkline()","total_count":1,"children":[]},{"name":"WidgetChartRenderer","total_count":1,"children":[]}]}]}]}]}]}]}]}]},{"name":"test","total_count":10,"children":[{"name":"java","total_count":10,"children":[{"name":"com","total_count":10,"children":[{"name":"example","total_count":10,"children":[{"name":"opengluco","total_count":10,"children":[{"name":"mobile","total_count":10,"children":[{"name":"MobileLegalComplianceTest.kt","total_count":10,"children":[{"name":".testClinicalThemeColors_hexValues()","total_count":1,"children":[]},{"name":".testExemptionMddsGuarantee_absenceOfBolusCalculators()","total_count":1,"children":[]},{"name":".testGdprArt17DeleteConfirmationStrings()","total_count":1,"children":[]},{"name":".testGdprArt9HealthDataPrivacyString()","total_count":1,"children":[]},{"name":".testManifestSecurity_allowBackupIsFalse()","total_count":1,"children":[]},{"name":".testManifestSecurity_networkSecurityConfigReferenced()","total_count":1,"children":[]},{"name":".testMdrFdaMedicalDisclaimerString()","total_count":1,"children":[]},{"name":".testPassiveLegalFooterPresence()","total_count":1,"children":[]},{"name":".testTrademarkNoticeString()","total_count":1,"children":[]},{"name":"MobileLegalComplianceTest","total_count":1,"children":[]}]}]}]}]}]}]}]}]},{"name":"build.gradle.kts","total_count":1,"children":[]}]},{"name":"app-wear","total_count":110,"children":[{"name":"src","total_count":109,"children":[{"name":"main","total_count":86,"children":[{"name":"java","total_count":86,"children":[{"name":"com","total_count":86,"children":[{"name":"example","total_count":86,"children":[{"name":"opengluco","total_count":86,"children":[{"name":"wear","total_count":86,"children":[{"name":"complication","total_count":3,"children":[{"name":"GlucoseComplicationService.kt","total_count":3,"children":[{"name":".getPreviewData()","total_count":1,"children":[]},{"name":".onComplicationRequest()","total_count":1,"children":[]},{"name":"GlucoseComplicationService","total_count":1,"children":[]}]}]},{"name":"MainActivity.kt","total_count":5,"children":[{"name":".checkAndStartRfcommService()","total_count":1,"children":[]},{"name":".onCreate()","total_count":1,"children":[]},{"name":".requestBluetoothPermissions()","total_count":1,"children":[]},{"name":"MainActivity","total_count":1,"children":[]},{"name":"WearAppNavigation()","total_count":1,"children":[]}]},{"name":"notification","total_count":6,"children":[{"name":"WearAlarmNotificationHelper.kt","total_count":6,"children":[{"name":".createChannels()","total_count":1,"children":[]},{"name":".dismissAlarm()","total_count":1,"children":[]},{"name":".triggerAlarmBySeverity()","total_count":1,"children":[]},{"name":".triggerHapticAlarm()","total_count":1,"children":[]},{"name":".triggerUrgentLowAlarm()","total_count":1,"children":[]},{"name":"WearAlarmNotificationHelper","total_count":1,"children":[]}]}]},{"name":"service","total_count":16,"children":[{"name":"WearAuthMessageListenerService.kt","total_count":2,"children":[{"name":".onMessageReceived()","total_count":1,"children":[]},{"name":"WearAuthMessageListenerService","total_count":1,"children":[]}]},{"name":"WearBluetoothRfcommService.kt","total_count":12,"children":[{"name":".buildForegroundNotification()","total_count":1,"children":[]},{"name":".createNotificationChannel()","total_count":1,"children":[]},{"name":".handleIncomingConnection()","total_count":1,"children":[]},{"name":".onBind()","total_count":1,"children":[]},{"name":".onCreate()","total_count":1,"children":[]},{"name":".onDestroy()","total_count":1,"children":[]},{"name":".onStartCommand()","total_count":1,"children":[]},{"name":".processStreamPayload()","total_count":1,"children":[]},{"name":".start()","total_count":1,"children":[]},{"name":".startRfcommListener()","total_count":1,"children":[]},{"name":".stop()","total_count":1,"children":[]},{"name":"WearBluetoothRfcommService","total_count":1,"children":[]}]},{"name":"WearGlucoseSyncWorker.kt","total_count":2,"children":[{"name":".doWork()","total_count":1,"children":[]},{"name":"WearGlucoseSyncWorker","total_count":1,"children":[]}]}]},{"name":"tile","total_count":4,"children":[{"name":"GlucoseTileService.kt","total_count":4,"children":[{"name":".buildTileLayout()","total_count":1,"children":[]},{"name":".onTileRequest()","total_count":1,"children":[]},{"name":".onTileResourcesRequest()","total_count":1,"children":[]},{"name":"GlucoseTileService","total_count":1,"children":[]}]}]},{"name":"ui","total_count":52,"children":[{"name":"auth","total_count":10,"children":[{"name":"WearLoginScreen.kt","total_count":1,"children":[{"name":"WearLoginScreen()","total_count":1,"children":[]}]},{"name":"WearLoginViewModel.kt","total_count":7,"children":[{"name":".login()","total_count":1,"children":[]},{"name":"Error","total_count":1,"children":[]},{"name":"Idle","total_count":1,"children":[]},{"name":"Loading","total_count":1,"children":[]},{"name":"Success","total_count":1,"children":[]},{"name":"WearLoginUiState","total_count":1,"children":[]},{"name":"WearLoginViewModel","total_count":1,"children":[]}]},{"name":"WearQrLoginScreen.kt","total_count":2,"children":[{"name":"ClinicalProgressSpinner()","total_count":1,"children":[]},{"name":"WearQrLoginScreen()","total_count":1,"children":[]}]}]},{"name":"dashboard","total_count":26,"children":[{"name":"components","total_count":13,"children":[{"name":"ClinicalSparklineWithSensor.kt","total_count":1,"children":[{"name":"ClinicalSparklineWithSensor()","total_count":1,"children":[]}]},{"name":"DualFloatingOrbs.kt","total_count":1,"children":[{"name":"DualFloatingOrbs()","total_count":1,"children":[]}]},{"name":"PatientSelectorChip.kt","total_count":1,"children":[{"name":"PatientSelectorChip()","total_count":1,"children":[]}]},{"name":"WearGlucoseGauge.kt","total_count":1,"children":[{"name":"WearGlucoseGauge()","total_count":1,"children":[]}]},{"name":"WearSensorChip.kt","total_count":1,"children":[{"name":"WearSensorChip()","total_count":1,"children":[]}]},{"name":"WearSparklineChart.kt","total_count":1,"children":[{"name":"WearSparklineChart()","total_count":1,"children":[]}]},{"name":"WearStatDetailModal.kt","total_count":7,"children":[{"name":"DetailModalType","total_count":1,"children":[]},{"name":"GLUCOSE_STATS","total_count":1,"children":[]},{"name":"NONE","total_count":1,"children":[]},{"name":"SENSOR_INFO","total_count":1,"children":[]},{"name":"StatRow()","total_count":1,"children":[]},{"name":"TREND_INFO","total_count":1,"children":[]},{"name":"WearStatDetailModal()","total_count":1,"children":[]}]}]},{"name":"WearDashboardScreen.kt","total_count":1,"children":[{"name":"WearDashboardScreen()","total_count":1,"children":[]}]},{"name":"WearDashboardViewModel.kt","total_count":12,"children":[{"name":".loadDashboardData()","total_count":1,"children":[]},{"name":".loadDashboardDataInternal()","total_count":1,"children":[]},{"name":".loadPatientDetails()","total_count":1,"children":[]},{"name":".refresh()","total_count":1,"children":[]},{"name":".selectPatient()","total_count":1,"children":[]},{"name":".switchPatient()","total_count":1,"children":[]},{"name":"Error","total_count":1,"children":[]},{"name":"Loading","total_count":1,"children":[]},{"name":"NeedsLogin","total_count":1,"children":[]},{"name":"Success","total_count":1,"children":[]},{"name":"WearDashboardUiState","total_count":1,"children":[]},{"name":"WearDashboardViewModel","total_count":1,"children":[]}]}]},{"name":"settings","total_count":13,"children":[{"name":"WearLegalNoticeDialog.kt","total_count":10,"children":[{"name":"DELETE_CONFIRMATION","total_count":1,"children":[]},{"name":"MEDICAL_DISCLAIMER","total_count":1,"children":[]},{"name":"NONE","total_count":1,"children":[]},{"name":"PRIVACY_GDPR","total_count":1,"children":[]},{"name":"TRADEMARKS","total_count":1,"children":[]},{"name":"WearLegalNoticeDialog()","total_count":1,"children":[]},{"name":"WearLegalNoticeType","total_count":1,"children":[]},{"name":"WearLegalSectionBox()","total_count":1,"children":[]},{"name":"WearLegalTexts","total_count":1,"children":[]},{"name":"WearPassiveLegalFooter()","total_count":1,"children":[]}]},{"name":"WearSettingsScreen.kt","total_count":3,"children":[{"name":"CompactActionRow()","total_count":1,"children":[]},{"name":"CompactSettingsRow()","total_count":1,"children":[]},{"name":"WearSettingsScreen()","total_count":1,"children":[]}]}]},{"name":"theme","total_count":3,"children":[{"name":"Color.kt","total_count":2,"children":[{"name":"getClinicalStatusColor()","total_count":1,"children":[]},{"name":"getGlucoseStatusColor()","total_count":1,"children":[]}]},{"name":"Theme.kt","total_count":1,"children":[{"name":"LibreWearTheme()","total_count":1,"children":[]}]}]}]}]}]}]}]}]}]},{"name":"test","total_count":23,"children":[{"name":"java","total_count":23,"children":[{"name":"com","total_count":23,"children":[{"name":"example","total_count":23,"children":[{"name":"opengluco","total_count":23,"children":[{"name":"wear","total_count":23,"children":[{"name":"service","total_count":9,"children":[{"name":"WearBluetoothSecurityTest.kt","total_count":9,"children":[{"name":".normalizeMac()","total_count":1,"children":[]},{"name":".testMacVerification_caseAndDelimiterNormalization()","total_count":1,"children":[]},{"name":".testMacVerification_emptyOrBlankRejected()","total_count":1,"children":[]},{"name":".testMacVerification_exactMatchSucceeds()","total_count":1,"children":[]},{"name":".testMacVerification_unauthorizedDeviceRejected()","total_count":1,"children":[]},{"name":".testRfcommUuid_standardSppCompliance()","total_count":1,"children":[]},{"name":".testStreamPayload_glucoseMeasurementSerializationRoundtrip()","total_count":1,"children":[]},{"name":".verifyMacMatch()","total_count":1,"children":[]},{"name":"WearBluetoothSecurityTest","total_count":1,"children":[]}]}]},{"name":"ui","total_count":10,"children":[{"name":"settings","total_count":10,"children":[{"name":"WearLegalTextsTest.kt","total_count":7,"children":[{"name":".testDeleteConfirmationCoversGdprArt17RightToErasure()","total_count":1,"children":[]},{"name":".testMedicalDisclaimerCompliesWithMdrAndFdaMdds()","total_count":1,"children":[]},{"name":".testPassiveLegalFooterExactContent()","total_count":1,"children":[]},{"name":".testPrivacyNoticeCoversGdprArt9LocalFirst()","total_count":1,"children":[]},{"name":".testTrademarkNoticeStatesFairUseAndNonAffiliation()","total_count":1,"children":[]},{"name":".testWearLegalNoticeTypeEnumValues()","total_count":1,"children":[]},{"name":"WearLegalTextsTest","total_count":1,"children":[]}]},{"name":"WearSettingsAndDashboardContractTest.kt","total_count":3,"children":[{"name":".testClinicalStatusColorThresholds()","total_count":1,"children":[]},{"name":".testLegalDisclaimerTextsNonEmptyAndFormatted()","total_count":1,"children":[]},{"name":"WearSettingsAndDashboardContractTest","total_count":1,"children":[]}]}]}]},{"name":"WearClinicalDesignAndSafetyTest.kt","total_count":4,"children":[{"name":".testExemptionMddsGuarantee_zeroBolusCalculatorsInWear()","total_count":1,"children":[]},{"name":".testWearClinicalColorTokens()","total_count":1,"children":[]},{"name":".testWearManifestSecurity()","total_count":1,"children":[]},{"name":"WearClinicalDesignAndSafetyTest","total_count":1,"children":[]}]}]}]}]}]}]}]}]},{"name":"build.gradle.kts","total_count":1,"children":[]}]},{"name":"core","total_count":319,"children":[{"name":"data","total_count":199,"children":[{"name":"src","total_count":198,"children":[{"name":"main","total_count":105,"children":[{"name":"java","total_count":105,"children":[{"name":"com","total_count":105,"children":[{"name":"example","total_count":105,"children":[{"name":"opengluco","total_count":105,"children":[{"name":"core","total_count":105,"children":[{"name":"data","total_count":105,"children":[{"name":"AlarmEvaluator.kt","total_count":8,"children":[{"name":".evaluate()","total_count":1,"children":[]},{"name":".isInCooldown()","total_count":1,"children":[]},{"name":".isThresholdCrossed()","total_count":1,"children":[]},{"name":".isWithinActiveSchedule()","total_count":1,"children":[]},{"name":".selectMostCritical()","total_count":1,"children":[]},{"name":".severityPriority()","total_count":1,"children":[]},{"name":".thresholdPriority()","total_count":1,"children":[]},{"name":"AlarmEvaluator","total_count":1,"children":[]}]},{"name":"AlarmRepository.kt","total_count":17,"children":[{"name":".addAlarm()","total_count":1,"children":[]},{"name":".clearAllCooldowns()","total_count":1,"children":[]},{"name":".clearCooldownForAlarm()","total_count":1,"children":[]},{"name":".deleteAlarm()","total_count":1,"children":[]},{"name":".getAlarmsByType()","total_count":1,"children":[]},{"name":".getAllAlarms()","total_count":1,"children":[]},{"name":".getDefaultAlarms()","total_count":1,"children":[]},{"name":".getLastFiredTimestamps()","total_count":1,"children":[]},{"name":".loadCooldowns()","total_count":1,"children":[]},{"name":".loadFromDisk()","total_count":1,"children":[]},{"name":".purgeAll()","total_count":1,"children":[]},{"name":".recordAlarmFired()","total_count":1,"children":[]},{"name":".saveCooldowns()","total_count":1,"children":[]},{"name":".saveToDisk()","total_count":1,"children":[]},{"name":".toggleAlarm()","total_count":1,"children":[]},{"name":".updateAlarm()","total_count":1,"children":[]},{"name":"AlarmRepository","total_count":1,"children":[]}]},{"name":"ClinicalReportsCalculator.kt","total_count":12,"children":[{"name":".calculateAvailableDays()","total_count":1,"children":[]},{"name":".calculateAverageGlucose()","total_count":1,"children":[]},{"name":".calculateDailyGraph()","total_count":1,"children":[]},{"name":".calculateDailyPatterns()","total_count":1,"children":[]},{"name":".calculateEstimatedA1c()","total_count":1,"children":[]},{"name":".calculateLowGlucoseEvents()","total_count":1,"children":[]},{"name":".calculatePercentile()","total_count":1,"children":[]},{"name":".calculateSensorUsage()","total_count":1,"children":[]},{"name":".calculateTimeInRange()","total_count":1,"children":[]},{"name":".extractHour()","total_count":1,"children":[]},{"name":".roundDec()","total_count":1,"children":[]},{"name":"ClinicalReportsCalculator","total_count":1,"children":[]}]},{"name":"HealthDataExporter.kt","total_count":3,"children":[{"name":".generateCsv()","total_count":1,"children":[]},{"name":".shareCsv()","total_count":1,"children":[]},{"name":"HealthDataExporter","total_count":1,"children":[]}]},{"name":"KeystoreCryptoHelper.kt","total_count":4,"children":[{"name":".decrypt()","total_count":1,"children":[]},{"name":".encrypt()","total_count":1,"children":[]},{"name":".getOrCreateSecretKey()","total_count":1,"children":[]},{"name":"KeystoreCryptoHelper","total_count":1,"children":[]}]},{"name":"OpenGlucoRepository.kt","total_count":16,"children":[{"name":".createApiService()","total_count":1,"children":[]},{"name":".getConnections()","total_count":1,"children":[]},{"name":".getPatientGraph()","total_count":1,"children":[]},{"name":".getSessionToken()","total_count":1,"children":[]},{"name":".getUserId()","total_count":1,"children":[]},{"name":".login()","total_count":1,"children":[]},{"name":".setRegion()","total_count":1,"children":[]},{"name":".setSession()","total_count":1,"children":[]},{"name":"AP","total_count":1,"children":[]},{"name":"DE","total_count":1,"children":[]},{"name":"EU","total_count":1,"children":[]},{"name":"FR","total_count":1,"children":[]},{"name":"JP","total_count":1,"children":[]},{"name":"OpenGlucoRegion","total_count":1,"children":[]},{"name":"OpenGlucoRepository","total_count":1,"children":[]},{"name":"US","total_count":1,"children":[]}]},{"name":"QrAuthHelper.kt","total_count":15,"children":[{"name":".createPairingPayload()","total_count":1,"children":[]},{"name":".createSessionExchange()","total_count":1,"children":[]},{"name":".decryptAesGcm()","total_count":1,"children":[]},{"name":".encryptAesGcm()","total_count":1,"children":[]},{"name":".generateQrBitmap()","total_count":1,"children":[]},{"name":".generateRandomHex()","total_count":1,"children":[]},{"name":".generateVerificationCode()","total_count":1,"children":[]},{"name":".getLocalIpAddress()","total_count":1,"children":[]},{"name":".hexToBytes()","total_count":1,"children":[]},{"name":".parsePairingPayload()","total_count":1,"children":[]},{"name":".parseSessionExchange()","total_count":1,"children":[]},{"name":".sendSessionOverNetwork()","total_count":1,"children":[]},{"name":".serializePairingPayload()","total_count":1,"children":[]},{"name":".startPairingServer()","total_count":1,"children":[]},{"name":"QrAuthHelper","total_count":1,"children":[]}]},{"name":"UserPreferencesRepository.kt","total_count":30,"children":[{"name":".clearAllHistoricalData()","total_count":1,"children":[]},{"name":".clearSession()","total_count":1,"children":[]},{"name":".filterReadingsByDays()","total_count":1,"children":[]},{"name":".getHistoricalReadings()","total_count":1,"children":[]},{"name":".getHistoricalReadingsList()","total_count":1,"children":[]},{"name":".getHistoryFileForPatient()","total_count":1,"children":[]},{"name":".getMeasurementKey()","total_count":1,"children":[]},{"name":".getMeasurementTimestampMillis()","total_count":1,"children":[]},{"name":".getTrustedPhoneMac()","total_count":1,"children":[]},{"name":".isTrustedPhoneMac()","total_count":1,"children":[]},{"name":".loadHistoryFromDisk()","total_count":1,"children":[]},{"name":".loadPatientHistory()","total_count":1,"children":[]},{"name":".parseTimestamp()","total_count":1,"children":[]},{"name":".purgeAllLocalData()","total_count":1,"children":[]},{"name":".saveAuthSession()","total_count":1,"children":[]},{"name":".saveDarkMode()","total_count":1,"children":[]},{"name":".saveHistoricalReadings()","total_count":1,"children":[]},{"name":".saveLastMeasurement()","total_count":1,"children":[]},{"name":".saveSelectedPatientId()","total_count":1,"children":[]},{"name":".saveTrustedPhoneMac()","total_count":1,"children":[]},{"name":".setHapticAlerts()","total_count":1,"children":[]},{"name":".setSelectedPatient()","total_count":1,"children":[]},{"name":".setTargetRange()","total_count":1,"children":[]},{"name":".setUnit()","total_count":1,"children":[]},{"name":"GlucoseUnit","total_count":1,"children":[]},{"name":"MGDL","total_count":1,"children":[]},{"name":"MMOL","total_count":1,"children":[]},{"name":"PreferencesKeys","total_count":1,"children":[]},{"name":"UserPreferencesRepository","total_count":1,"children":[]},{"name":"UserSettings","total_count":1,"children":[]}]}]}]}]}]}]}]}]},{"name":"test","total_count":93,"children":[{"name":"java","total_count":93,"children":[{"name":"com","total_count":93,"children":[{"name":"example","total_count":93,"children":[{"name":"opengluco","total_count":93,"children":[{"name":"core","total_count":93,"children":[{"name":"data","total_count":93,"children":[{"name":"AlarmEvaluatorTest.kt","total_count":9,"children":[{"name":".testCooldownExpiredAllowsReTrigger()","total_count":1,"children":[]},{"name":".testCooldownSuppressesReTrigger()","total_count":1,"children":[]},{"name":".testDaytimeScheduleEvaluation()","total_count":1,"children":[]},{"name":".testDisabledAlarmIsIgnored()","total_count":1,"children":[]},{"name":".testHighAlarmTriggersWhenAboveThreshold()","total_count":1,"children":[]},{"name":".testLowAlarmTriggersWhenBelowThreshold()","total_count":1,"children":[]},{"name":".testMostCriticalSeverityWins()","total_count":1,"children":[]},{"name":".testOvernightScheduleEvaluation()","total_count":1,"children":[]},{"name":"AlarmEvaluatorTest","total_count":1,"children":[]}]},{"name":"ClinicalReportsCalculatorTest.kt","total_count":10,"children":[{"name":".createReading()","total_count":1,"children":[]},{"name":".testAverageGlucoseOverallAndByTimeBlocks()","total_count":1,"children":[]},{"name":".testCalculateAvailableDays()","total_count":1,"children":[]},{"name":".testDailyGraphGroupedByDate()","total_count":1,"children":[]},{"name":".testDailyPatternsPercentilesAndVariability()","total_count":1,"children":[]},{"name":".testEstimatedA1cBergenstalFormulaAndLegalDisclaimer()","total_count":1,"children":[]},{"name":".testLowGlucoseEventsGroupingByTimeBlocks()","total_count":1,"children":[]},{"name":".testSensorUsageCalculation()","total_count":1,"children":[]},{"name":".testTimeInRangeFiveTiersCalculation()","total_count":1,"children":[]},{"name":"ClinicalReportsCalculatorTest","total_count":1,"children":[]}]},{"name":"e2e","total_count":47,"children":[{"name":"E2ETier1FeatureCoverageTest.kt","total_count":16,"children":[{"name":".testF01_MedicalDisclaimerStructure()","total_count":1,"children":[]},{"name":".testF02_TrademarkNoticeFairUse()","total_count":1,"children":[]},{"name":".testF03_GdprArt9HealthDataCommitments()","total_count":1,"children":[]},{"name":".testF04_CsvDataPortabilityExport()","total_count":1,"children":[]},{"name":".testF05_08_GdprArt17PurgeDataContract()","total_count":1,"children":[]},{"name":".testF06_09_PassiveFooterExactMatch()","total_count":1,"children":[]},{"name":".testF07_WearLegalNoticeTypes()","total_count":1,"children":[]},{"name":".testF10_AutoPassiveDisclaimerRow()","total_count":1,"children":[]},{"name":".testF11_NetworkSecurityCleartextRule()","total_count":1,"children":[]},{"name":".testF12_KeystoreCryptoFormatAndFallback()","total_count":1,"children":[]},{"name":".testF13_LocalFirstDirectApiCommunication()","total_count":1,"children":[]},{"name":".testF14_ClinicalDesignInvariants()","total_count":1,"children":[]},{"name":".testF15_MddsZeroBolusInvariant()","total_count":1,"children":[]},{"name":".testF16_AllowBackupFalse()","total_count":1,"children":[]},{"name":".testF17_18_QrPairingAndSessionExchange()","total_count":1,"children":[]},{"name":"E2ETier1FeatureCoverageTest","total_count":1,"children":[]}]},{"name":"E2ETier2BoundaryCornerCasesTest.kt","total_count":7,"children":[{"name":".testCorruptCryptoPayloads()","total_count":1,"children":[]},{"name":".testEmptyCsvExportMaintainsCompliance()","total_count":1,"children":[]},{"name":".testMissingSensorInfoGracefulDegradation()","total_count":1,"children":[]},{"name":".testSpecialCharactersInQrPayload()","total_count":1,"children":[]},{"name":".testUrgentHypoglycemiaThreshold()","total_count":1,"children":[]},{"name":".testVeryHighHyperglycemiaThreshold()","total_count":1,"children":[]},{"name":"E2ETier2BoundaryCornerCasesTest","total_count":1,"children":[]}]},{"name":"E2ETier3CrossFeatureCombinationsTest.kt","total_count":4,"children":[{"name":".testCombination_gdprPurge_stateInvalidation()","total_count":1,"children":[]},{"name":".testCombination_qrSync_encryption_csvExport()","total_count":1,"children":[]},{"name":".testCombination_unitSwitch_status_csv()","total_count":1,"children":[]},{"name":"E2ETier3CrossFeatureCombinationsTest","total_count":1,"children":[]}]},{"name":"E2ETier4RealWorldScenariosTest.kt","total_count":4,"children":[{"name":".testScenarioA_fullDailyDiabetesTrackingLifecycle()","total_count":1,"children":[]},{"name":".testScenarioB_inCarDrivingGlanceableState()","total_count":1,"children":[]},{"name":".testScenarioC_smartwatchAmbientOfflineResilience()","total_count":1,"children":[]},{"name":"E2ETier4RealWorldScenariosTest","total_count":1,"children":[]}]},{"name":"EmpiricalStressChallengeTest.kt","total_count":16,"children":[{"name":".testBoundary_allSensorFieldsMissing()","total_count":1,"children":[]},{"name":".testBoundary_connectionItemWithMissingPatientData()","total_count":1,"children":[]},{"name":".testBoundary_extremeGlucoseLevels_andExactUnitConversions()","total_count":1,"children":[]},{"name":".testBoundary_negativeAndZeroGlucoseValues()","total_count":1,"children":[]},{"name":".testBoundary_sensorAgeEdgeCases()","total_count":1,"children":[]},{"name":".testConcurrency_atomicDataPurgeDuringActiveTelemetryReads()","total_count":1,"children":[]},{"name":".testConcurrency_parallelAesGcmCryptoOperations()","total_count":1,"children":[]},{"name":".testConcurrency_parallelQrSessionExchangeAndCrypto()","total_count":1,"children":[]},{"name":".testCrypto_aes256Gcm_authTagCorruptionThrowsAndHandled()","total_count":1,"children":[]},{"name":".testCrypto_keystoreCryptoHelper_corruptBase64AndPayloads()","total_count":1,"children":[]},{"name":".testCrypto_qrAuthHelper_corruptedPayloadsAndBitFlips()","total_count":1,"children":[]},{"name":".testCsv_emptyReadings_validStructure()","total_count":1,"children":[]},{"name":".testCsv_highVolumeStressGeneration()","total_count":1,"children":[]},{"name":".testCsv_specialCharactersAndMissingTimestamps()","total_count":1,"children":[]},{"name":".testStateTransition_fullSessionLifecycle_login_save_invalidate_relogin()","total_count":1,"children":[]},{"name":"EmpiricalStressChallengeTest","total_count":1,"children":[]}]}]},{"name":"HealthDataExporterTest.kt","total_count":6,"children":[{"name":".testGenerateCsv_boundaryThresholds()","total_count":1,"children":[]},{"name":".testGenerateCsv_emptyList_producesValidHeaderOnly()","total_count":1,"children":[]},{"name":".testGenerateCsv_mgdlHeaderAndRows()","total_count":1,"children":[]},{"name":".testGenerateCsv_mmolHeaderAndRows()","total_count":1,"children":[]},{"name":".testGenerateCsv_sortingByTimestampAscending()","total_count":1,"children":[]},{"name":"HealthDataExporterTest","total_count":1,"children":[]}]},{"name":"KeystoreCryptoHelperTest.kt","total_count":8,"children":[{"name":".testAes256GcmSpecification_authTagTamperingRejection()","total_count":1,"children":[]},{"name":".testAes256GcmSpecification_encryptAndDecryptRoundtrip()","total_count":1,"children":[]},{"name":".testDecrypt_blankString_returnsEmptyString()","total_count":1,"children":[]},{"name":".testDecrypt_legacyUnencryptedString_returnsOriginalString()","total_count":1,"children":[]},{"name":".testDecrypt_malformedBase64WithPrefix_handlesGracefullyWithoutCrash()","total_count":1,"children":[]},{"name":".testDecrypt_truncatedPayloadLessThanIvLength_handlesSafely()","total_count":1,"children":[]},{"name":".testEncrypt_blankString_returnsEmptyString()","total_count":1,"children":[]},{"name":"KeystoreCryptoHelperTest","total_count":1,"children":[]}]},{"name":"OpenGlucoRepositoryTest.kt","total_count":4,"children":[{"name":".testRegionsBaseUrls()","total_count":1,"children":[]},{"name":".testRepositoryRegionSwitching()","total_count":1,"children":[]},{"name":".testRepositorySessionState()","total_count":1,"children":[]},{"name":"OpenGlucoRepositoryTest","total_count":1,"children":[]}]},{"name":"QrAuthHelperTest.kt","total_count":9,"children":[{"name":".testAesGcm_encryptAndDecryptRoundtrip()","total_count":1,"children":[]},{"name":".testAesGcm_invalidTag_throwsException()","total_count":1,"children":[]},{"name":".testAesGcm_wrongKey_failsDecryption()","total_count":1,"children":[]},{"name":".testCreatePairingPayload_generatesValidHexKeys()","total_count":1,"children":[]},{"name":".testGenerateVerificationCode_formatAndLength()","total_count":1,"children":[]},{"name":".testPairingPayloadSerializationRoundtrip()","total_count":1,"children":[]},{"name":".testParsePairingPayload_malformedJsonReturnsNull()","total_count":1,"children":[]},{"name":".testSessionExchangeSerializationRoundtrip()","total_count":1,"children":[]},{"name":"QrAuthHelperTest","total_count":1,"children":[]}]}]}]}]}]}]}]}]}]},{"name":"build.gradle.kts","total_count":1,"children":[]}]},{"name":"model","total_count":95,"children":[{"name":"src","total_count":94,"children":[{"name":"main","total_count":65,"children":[{"name":"java","total_count":65,"children":[{"name":"com","total_count":65,"children":[{"name":"example","total_count":65,"children":[{"name":"opengluco","total_count":65,"children":[{"name":"core","total_count":65,"children":[{"name":"model","total_count":65,"children":[{"name":"CgmCurveSmoother.kt","total_count":6,"children":[{"name":".computeCatmullRomSpline()","total_count":1,"children":[]},{"name":".consolidateBucket()","total_count":1,"children":[]},{"name":".consolidateTemporalBuckets()","total_count":1,"children":[]},{"name":".smoothMeasurements()","total_count":1,"children":[]},{"name":"CgmCurveSmoother","total_count":1,"children":[]},{"name":"CubicBezierSegment","total_count":1,"children":[]}]},{"name":"ClinicalReportModels.kt","total_count":24,"children":[{"name":".fromHour()","total_count":1,"children":[]},{"name":".getFormattedDuration()","total_count":1,"children":[]},{"name":"AFTERNOON","total_count":1,"children":[]},{"name":"AverageGlucoseReport","total_count":1,"children":[]},{"name":"DailyGraphDaySummary","total_count":1,"children":[]},{"name":"DailyGraphReport","total_count":1,"children":[]},{"name":"DailyPatternsReport","total_count":1,"children":[]},{"name":"EstimatedA1cReport","total_count":1,"children":[]},{"name":"EVENING","total_count":1,"children":[]},{"name":"HIGH","total_count":1,"children":[]},{"name":"HourlyPercentile","total_count":1,"children":[]},{"name":"IN_RANGE","total_count":1,"children":[]},{"name":"LOW","total_count":1,"children":[]},{"name":"LowGlucoseEvent","total_count":1,"children":[]},{"name":"LowGlucoseEventsReport","total_count":1,"children":[]},{"name":"MORNING","total_count":1,"children":[]},{"name":"NIGHT","total_count":1,"children":[]},{"name":"ReportTimeBlock","total_count":1,"children":[]},{"name":"SensorUsageReport","total_count":1,"children":[]},{"name":"TimeInRangeReport","total_count":1,"children":[]},{"name":"TirBucket","total_count":1,"children":[]},{"name":"TirCategory","total_count":1,"children":[]},{"name":"VERY_HIGH","total_count":1,"children":[]},{"name":"VERY_LOW","total_count":1,"children":[]}]},{"name":"GlucoseAlarmModels.kt","total_count":15,"children":[{"name":"AlarmCooldown","total_count":1,"children":[]},{"name":"AlarmEvaluationResult","total_count":1,"children":[]},{"name":"AlarmSeverity","total_count":1,"children":[]},{"name":"AlarmType","total_count":1,"children":[]},{"name":"ALERT","total_count":1,"children":[]},{"name":"GlucoseAlarm","total_count":1,"children":[]},{"name":"HIGH","total_count":1,"children":[]},{"name":"INFORMATIVE","total_count":1,"children":[]},{"name":"LOW","total_count":1,"children":[]},{"name":"MIN_10","total_count":1,"children":[]},{"name":"MIN_15","total_count":1,"children":[]},{"name":"MIN_30","total_count":1,"children":[]},{"name":"MIN_5","total_count":1,"children":[]},{"name":"NONE","total_count":1,"children":[]},{"name":"URGENT","total_count":1,"children":[]}]},{"name":"OpenGlucoModels.kt","total_count":14,"children":[{"name":".getDisplayTime()","total_count":1,"children":[]},{"name":".getEpochMillis()","total_count":1,"children":[]},{"name":".getFormattedValue()","total_count":1,"children":[]},{"name":".getRemainingDays()","total_count":1,"children":[]},{"name":"AuthTicket","total_count":1,"children":[]},{"name":"BaseResponse","total_count":1,"children":[]},{"name":"ConnectionItem","total_count":1,"children":[]},{"name":"GlucoseMeasurement","total_count":1,"children":[]},{"name":"GraphData","total_count":1,"children":[]},{"name":"LoginData","total_count":1,"children":[]},{"name":"LoginRequest","total_count":1,"children":[]},{"name":"ResponseError","total_count":1,"children":[]},{"name":"SensorInfo","total_count":1,"children":[]},{"name":"UserProfile","total_count":1,"children":[]}]},{"name":"QrAuthModels.kt","total_count":6,"children":[{"name":"ANDROID_AUTO","total_count":1,"children":[]},{"name":"QrDeviceType","total_count":1,"children":[]},{"name":"QrEncryptedPayload","total_count":1,"children":[]},{"name":"QrPairingPayload","total_count":1,"children":[]},{"name":"QrSessionExchange","total_count":1,"children":[]},{"name":"WEAR_OS","total_count":1,"children":[]}]}]}]}]}]}]}]}]},{"name":"test","total_count":29,"children":[{"name":"java","total_count":29,"children":[{"name":"com","total_count":29,"children":[{"name":"example","total_count":29,"children":[{"name":"opengluco","total_count":29,"children":[{"name":"core","total_count":29,"children":[{"name":"model","total_count":29,"children":[{"name":"ClinicalModelsTest.kt","total_count":22,"children":[{"name":".testBaseResponseSerialization()","total_count":1,"children":[]},{"name":".testConnectionItem_effectiveMeasurement()","total_count":1,"children":[]},{"name":".testConnectionItem_fullName_combinations()","total_count":1,"children":[]},{"name":".testDisplayTime_nullOrInvalidFallback()","total_count":1,"children":[]},{"name":".testDisplayTime_validTimestampFormats24Hours()","total_count":1,"children":[]},{"name":".testFormattedValue_mgdlIntegerRounding()","total_count":1,"children":[]},{"name":".testFormattedValue_mmolConversionUSLocale()","total_count":1,"children":[]},{"name":".testNumericValuePriority_fallbackToValue()","total_count":1,"children":[]},{"name":".testNumericValuePriority_nullDefaultsToZero()","total_count":1,"children":[]},{"name":".testNumericValuePriority_prefersValueInMgPerDl()","total_count":1,"children":[]},{"name":".testSensorModelName_defaultType()","total_count":1,"children":[]},{"name":".testSensorRemainingDays_activeSensor()","total_count":1,"children":[]},{"name":".testSensorRemainingDays_expiredSensor()","total_count":1,"children":[]},{"name":".testSensorRemainingDays_nullActivationTimestamp()","total_count":1,"children":[]},{"name":".testTimestampParsing_factoryTimestampFallback()","total_count":1,"children":[]},{"name":".testTimestampParsing_invalidOrNullReturnsZero()","total_count":1,"children":[]},{"name":".testTimestampParsing_isoNoZ()","total_count":1,"children":[]},{"name":".testTimestampParsing_isoUtcZ()","total_count":1,"children":[]},{"name":".testTimestampParsing_us12HourFormat()","total_count":1,"children":[]},{"name":".testTrendSymbolAndText_allArrows()","total_count":1,"children":[]},{"name":".testTrendSymbolAndText_invalidOrNullArrows_fallbackToStable()","total_count":1,"children":[]},{"name":"ClinicalModelsTest","total_count":1,"children":[]}]},{"name":"ModelSanityTest.kt","total_count":2,"children":[{"name":".testGlucoseMeasurementNumericValue()","total_count":1,"children":[]},{"name":"ModelSanityTest","total_count":1,"children":[]}]},{"name":"QrAuthModelsTest.kt","total_count":5,"children":[{"name":".testQrEncryptedPayload_serializationRoundtrip()","total_count":1,"children":[]},{"name":".testQrPairingPayload_defaultValues()","total_count":1,"children":[]},{"name":".testQrPairingPayload_serializationRoundtrip()","total_count":1,"children":[]},{"name":".testQrSessionExchange_serializationRoundtrip()","total_count":1,"children":[]},{"name":"QrAuthModelsTest","total_count":1,"children":[]}]}]}]}]}]}]}]}]}]},{"name":"build.gradle.kts","total_count":1,"children":[]}]},{"name":"network","total_count":25,"children":[{"name":"src","total_count":24,"children":[{"name":"main","total_count":8,"children":[{"name":"java","total_count":8,"children":[{"name":"com","total_count":8,"children":[{"name":"example","total_count":8,"children":[{"name":"opengluco","total_count":8,"children":[{"name":"core","total_count":8,"children":[{"name":"network","total_count":8,"children":[{"name":"OpenGlucoApiService.kt","total_count":5,"children":[{"name":".acceptTerms()","total_count":1,"children":[]},{"name":".getConnections()","total_count":1,"children":[]},{"name":".getPatientGraph()","total_count":1,"children":[]},{"name":".login()","total_count":1,"children":[]},{"name":"OpenGlucoApiService","total_count":1,"children":[]}]},{"name":"OpenGlucoInterceptor.kt","total_count":3,"children":[{"name":".intercept()","total_count":1,"children":[]},{"name":".sha256()","total_count":1,"children":[]},{"name":"OpenGlucoInterceptor","total_count":1,"children":[]}]}]}]}]}]}]}]}]},{"name":"test","total_count":16,"children":[{"name":"java","total_count":16,"children":[{"name":"com","total_count":16,"children":[{"name":"example","total_count":16,"children":[{"name":"opengluco","total_count":16,"children":[{"name":"core","total_count":16,"children":[{"name":"network","total_count":16,"children":[{"name":"OpenGlucoApiServiceContractTest.kt","total_count":7,"children":[{"name":".setUp()","total_count":1,"children":[]},{"name":".tearDown()","total_count":1,"children":[]},{"name":".testGetConnectionsContract_success()","total_count":1,"children":[]},{"name":".testGetPatientGraphContract_success()","total_count":1,"children":[]},{"name":".testLoginContract_success()","total_count":1,"children":[]},{"name":".testTermsAcceptContract()","total_count":1,"children":[]},{"name":"OpenGlucoApiServiceContractTest","total_count":1,"children":[]}]},{"name":"OpenGlucoInterceptorTest.kt","total_count":9,"children":[{"name":".expectedSha256()","total_count":1,"children":[]},{"name":".setUp()","total_count":1,"children":[]},{"name":".tearDown()","total_count":1,"children":[]},{"name":".testHeaders_accountIdHashedWithSha256()","total_count":1,"children":[]},{"name":".testHeaders_bearerTokenInjectedWhenPresent()","total_count":1,"children":[]},{"name":".testHeaders_emptyOrBlankValuesIgnored()","total_count":1,"children":[]},{"name":".testHeaders_standardHeadersAlwaysPresent()","total_count":1,"children":[]},{"name":".testSha256Determinism()","total_count":1,"children":[]},{"name":"OpenGlucoInterceptorTest","total_count":1,"children":[]}]}]}]}]}]}]}]}]}]},{"name":"build.gradle.kts","total_count":1,"children":[]}]}]},{"name":"build.gradle.kts","total_count":1,"children":[]},{"name":"settings.gradle.kts","total_count":1,"children":[]}]};
+
+    function transformData(jsonData) {
+        // Helper function to recursively build the children structure
+        function processNode(node, parentL1StageName) {
+            let displayName = node.name;
+            // Append total_count if it exists and is not already in the name
+            if (node.total_count !== undefined) {
+                if (!/\(Total Count: \d+\)$/.test(displayName)) {
+                    displayName += ` (Total Count: ${node.total_count})`;
+                }
+            }
+
+            const newNode = { name: displayName };
+
+            if (parentL1StageName === "Root") {
+                 newNode.originalStageName = node.name;
+            } else {
+                newNode.originalStageName = parentL1StageName;
+            }
+
+            if (node.children && node.children.length > 0) {
+                const stageNameToPass = (parentL1StageName === "Root") ? node.name : parentL1StageName;
+                newNode.children = node.children.map(child => processNode(child, stageNameToPass));
+            }
+
+            return newNode;
+        }
+
+        let rootDisplayName = jsonData.name;
+        if (jsonData.total_count !== undefined && !/\(Total Count: \d+\)$/.test(rootDisplayName)) {
+            rootDisplayName += ` (Total Count: ${jsonData.total_count})`;
+        }
+
+        return {
+            name: rootDisplayName,
+            originalStageName: "Root",
+            children: (jsonData.children || []).map(child => processNode(child, "Root"))
+        };
+    }
+
+    const treeData = transformData(initialJsonData);
+
+    // Auto-populated phaseColors: every depth-1 child of the root gets
+    // a stable colour from a bigger palette so all top-level dirs are
+    // distinguishable.
+    const PALETTE = [
+      ["#3498DB","#2980B9","#AED6F1"], ["#2ECC71","#27AE60","#A9DFBF"],
+      ["#E74C3C","#C0392B","#F5B7B1"], ["#9B59B6","#8E44AD","#D7BDE2"],
+      ["#F39C12","#D68910","#FAD7A0"], ["#1ABC9C","#117864","#A2D9CE"],
+      ["#34495E","#1B2631","#ABB2B9"], ["#E67E22","#BA4A00","#F5CBA7"],
+      ["#16A085","#0E6655","#A2D9CE"], ["#D35400","#A04000","#EDBB99"],
+      ["#7F8C8D","#566573","#D5DBDB"], ["#C0392B","#7B241C","#F5B7B1"],
+      ["#2E86C1","#1B4F72","#A9CCE3"], ["#28B463","#196F3D","#A9DFBF"],
+      ["#AF7AC5","#6C3483","#D2B4DE"],
+    ];
+    const phaseColors = { "Root": { fill: "#4A4A4A", stroke: "#333333", collapsedFill: "#6C757D" },
+                          "Default": { fill: "#BDC3C7", stroke: "#95A5A6", collapsedFill: "#ECF0F1" } };
+    (initialJsonData.children || []).forEach((c, i) => {
+      const pal = PALETTE[i % PALETTE.length];
+      phaseColors[c.name] = { fill: pal[0], stroke: pal[1], collapsedFill: pal[2] };
+    });
+
+    const levelSpecificPalettes = {
+      0: { fill: "#4A4A4A", stroke: "#333333", collapsedFill: "#6C757D" },
+      2: { fill: "#6ab04c", stroke: "#508a38", collapsedFill: "#a3d391" },
+      3: { fill: "#f0932b", stroke: "#d0730f", collapsedFill: "#f6c07e" },
+      4: { fill: "#be2edd", stroke: "#a01cb3", collapsedFill: "#e08bf2" },
+      5: { fill: "#00a8ff", stroke: "#007ac1", collapsedFill: "#74d2ff" },
+      6: { fill: "#e55039", stroke: "#c23620", collapsedFill: "#f09a8d" },
+      default: { fill: "#747d8c", stroke: "#57606f", collapsedFill: "#a4b0be" }
+    };
+
+    const svgElement = d3.select("#tree-svg");
+    const initialSvgWidth = +svgElement.attr("width");
+    const initialSvgHeight = +svgElement.attr("height");
+    const margin = { top: 40, right: 120, bottom: 80, left: 450 };
+    let width = initialSvgWidth - margin.left - margin.right;
+    let height = initialSvgHeight - margin.top - margin.bottom;
+    const duration = 500;
+    let nodeCounter = 0;
+    const g = svgElement.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+    const treemap = d3.tree().nodeSize([40, 0]);
+    let rootNode = d3.hierarchy(treeData, d => d.children);
+    rootNode.x0 = 0;
+    rootNode.y0 = 0;
+
+    if (rootNode.children) {
+      rootNode.children.forEach(d_child => {
+        if (d_child.children) { collapseBranch(d_child); }
+      });
+    }
+    updateTree(rootNode);
+
+    function collapseBranch(d) { if (d.children) { d._children = d.children; d._children.forEach(collapseBranch); d.children = null; } }
+    function expandBranch(d) { if (d._children) { d.children = d._children; d._children = null; } if (d.children) { d.children.forEach(expandBranch); } }
+    window.expandAll = () => { expandBranch(rootNode); updateTree(rootNode); };
+    window.collapseAll = () => { if (rootNode.children) { rootNode.children.forEach(collapseBranch); } updateTree(rootNode); };
+    window.resetView = () => { if (rootNode.children) { rootNode.children.forEach(d_child => { if (d_child.children || d_child._children) { collapseBranch(d_child); } }); } if (rootNode._children && !rootNode.children) { rootNode.children = rootNode._children; rootNode._children = null; } updateTree(rootNode); };
+
+    function updateTree(source) {
+      const treeLayoutData = treemap(rootNode);
+      let nodes = treeLayoutData.descendants();
+      let links = treeLayoutData.descendants().slice(1);
+
+      let minX = 0;
+      let maxX = 0;
+      if (nodes.length > 0) {
+        minX = d3.min(nodes, d => d.x);
+        maxX = d3.max(nodes, d => d.x);
+      }
+
+      let neededHeight = Math.max(initialSvgHeight, maxX - minX + margin.top + margin.bottom + 100);
+      svgElement.transition().duration(duration / 2).attr("height", neededHeight);
+      g.transition().duration(duration / 2).attr("transform", `translate(${margin.left},${margin.top - minX + 40})`);
+
+      nodes.forEach(d => { d.y = d.depth * 400; }); // Adjust horizontal separation if needed
+
+      const node = g.selectAll('g.node').data(nodes, d => d.id || (d.id = ++nodeCounter));
+      const nodeEnter = node.enter().append('g')
+        .attr('class', d => "node" + (d.children || d._children ? " node--internal" : " node--leaf") + (d._children ? " _children" : ""))
+        .attr('transform', d => `translate(${source.y0},${source.x0})`)
+        .on('click', (event, d) => { if (d.children) { d._children = d.children; d.children = null; } else if (d._children) { d.children = d._children; d._children = null; } updateTree(d); })
+        .style('cursor', d => (d.children || d._children) ? 'pointer' : 'default');
+
+      nodeEnter.append('circle').attr('r', 1e-6);
+
+      nodeEnter.append('text')
+        .attr('dy', '.35em')
+        .attr('x', d => d.children || d._children ? -14 : 14)
+        .attr('text-anchor', d => d.children || d._children ? 'end' : 'start')
+        .style("fill-opacity", 1e-6)
+        .call(wrapText, 380);
+
+      const nodeUpdate = nodeEnter.merge(node);
+      nodeUpdate.transition().duration(duration)
+        .attr('transform', d => `translate(${d.y},${d.x})`)
+        .attr('class', d => "node" + (d.children ? " node--internal" : " node--leaf") + (d._children ? " node--internal _children" : ""));
+
+      nodeUpdate.select('circle').attr('r', 8.5)
+        .style('fill', d => {
+            let palette;
+            if (d.depth === 0) {
+                palette = levelSpecificPalettes[0];
+            } else if (d.depth === 1) {
+                palette = phaseColors[d.data.originalStageName] || phaseColors.Default;
+            } else {
+                palette = levelSpecificPalettes[d.depth] || levelSpecificPalettes.default;
+            }
+            if (d._children) return palette.collapsedFill;
+            if (d.children) return palette.fill;
+            return "#fff";
+        })
+        .style('stroke', d => {
+            let palette;
+            if (d.depth === 0) {
+                palette = levelSpecificPalettes[0];
+            } else if (d.depth === 1) {
+                palette = phaseColors[d.data.originalStageName] || phaseColors.Default;
+            } else {
+                palette = levelSpecificPalettes[d.depth] || levelSpecificPalettes.default;
+            }
+            return palette.stroke;
+        });
+      nodeUpdate.select('text').style("fill-opacity", 1).call(wrapText, 380);
+
+      const nodeExit = node.exit().transition().duration(duration).attr('transform', d => `translate(${source.y},${source.x})`).remove();
+      nodeExit.select('circle').attr('r', 1e-6);
+      nodeExit.select('text').style('fill-opacity', 1e-6);
+
+      const link = g.selectAll('path.link').data(links, d => d.id);
+      const linkEnter = link.enter().insert('path', "g").attr('class', 'link').attr('d', d => { const o = { x: source.x0, y: source.y0 }; return diagonal(o, o); });
+
+      linkEnter.merge(link).transition().duration(duration).attr('d', d => diagonal(d, d.parent))
+        .style('stroke', d => {
+            const sourceNode = d.parent;
+            if (!sourceNode) return phaseColors.Default.stroke;
+            const l1AncestorName = sourceNode.data.originalStageName;
+            const colorPalette = phaseColors[l1AncestorName] || phaseColors.Default;
+            return colorPalette.stroke;
+        });
+      link.exit().transition().duration(duration).attr('d', d => { const o = { x: source.x, y: source.y }; return diagonal(o, o); }).remove();
+      nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
+    }
+
+    function diagonal(s, d) { return `M ${s.y} ${s.x} C ${(s.y + d.y) / 2} ${s.x}, ${(s.y + d.y) / 2} ${d.x}, ${d.y} ${d.x}`; }
+
+    function wrapText(textElements, maxWidth) {
+        const textPartColors = {
+            name: '#343a40',
+            count: '#0056b3'
+        };
+        const countRegex = /(\s\(Total Count: \d+\))$/;
+
+        textElements.each(function () {
+            const textD3 = d3.select(this);
+            const originalNodeText = textD3.datum().data.name;
+            const x = parseFloat(textD3.attr("x") || 0);
+            const initialDy = textD3.attr("dy");
+            const textAnchor = textD3.attr("text-anchor");
+            const lineHeight = 1.1;
+
+            textD3.text(null);
+
+            let namePart = originalNodeText;
+            let countPartText = "";
+
+            const countMatch = originalNodeText.match(countRegex);
+            if (countMatch && originalNodeText.endsWith(countMatch[0])) {
+                namePart = originalNodeText.substring(0, originalNodeText.length - countMatch[0].length).trim();
+                countPartText = countMatch[0].trim();
+            }
+
+            const tokens = [];
+            namePart.split(/\s+/).filter(Boolean).forEach(word => {
+                tokens.push({ text: word, type: 'name' });
+            });
+            if (countPartText) {
+                tokens.push({ text: countPartText, type: 'count' });
+            }
+
+            if (tokens.length === 0 && originalNodeText) {
+                tokens.push({ text: originalNodeText, type: 'name' });
+            }
+
+            let currentTspan = textD3.append("tspan").attr("x", x).attr("dy", initialDy);
+            if (textAnchor === "end") currentTspan.attr("text-anchor", "end");
+
+            let lineTokens = [];
+
+            for (let i = 0; i < tokens.length; i++) {
+                const tokenObj = tokens[i];
+
+                lineTokens.push(tokenObj);
+                currentTspan.text(lineTokens.map(t => t.text).join(" "));
+
+                if (currentTspan.node().getComputedTextLength() > maxWidth && lineTokens.length > 1) {
+                    lineTokens.pop();
+
+                    currentTspan.text(null);
+                    lineTokens.forEach((prevToken, idx) => {
+                        currentTspan.append("tspan")
+                            .text((idx > 0 ? " " : "") + prevToken.text)
+                            .style("fill", textPartColors[prevToken.type] || textPartColors.name)
+                            .style("font-weight", prevToken.type === 'count' ? "bold" : "normal");
+                    });
+
+                    lineTokens = [tokenObj];
+                    currentTspan = textD3.append("tspan").attr("x", x).attr("dy", lineHeight + "em");
+                    if (textAnchor === "end") currentTspan.attr("text-anchor", "end");
+                }
+            }
+
+            currentTspan.text(null);
+            lineTokens.forEach((token, idx) => {
+                currentTspan.append("tspan")
+                    .text((idx > 0 ? " " : "") + token.text)
+                    .style("fill", textPartColors[token.type] || textPartColors.name)
+                    .style("font-weight", token.type === 'count' ? "bold" : "normal");
+            });
+
+            if (textD3.selectAll("tspan > tspan").empty() && textD3.select("tspan").text().length === 0 && originalNodeText) {
+                let t = textD3.select("tspan");
+                let displayText = originalNodeText;
+                t.text(displayText).style("fill", textPartColors.name);
+                if (t.node() && t.node().getComputedTextLength() > maxWidth && displayText.length > 20) {
+                    let estimatedChars = Math.floor(maxWidth / (t.node().getComputedTextLength()/displayText.length) );
+                    displayText = displayText.substring(0, Math.max(0, estimatedChars - 3)) + "...";
+                    t.text(displayText);
+                }
+            }
+        });
+    }
+  </script>
+</body>
+</html>
