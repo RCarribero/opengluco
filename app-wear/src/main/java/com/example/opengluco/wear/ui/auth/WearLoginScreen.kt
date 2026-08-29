@@ -1,8 +1,10 @@
-﻿package com.example.opengluco.wear.ui.auth
+package com.example.opengluco.wear.ui.auth
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -93,23 +95,26 @@ fun WearLoginScreen(
 
             // Campo Email
             item {
-                Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 4.dp)) {
-                    Text("Email", fontSize = 11.sp, color = Color(0xFFB0BEC5))
+                Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 3.dp)) {
+                    Text("Email", fontSize = 10.sp, color = com.example.opengluco.wear.ui.theme.ClinicalTextSecondary, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                    Spacer(modifier = Modifier.height(2.dp))
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(WearSurface, shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
-                            .padding(horizontal = 10.dp, vertical = 8.dp)
+                            .clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+                            .background(com.example.opengluco.wear.ui.theme.ClinicalSurfaceCard)
+                            .border(1.dp, com.example.opengluco.wear.ui.theme.ClinicalSurfaceBorder, androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+                            .padding(horizontal = 10.dp, vertical = 7.dp)
                     ) {
                         if (email.isEmpty()) {
-                            Text("correo@ejemplo.com", fontSize = 12.sp, color = Color.Gray)
+                            Text("correo@ejemplo.com", fontSize = 11.sp, color = com.example.opengluco.wear.ui.theme.ClinicalTextMuted)
                         }
                         BasicTextField(
                             value = email,
                             onValueChange = { email = it },
-                            textStyle = TextStyle(color = Color.White, fontSize = 12.sp),
+                            textStyle = TextStyle(color = Color.White, fontSize = 11.sp),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
-                            cursorBrush = SolidColor(WearPrimary),
+                            cursorBrush = SolidColor(com.example.opengluco.wear.ui.theme.ClinicalMint),
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
@@ -118,39 +123,42 @@ fun WearLoginScreen(
 
             // Campo Contraseña
             item {
-                Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 4.dp)) {
+                Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 3.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Contraseña", fontSize = 11.sp, color = Color(0xFFB0BEC5))
+                        Text("Contraseña", fontSize = 10.sp, color = com.example.opengluco.wear.ui.theme.ClinicalTextSecondary)
                         Text(
                             text = if (isPasswordVisible) "Ocultar" else "Ver",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
-                            color = WearPrimary,
+                            color = com.example.opengluco.wear.ui.theme.ClinicalMint,
                             modifier = Modifier
                                 .clickable { isPasswordVisible = !isPasswordVisible }
                                 .padding(horizontal = 4.dp, vertical = 2.dp)
                         )
                     }
+                    Spacer(modifier = Modifier.height(2.dp))
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(WearSurface, shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp))
-                            .padding(horizontal = 10.dp, vertical = 8.dp)
+                            .clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+                            .background(com.example.opengluco.wear.ui.theme.ClinicalSurfaceCard)
+                            .border(1.dp, com.example.opengluco.wear.ui.theme.ClinicalSurfaceBorder, androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
+                            .padding(horizontal = 10.dp, vertical = 7.dp)
                     ) {
                         if (password.isEmpty()) {
-                            Text("••••••••", fontSize = 12.sp, color = Color.Gray)
+                            Text("••••••••", fontSize = 11.sp, color = com.example.opengluco.wear.ui.theme.ClinicalTextMuted)
                         }
                         BasicTextField(
                             value = password,
                             onValueChange = { password = it },
                             visualTransformation = if (isPasswordVisible) androidx.compose.ui.text.input.VisualTransformation.None else PasswordVisualTransformation(),
-                            textStyle = TextStyle(color = Color.White, fontSize = 12.sp),
+                            textStyle = TextStyle(color = Color.White, fontSize = 11.sp),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
-                            cursorBrush = SolidColor(WearPrimary),
+                            cursorBrush = SolidColor(com.example.opengluco.wear.ui.theme.ClinicalMint),
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
@@ -162,8 +170,8 @@ fun WearLoginScreen(
                 item {
                     Text(
                         text = (uiState as WearLoginUiState.Error).message,
-                        color = Color(0xFFFF5252),
-                        fontSize = 11.sp,
+                        color = com.example.opengluco.wear.ui.theme.ClinicalLowCoral,
+                        fontSize = 10.5.sp,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                     )
@@ -176,16 +184,20 @@ fun WearLoginScreen(
                 if (uiState is WearLoginUiState.Loading) {
                     CircularProgressIndicator(
                         progress = { 0.75f },
-                        modifier = Modifier.size(28.dp)
+                        modifier = Modifier.size(26.dp)
                     )
                 } else {
-                    Button(
-                        onClick = { viewModel.login(email, password) },
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 6.dp)
+                            .padding(horizontal = 14.dp, vertical = 4.dp)
+                            .clip(androidx.compose.foundation.shape.RoundedCornerShape(14.dp))
+                            .background(com.example.opengluco.wear.ui.theme.ClinicalMint)
+                            .clickable { viewModel.login(email, password) }
+                            .padding(vertical = 9.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Text("Acceder", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        Text("Acceder", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.Black, textAlign = TextAlign.Center)
                     }
                 }
             }

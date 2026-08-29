@@ -1,12 +1,19 @@
-﻿package com.example.opengluco.wear.ui.settings
+package com.example.opengluco.wear.ui.settings
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -16,6 +23,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -23,20 +31,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
-import androidx.wear.compose.material3.Button
-import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.Text
 import androidx.wear.compose.material3.TimeText
 import com.example.opengluco.core.data.AlarmRepository
 import com.example.opengluco.core.data.GlucoseUnit
 import com.example.opengluco.core.data.UserPreferencesRepository
 import com.example.opengluco.core.data.UserSettings
+import com.example.opengluco.wear.ui.theme.ClinicalArcticCyan
+import com.example.opengluco.wear.ui.theme.ClinicalBackground
 import com.example.opengluco.wear.ui.theme.ClinicalLowCoral
+import com.example.opengluco.wear.ui.theme.ClinicalMint
+import com.example.opengluco.wear.ui.theme.ClinicalSurfaceBorder
 import com.example.opengluco.wear.ui.theme.ClinicalSurfaceCard
+import com.example.opengluco.wear.ui.theme.ClinicalSurfaceOrb
+import com.example.opengluco.wear.ui.theme.ClinicalTextMuted
+import com.example.opengluco.wear.ui.theme.ClinicalTextPrimary
 import com.example.opengluco.wear.ui.theme.ClinicalTextSecondary
-import com.example.opengluco.wear.ui.theme.WearDarkBackground
-import com.example.opengluco.wear.ui.theme.WearPrimary
-import com.example.opengluco.wear.ui.theme.WearSurface
 import kotlinx.coroutines.launch
 
 @Composable
@@ -58,7 +68,7 @@ fun WearSettingsScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(WearDarkBackground)
+            .background(ClinicalBackground)
     ) {
         TimeText {
             time()
@@ -73,197 +83,147 @@ fun WearSettingsScreen(
                 Spacer(modifier = Modifier.height(20.dp))
             }
 
+            // TÍTULO DE AJUSTES
             item {
                 Text(
                     text = "Ajustes",
-                    fontSize = 15.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = WearPrimary,
-                    textAlign = TextAlign.Center
+                    color = ClinicalMint,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
-            // 1. SELECTOR UNIDAD DE GLUCOSA
+            item {
+                Spacer(modifier = Modifier.height(4.dp))
+            }
+
+            // 1. SECCIÓN PREFERENCIAS CLÍNICAS
             item {
                 Text(
-                    text = "Unidad de medida",
-                    fontSize = 11.sp,
-                    color = ClinicalTextSecondary,
-                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                    text = "Preferencias",
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = ClinicalArcticCyan,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp, bottom = 4.dp)
                 )
             }
 
+            // Selector de Unidad
             item {
-                Button(
+                CompactSettingsRow(
+                    title = "Unidad",
+                    value = settings.unit.label,
+                    valueColor = ClinicalMint,
                     onClick = {
                         val nextUnit = if (settings.unit == GlucoseUnit.MGDL) GlucoseUnit.MMOL else GlucoseUnit.MGDL
                         scope.launch { preferencesRepository.setUnit(nextUnit) }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = WearSurface),
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = "Unidad: ${settings.unit.label}",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
+                    }
+                )
             }
 
-            // 2. ALERTAS HÁPTICAS
+            // Vibración / Alertas Hápticas
             item {
-                Button(
+                CompactSettingsRow(
+                    title = "Vibración",
+                    value = if (settings.hapticAlertsEnabled) "Activa" else "Inactiva",
+                    valueColor = if (settings.hapticAlertsEnabled) ClinicalMint else ClinicalTextMuted,
                     onClick = {
                         scope.launch { preferencesRepository.setHapticAlerts(!settings.hapticAlertsEnabled) }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = WearSurface),
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 2.dp)
-                ) {
-                    val status = if (settings.hapticAlertsEnabled) "Activadas" else "Desactivadas"
-                    Text(
-                        text = "Vibración: $status",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
+                    }
+                )
             }
 
-            // 2.5 ESTADO DE ALARMAS (solo lectura - gestion desde movil)
+            // Estado de Alarmas
             item {
-                Button(
-                    onClick = { /* Solo informativo - gestion desde movil */ },
-                    colors = ButtonDefaults.buttonColors(containerColor = WearSurface),
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 2.dp),
-                    enabled = false
-                ) {
-                    Text(
-                        text = if (activeAlarmCount > 0) {
-                            "Alarmas: $activeAlarmCount activas"
-                        } else {
-                            "Alarmas: Sin configurar"
-                        },
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = if (activeAlarmCount > 0) WearPrimary else ClinicalTextSecondary
-                    )
-                }
+                CompactSettingsRow(
+                    title = "Alarmas",
+                    value = if (activeAlarmCount > 0) "$activeAlarmCount activas" else "Configurar",
+                    valueColor = if (activeAlarmCount > 0) ClinicalMint else ClinicalTextSecondary,
+                    onClick = { /* Gestionable desde la app móvil */ }
+                )
             }
 
+            // 2. SECCIÓN LEGAL Y REGULATORIA
             item {
                 Text(
-                    text = "Gestiona alarmas desde el movil",
-                    fontSize = 9.sp,
-                    color = ClinicalTextSecondary,
+                    text = "Legal y Seguridad",
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = ClinicalArcticCyan,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(bottom = 4.dp)
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 4.dp)
                 )
             }
 
-            // 3. SECCIÓN INFORMACIÓN LEGAL Y REGULATORIA
+            item {
+                CompactActionRow(
+                    title = "Descargo Médico",
+                    textColor = ClinicalTextPrimary,
+                    onClick = { activeNotice = WearLegalNoticeType.MEDICAL_DISCLAIMER }
+                )
+            }
+
+            item {
+                CompactActionRow(
+                    title = "Marcas y No Afiliación",
+                    textColor = ClinicalTextPrimary,
+                    onClick = { activeNotice = WearLegalNoticeType.TRADEMARKS }
+                )
+            }
+
+            item {
+                CompactActionRow(
+                    title = "Privacidad RGPD",
+                    textColor = ClinicalTextPrimary,
+                    onClick = { activeNotice = WearLegalNoticeType.PRIVACY_GDPR }
+                )
+            }
+
+            // 3. SECCIÓN DATOS Y SESIÓN
             item {
                 Text(
-                    text = "Información Legal",
-                    fontSize = 11.sp,
-                    color = ClinicalTextSecondary,
-                    modifier = Modifier.padding(top = 10.dp, bottom = 4.dp)
+                    text = "Sesión y Datos",
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = ClinicalArcticCyan,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 4.dp)
                 )
             }
 
             item {
-                Button(
-                    onClick = { activeNotice = WearLegalNoticeType.MEDICAL_DISCLAIMER },
-                    colors = ButtonDefaults.buttonColors(containerColor = WearSurface),
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = "Descargo Médico",
-                        fontSize = 11.5.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
-
-            item {
-                Button(
-                    onClick = { activeNotice = WearLegalNoticeType.TRADEMARKS },
-                    colors = ButtonDefaults.buttonColors(containerColor = WearSurface),
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = "Marcas y No Afiliación",
-                        fontSize = 11.5.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
-
-            item {
-                Button(
-                    onClick = { activeNotice = WearLegalNoticeType.PRIVACY_GDPR },
-                    colors = ButtonDefaults.buttonColors(containerColor = WearSurface),
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = "Privacidad y Salud (RGPD)",
-                        fontSize = 11.5.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
-
-            // 4. SECCIÓN DATOS Y PRIVACIDAD / DERECHO AL OLVIDO
-            item {
-                Text(
-                    text = "Datos y Sesión",
-                    fontSize = 11.sp,
-                    color = ClinicalTextSecondary,
-                    modifier = Modifier.padding(top = 10.dp, bottom = 4.dp)
+                CompactActionRow(
+                    title = "Borrar Datos Locales",
+                    textColor = ClinicalLowCoral,
+                    isDestructive = true,
+                    onClick = { activeNotice = WearLegalNoticeType.DELETE_CONFIRMATION }
                 )
             }
 
             item {
-                Button(
-                    onClick = { activeNotice = WearLegalNoticeType.DELETE_CONFIRMATION },
-                    colors = ButtonDefaults.buttonColors(containerColor = ClinicalLowCoral.copy(alpha = 0.85f)),
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = "Borrar Datos Locales",
-                        fontSize = 11.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
-            }
-
-            item {
-                Button(
+                CompactActionRow(
+                    title = "Cerrar Sesión",
+                    textColor = ClinicalLowCoral,
                     onClick = {
                         scope.launch {
                             preferencesRepository.clearSession()
                             onLogoutSuccess()
                         }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = ClinicalSurfaceCard),
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 2.dp)
-                ) {
-                    Text(
-                        text = "Cerrar Sesión",
-                        fontSize = 11.5.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFFF87171)
-                    )
-                }
+                    }
+                )
             }
 
-            // 5. PIE DE PÁGINA LEGAL PASIVO PERMANENTE
+            // 4. PIE DE PÁGINA LEGAL PASIVO
             item {
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 WearPassiveLegalFooter()
             }
 
             item {
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(18.dp))
             }
         }
 
@@ -277,6 +237,78 @@ fun WearSettingsScreen(
                     onLogoutSuccess()
                 }
             }
+        )
+    }
+}
+
+@Composable
+private fun CompactSettingsRow(
+    title: String,
+    value: String,
+    valueColor: Color = ClinicalMint,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp, vertical = 2.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(ClinicalSurfaceCard)
+            .border(1.dp, ClinicalSurfaceBorder, RoundedCornerShape(14.dp))
+            .clickable { onClick() }
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = title,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium,
+                color = ClinicalTextPrimary
+            )
+            Text(
+                text = value,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = valueColor
+            )
+        }
+    }
+}
+
+@Composable
+private fun CompactActionRow(
+    title: String,
+    textColor: Color = ClinicalTextPrimary,
+    isDestructive: Boolean = false,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val bgColor = if (isDestructive) ClinicalLowCoral.copy(alpha = 0.15f) else ClinicalSurfaceCard
+    val borderColor = if (isDestructive) ClinicalLowCoral.copy(alpha = 0.4f) else ClinicalSurfaceBorder
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp, vertical = 2.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(bgColor)
+            .border(1.dp, borderColor, RoundedCornerShape(14.dp))
+            .clickable { onClick() }
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = title,
+            fontSize = 11.sp,
+            fontWeight = if (isDestructive) FontWeight.Bold else FontWeight.Medium,
+            color = textColor,
+            textAlign = TextAlign.Center
         )
     }
 }

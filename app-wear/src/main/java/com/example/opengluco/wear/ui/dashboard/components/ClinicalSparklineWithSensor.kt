@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.wear.ui.dashboard.components
+package com.example.opengluco.wear.ui.dashboard.components
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -58,7 +58,7 @@ fun ClinicalSparklineWithSensor(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 10.dp),
+            .padding(horizontal = 14.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {

@@ -1,6 +1,8 @@
 package com.example.opengluco.wear.ui.dashboard
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -10,6 +12,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -40,7 +45,10 @@ import com.example.opengluco.wear.ui.dashboard.components.DetailModalType
 import com.example.opengluco.wear.ui.dashboard.components.DualFloatingOrbs
 import com.example.opengluco.wear.ui.dashboard.components.PatientSelectorChip
 import com.example.opengluco.wear.ui.dashboard.components.WearStatDetailModal
+import com.example.opengluco.wear.ui.theme.ClinicalArcticCyan
 import com.example.opengluco.wear.ui.theme.ClinicalBackground
+import com.example.opengluco.wear.ui.theme.ClinicalMint
+import com.example.opengluco.wear.ui.theme.ClinicalSurfaceBorder
 import com.example.opengluco.wear.ui.theme.ClinicalSurfaceCard
 import com.example.opengluco.wear.ui.theme.ClinicalTextPrimary
 import com.example.opengluco.wear.ui.theme.ClinicalTextSecondary
@@ -178,39 +186,77 @@ fun WearDashboardScreen(
                     // 4. BOTONES DE ACCIÓN: AJUSTES Y REFRESCO
                     item {
                         Row(
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 2.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Button(
-                                onClick = { viewModel.refresh() },
-                                colors = ButtonDefaults.buttonColors(containerColor = ClinicalSurfaceCard),
-                                modifier = Modifier.weight(1f).height(36.dp)
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(34.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(ClinicalSurfaceCard)
+                                    .border(1.dp, ClinicalSurfaceBorder, RoundedCornerShape(12.dp))
+                                    .clickable { viewModel.refresh() },
+                                contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Refresh,
-                                    contentDescription = "Refrescar",
-                                    tint = ClinicalTextPrimary,
-                                    modifier = Modifier.size(16.dp)
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Refresh,
+                                        contentDescription = "Refrescar",
+                                        tint = ClinicalMint,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "Refrescar",
+                                        fontSize = 10.5.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = ClinicalTextPrimary
+                                    )
+                                }
                             }
-                            Button(
-                                onClick = onNavigateToSettings,
-                                colors = ButtonDefaults.buttonColors(containerColor = ClinicalSurfaceCard),
-                                modifier = Modifier.weight(1f).height(36.dp)
+
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(34.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(ClinicalSurfaceCard)
+                                    .border(1.dp, ClinicalSurfaceBorder, RoundedCornerShape(12.dp))
+                                    .clickable { onNavigateToSettings() },
+                                contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Settings,
-                                    contentDescription = "Ajustes",
-                                    tint = ClinicalTextPrimary,
-                                    modifier = Modifier.size(16.dp)
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Settings,
+                                        contentDescription = "Ajustes",
+                                        tint = ClinicalArcticCyan,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "Ajustes",
+                                        fontSize = 10.5.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = ClinicalTextPrimary
+                                    )
+                                }
                             }
                         }
                     }
 
                     // 5. PIE DE PÁGINA LEGAL PASIVO
                     item {
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(4.dp))
                         WearPassiveLegalFooter()
                     }
 

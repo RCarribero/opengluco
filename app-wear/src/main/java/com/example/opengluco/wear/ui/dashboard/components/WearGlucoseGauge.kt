@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.wear.ui.dashboard.components
+package com.example.opengluco.wear.ui.dashboard.components
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
@@ -101,8 +101,9 @@ fun WearGlucoseGauge(
             Text(
                 text = unit.label,
                 fontSize = 11.sp,
-                color = Color(0xFF90A4AE),
-                fontWeight = FontWeight.Medium
+                color = com.example.opengluco.wear.ui.theme.ClinicalTextSecondary,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center
             )
         }
     }

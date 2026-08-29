@@ -98,7 +98,8 @@ fun DualFloatingOrbs(
                     text = unit.label,
                     fontSize = 9.sp,
                     fontWeight = FontWeight.Medium,
-                    color = ClinicalTextSecondary
+                    color = ClinicalTextSecondary,
+                    textAlign = TextAlign.Center
                 )
             }
         }

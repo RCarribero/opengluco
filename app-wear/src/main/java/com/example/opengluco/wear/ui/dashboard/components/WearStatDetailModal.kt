@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.wear.ui.dashboard.components
+package com.example.opengluco.wear.ui.dashboard.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -189,12 +189,17 @@ fun WearStatDetailModal(
             }
 
             item {
-                Button(
-                    onClick = onDismiss,
-                    colors = ButtonDefaults.buttonColors(containerColor = ClinicalSurfaceCard),
-                    modifier = Modifier.height(32.dp)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.6f)
+                        .height(32.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(ClinicalSurfaceCard)
+                        .border(1.dp, ClinicalSurfaceBorder, RoundedCornerShape(12.dp))
+                        .clickable { onDismiss() },
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text("Cerrar", fontSize = 11.sp, color = ClinicalTextPrimary)
+                    Text("Cerrar", fontSize = 11.sp, fontWeight = FontWeight.Medium, color = ClinicalTextPrimary, textAlign = TextAlign.Center)
                 }
             }
 

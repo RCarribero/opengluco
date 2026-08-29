@@ -213,38 +213,46 @@ fun WearLegalNoticeDialog(
                     item {
                         Column(
                             modifier = Modifier.fillMaxWidth(),
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Button(
-                                onClick = {
-                                    onDismiss()
-                                    onConfirmDelete?.invoke()
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = ClinicalLowCoral),
+                            Box(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(36.dp)
+                                    .fillMaxWidth(0.85f)
+                                    .height(34.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(ClinicalLowCoral)
+                                    .clickable {
+                                        onDismiss()
+                                        onConfirmDelete?.invoke()
+                                    },
+                                contentAlignment = Alignment.Center
                             ) {
                                 Text(
                                     text = WearLegalTexts.DELETE_CONFIRM_BTN_CONFIRM,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.White
+                                    color = Color.White,
+                                    textAlign = TextAlign.Center
                                 )
                             }
 
-                            Button(
-                                onClick = onDismiss,
-                                colors = ButtonDefaults.buttonColors(containerColor = ClinicalSurfaceCard),
+                            Box(
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(34.dp)
+                                    .fillMaxWidth(0.85f)
+                                    .height(32.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(ClinicalSurfaceCard)
+                                    .border(1.dp, ClinicalSurfaceBorder, RoundedCornerShape(12.dp))
+                                    .clickable { onDismiss() },
+                                contentAlignment = Alignment.Center
                             ) {
                                 Text(
                                     text = WearLegalTexts.DELETE_CONFIRM_BTN_CANCEL,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Medium,
-                                    color = ClinicalTextSecondary
+                                    color = ClinicalTextSecondary,
+                                    textAlign = TextAlign.Center
                                 )
                             }
                         }
@@ -260,18 +268,22 @@ fun WearLegalNoticeDialog(
                 }
 
                 item {
-                    Button(
-                        onClick = onDismiss,
-                        colors = ButtonDefaults.buttonColors(containerColor = ClinicalSurfaceCard),
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(34.dp)
+                            .fillMaxWidth(0.7f)
+                            .height(32.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(ClinicalSurfaceCard)
+                            .border(1.dp, ClinicalSurfaceBorder, RoundedCornerShape(12.dp))
+                            .clickable { onDismiss() },
+                        contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = "Entendido",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
-                            color = ClinicalMint
+                            color = ClinicalMint,
+                            textAlign = TextAlign.Center
                         )
                     }
                 }
