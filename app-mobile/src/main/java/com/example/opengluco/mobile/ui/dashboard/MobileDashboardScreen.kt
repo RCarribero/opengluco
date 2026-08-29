@@ -210,7 +210,7 @@ fun MobileDashboardScreen(
             val currentVersion = try {
                 context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "1.0.0"
             } catch (_: Exception) { "1.0.0" }
-            val res = updateRepo.checkLatestRelease(currentVersion)
+            val res = updateRepo.checkLatestRelease(currentVersion, "Mobile")
             isCheckingUpdates = false
             res.fold(
                 onSuccess = { info ->

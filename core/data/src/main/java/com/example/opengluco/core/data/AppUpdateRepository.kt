@@ -32,6 +32,7 @@ class AppUpdateRepository {
      */
     suspend fun checkLatestRelease(
         currentVersionName: String,
+        targetKeyword: String = "Mobile",
         owner: String = DEFAULT_GITHUB_OWNER,
         repo: String = DEFAULT_GITHUB_REPO
     ): Result<AppReleaseInfo> = withContext(Dispatchers.IO) {
@@ -75,16 +76,29 @@ class AppUpdateRepository {
                 val htmlUrl = json.optString("html_url", "")
                 val publishedAt = json.optString("published_at", "")
 
-                // Buscar el archivo APK en los assets de la release
+                // Buscar el archivo APK en los assets de la release filtrando por el módulo correspondiente
                 var apkUrl = ""
                 val assets = json.optJSONArray("assets")
                 if (assets != null) {
+                    // Prioridad 1: Coincidencia con el nombre del módulo (ej. "Mobile", "Wear", "Auto")
                     for (i in 0 until assets.length()) {
                         val asset = assets.getJSONObject(i)
                         val name = asset.optString("name", "")
-                        if (name.endsWith(".apk", ignoreCase = true)) {
+                        if (name.endsWith(".apk", ignoreCase = true) &&
+                            name.contains(targetKeyword, ignoreCase = true)) {
                             apkUrl = asset.optString("browser_download_url", "")
                             break
+                        }
+                    }
+                    // Prioridad 2: Si no encuentra la keyword exacta, fallback a cualquier APK
+                    if (apkUrl.isBlank()) {
+                        for (i in 0 until assets.length()) {
+                            val asset = assets.getJSONObject(i)
+                            val name = asset.optString("name", "")
+                            if (name.endsWith(".apk", ignoreCase = true)) {
+                                apkUrl = asset.optString("browser_download_url", "")
+                                break
+                            }
                         }
                     }
                 }
