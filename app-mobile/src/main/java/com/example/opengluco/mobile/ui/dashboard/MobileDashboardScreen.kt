@@ -438,14 +438,15 @@ fun MobileDashboardScreen(
     val sensorModel = sensor?.sensorModelName ?: "FreeStyle Libre 3"
     val isSensorActive = (sensor?.getRemainingDays() ?: 1) > 0
 
-    if (showReportsScreen) {
-        ReportsHubScreen(
-            patient = selectedPatient,
-            historicalReadings = combinedHistory,
-            unit = settings?.unit ?: GlucoseUnit.MGDL,
-            onBack = { showReportsScreen = false }
-        )
-    } else if (showSettingsScreen) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (showReportsScreen) {
+            ReportsHubScreen(
+                patient = selectedPatient,
+                historicalReadings = combinedHistory,
+                unit = settings?.unit ?: GlucoseUnit.MGDL,
+                onBack = { showReportsScreen = false }
+            )
+        } else if (showSettingsScreen) {
         MobileSettingsScreen(
             selectedPatient = selectedPatient,
             sensor = sensor,
@@ -1235,6 +1236,7 @@ fun MobileDashboardScreen(
         }
     }
 }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1260,6 +1262,7 @@ private fun MobileSettingsScreen(
     onBack: () -> Unit
 ) {
     val colors = ClinicalTheme.colors
+    val context = LocalContext.current
 
     Scaffold(
         containerColor = colors.background,
@@ -1539,6 +1542,22 @@ private fun MobileSettingsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp)
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            val currentAppVersion = remember {
+                try {
+                    context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "1.1.1"
+                } catch (_: Exception) { "1.1.1" }
+            }
+            Text(
+                text = "OpenGluco v$currentAppVersion",
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Medium,
+                color = colors.textSecondary.copy(alpha = 0.7f),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(24.dp))
