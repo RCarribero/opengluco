@@ -38,3 +38,9 @@ Guia maestra de desarrollo para el ecosistema OpenGluco (`app-mobile`, `app-wear
 - **No Afiliacion:** Debe declararse explícitamente la ausencia de afiliación, patrocinio o respaldo oficial de Abbott Laboratories.
 - **Exención Médica (MDR/MDDS):** Prohibición absoluta de funciones de cálculo de bolos o dosificación de insulina.
 - **Respaldo Legal:** Las comunicaciones con el backend de LibreView están respaldadas por el Art. 100.3 TRLPI (interoperabilidad) y el Reglamento UE 2023/2854 (Data Act).
+
+## 7. Arquitectura y Grafo de Conocimiento (Graphify)
+- **Consulta Obligatoria al Añadir Módulos o Funcionalidades:** Antes de incorporar nuevos módulos, pantallas, servicios o flujos en el ecosistema, se debe consultar primero el grafo de conocimiento (`graphify query "<feature/modulo>"`, `graphify explain "<concepto>"` o `graphify path "<origen>" "<destino>"`).
+- **Objetivo:** Identificar dependencias existentes, modelos y repositorios compartidos (`core:model`, `core:data`, `core:network`), y asegurar la consistencia entre `app-mobile`, `app-wear` y `app-auto` sin introducir duplicidades ni código acoplado.
+- **Actualización Continua:** Tras finalizar modificaciones de código, ejecutar `graphify update .` para mantener el grafo sincronizado.
+
