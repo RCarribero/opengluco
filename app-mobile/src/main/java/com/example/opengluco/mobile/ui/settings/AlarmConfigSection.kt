@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.mobile.ui.settings
+package com.example.opengluco.mobile.ui.settings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -54,6 +54,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -67,6 +68,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -80,6 +82,7 @@ import com.example.opengluco.core.data.GlucoseUnit
 import com.example.opengluco.core.model.AlarmSeverity
 import com.example.opengluco.core.model.AlarmType
 import com.example.opengluco.core.model.GlucoseAlarm
+import com.example.opengluco.mobile.service.MobileAlarmSyncHelper
 import kotlinx.coroutines.launch
 import java.util.Locale
 import java.util.UUID
@@ -112,8 +115,15 @@ fun AlarmConfigSection(
     onConfigureTargetRange: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val alarms by alarmRepository.alarmsFlow.collectAsState(initial = emptyList())
+
+    LaunchedEffect(alarms) {
+        if (alarms.isNotEmpty()) {
+            MobileAlarmSyncHelper.syncAlarmsToWear(context, alarmRepository)
+        }
+    }
 
     var showCreateDialog by remember { mutableStateOf(false) }
     var selectedAlarmTypeForCreation by remember { mutableStateOf(AlarmType.LOW) }

@@ -46,6 +46,9 @@ object MobilePairingHelper {
                     Log.d("MobilePairing", "Enviando auth a nodo Wearable: ${node.displayName} (${node.id})")
                     dataClient.sendMessage(node.id, "/opengluco_auth_sync", sessionJson.toByteArray(Charsets.UTF_8))
                 }
+                // Sincronizar también las alarmas configuradas
+                val alarmRepo = com.example.opengluco.core.data.AlarmRepository(context)
+                com.example.opengluco.mobile.service.MobileAlarmSyncHelper.syncAlarmsToWear(context, alarmRepo)
             }
         } catch (e: Exception) {
             Log.e("MobilePairing", "Error al enviar mensaje Wearable: ${e.message}")

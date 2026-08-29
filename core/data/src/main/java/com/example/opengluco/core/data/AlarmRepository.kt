@@ -121,6 +121,25 @@ class AlarmRepository(private val context: Context) {
         Result.success(Unit)
     }
 
+    suspend fun replaceAllAlarms(newAlarms: List<GlucoseAlarm>): Result<Unit> = withContext(Dispatchers.IO) {
+        saveToDisk(newAlarms)
+        _alarmsFlow.value = newAlarms
+        Result.success(Unit)
+    }
+
+    suspend fun importAlarmsFromJson(jsonStr: String): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val alarms = json.decodeFromString<List<GlucoseAlarm>>(jsonStr)
+            replaceAllAlarms(alarms)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    fun exportAlarmsToJson(): String {
+        return json.encodeToString(_alarmsFlow.value)
+    }
+
     fun getAllAlarms(): List<GlucoseAlarm> = _alarmsFlow.value
 
     fun getAlarmsByType(type: AlarmType): List<GlucoseAlarm> =
