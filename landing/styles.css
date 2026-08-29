@@ -1,0 +1,218 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap');
+
+:root {
+  /* Default: Dark Theme */
+  --bg-main: #06060a;
+  --bg-card: rgba(14, 14, 22, 0.75);
+  --border-card: rgba(255, 255, 255, 0.1);
+  --text-main: #f3f4f6;
+  --text-muted: #9ca3af;
+  --text-sub: #d1d5db;
+  --card-hover-bg: rgba(20, 20, 32, 0.85);
+  --chart-grid: rgba(255, 255, 255, 0.08);
+  --widget-bg: rgba(10, 10, 16, 0.9);
+  --widget-border: rgba(255, 255, 255, 0.15);
+  
+  /* Clinical Tokens */
+  --color-in-range: #4ADE80;
+  --color-low: #F87171;
+  --color-urgent-low: #EF4444;
+  --color-high: #FBBF24;
+  --color-very-high: #FB923C;
+
+  --theme-glow: var(--color-in-range);
+  --theme-glow-rgb: 74, 222, 128;
+}
+
+/* Light Theme Variables */
+html.light {
+  --bg-main: #f8fafc;
+  --bg-card: rgba(255, 255, 255, 0.85);
+  --border-card: rgba(15, 23, 42, 0.1);
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --text-sub: #334155;
+  --card-hover-bg: rgba(255, 255, 255, 0.95);
+  --chart-grid: rgba(15, 23, 42, 0.08);
+  --widget-bg: #ffffff;
+  --widget-border: #e2e8f0;
+  
+  --color-in-range: #16a34a;
+  --color-low: #dc2626;
+  --color-urgent-low: #b91c1c;
+  --color-high: #d97706;
+  --color-very-high: #ea580c;
+
+  --theme-glow: #16a34a;
+  --theme-glow-rgb: 22, 163, 74;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+body {
+  background-color: transparent;
+  overflow-x: hidden;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* 3D Background Canvas Layer */
+#canvas-3d-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+  pointer-events: auto;
+  cursor: grab;
+}
+
+#canvas-3d-background:active {
+  cursor: grabbing;
+}
+
+/* Foreground Content Wrapper */
+.content-wrapper {
+  position: relative;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.content-wrapper * {
+  pointer-events: auto;
+}
+
+/* Floating Theme Switcher Button */
+.theme-toggle-btn {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 100;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-card);
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.theme-toggle-btn:hover {
+  transform: scale(1.1) rotate(15deg);
+  border-color: var(--theme-glow);
+  box-shadow: 0 0 20px rgba(var(--theme-glow-rgb), 0.4);
+}
+
+/* 3D Glassmorphism Cards */
+.glass-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--border-card);
+  border-radius: 24px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+  transform-style: preserve-3d;
+}
+
+.glass-card:hover {
+  background: var(--card-hover-bg);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+}
+
+html.light .glass-card:hover {
+  border-color: rgba(15, 23, 42, 0.2);
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+}
+
+/* Range Selector Buttons */
+.range-pill {
+  transition: all 0.25s ease;
+  border: 1px solid var(--border-card);
+  background: rgba(125, 125, 125, 0.08);
+  color: var(--text-muted);
+}
+
+.range-pill.active {
+  border-color: currentColor;
+  box-shadow: 0 0 16px rgba(var(--theme-glow-rgb), 0.35);
+  background: var(--bg-card);
+  font-weight: 700;
+}
+
+/* Sparkline Grid */
+.chart-grid-line {
+  stroke: var(--chart-grid);
+  stroke-dasharray: 4 4;
+}
+
+/* Watch Simulator */
+.watch-frame {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: var(--widget-bg);
+  border: 3px solid var(--widget-border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.watch-bubble {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 2px solid var(--theme-glow);
+  box-shadow: 0 0 16px rgba(var(--theme-glow-rgb), 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Car Display Matrix */
+.car-display {
+  background: var(--widget-bg);
+  border: 1px solid var(--widget-border);
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* 3D Interaction Hint Badge */
+.drag-hint-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  font-size: 11px;
+  color: var(--text-muted);
+  backdrop-filter: blur(12px);
+  user-select: none;
+}
