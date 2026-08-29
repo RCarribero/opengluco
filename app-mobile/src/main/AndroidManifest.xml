@@ -43,6 +43,19 @@
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 
+        <!-- Servicio de escucha de sincronización Wear OS (DataLayer MessageClient) -->
+        <service
+            android:name=".service.MobileWearableMessageListenerService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data
+                    android:host="*"
+                    android:pathPrefix="/opengluco"
+                    android:scheme="wear" />
+            </intent-filter>
+        </service>
+
         <!-- FileProvider para compartir y exportar informes médicos en CSV -->
         <provider
             android:name="androidx.core.content.FileProvider"

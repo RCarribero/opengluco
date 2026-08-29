@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -64,6 +65,18 @@ fun WearSettingsScreen(
     val alarmRepository = remember { AlarmRepository(context) }
     val alarms by alarmRepository.alarmsFlow.collectAsState(initial = emptyList())
     val activeAlarmCount = alarms.count { it.enabled }
+
+    LaunchedEffect(Unit) {
+        try {
+            val nodeClient = com.google.android.gms.wearable.Wearable.getNodeClient(context)
+            val messageClient = com.google.android.gms.wearable.Wearable.getMessageClient(context)
+            nodeClient.connectedNodes.addOnSuccessListener { nodes ->
+                for (node in nodes) {
+                    messageClient.sendMessage(node.id, "/opengluco_request_alarms_sync", byteArrayOf())
+                }
+            }
+        } catch (_: Exception) {}
+    }
 
     Box(
         modifier = modifier
@@ -142,7 +155,19 @@ fun WearSettingsScreen(
                     title = "Alarmas",
                     value = if (activeAlarmCount > 0) "$activeAlarmCount activas" else "Configurar",
                     valueColor = if (activeAlarmCount > 0) ClinicalMint else ClinicalTextSecondary,
-                    onClick = { /* Gestionable desde la app móvil */ }
+                    onClick = {
+                        scope.launch {
+                            try {
+                                val nodeClient = com.google.android.gms.wearable.Wearable.getNodeClient(context)
+                                val messageClient = com.google.android.gms.wearable.Wearable.getMessageClient(context)
+                                nodeClient.connectedNodes.addOnSuccessListener { nodes ->
+                                    for (node in nodes) {
+                                        messageClient.sendMessage(node.id, "/opengluco_request_alarms_sync", byteArrayOf())
+                                    }
+                                }
+                            } catch (_: Exception) {}
+                        }
+                    }
                 )
             }
 
