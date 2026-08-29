@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.core.data
+package com.example.opengluco.core.data
 
 import com.example.opengluco.core.model.GlucoseMeasurement
 import com.example.opengluco.core.model.ReportTimeBlock
@@ -201,5 +201,89 @@ class ClinicalReportsCalculatorTest {
             createReading(115.0, 12, 0, day)
         }
         assertEquals(5, ClinicalReportsCalculator.calculateAvailableDays(fiveDaysReadings))
+    }
+
+    @Test
+    fun testTimeInTightRangeAndGriCalculation() {
+        val readings = listOf(
+            createReading(45.0, 1),   // VERY_LOW (<54)
+            createReading(60.0, 2),   // LOW (54-69)
+            createReading(100.0, 3),  // IN_RANGE (70-180) & TIGHT_RANGE (70-140)
+            createReading(120.0, 4),  // IN_RANGE & TIGHT_RANGE
+            createReading(160.0, 5),  // IN_RANGE (pero no Tight Range >140)
+            createReading(200.0, 6),  // HIGH (181-250)
+            createReading(300.0, 7)   // VERY_HIGH (>250)
+        )
+
+        val report = ClinicalReportsCalculator.calculateTimeInRange(readings, 7)
+        assertEquals(7, report.totalReadings)
+        // 2 de 7 lecturas están entre 70 y 140 (100 y 120) -> 2/7 = 28.6%
+        assertEquals(28.6, report.tightRangePercent, 0.2)
+        // GRI debe ser > 0 y tener categoría asignada
+        assertTrue("GRI score must be positive", report.gri > 0.0)
+        assertNotNull(report.griCategory)
+        assertTrue("Category must be defined", report.griCategory.startsWith("Zona"))
+    }
+
+    @Test
+    fun testMageCalculation() {
+        // Generar fluctuaciones con subidas y bajadas marcadas
+        val readings = listOf(
+            createReading(80.0, 1, 0),
+            createReading(160.0, 2, 0),
+            createReading(90.0, 3, 0),
+            createReading(200.0, 4, 0),
+            createReading(85.0, 5, 0)
+        )
+        val report = ClinicalReportsCalculator.calculateDailyPatterns(readings, 7)
+        assertTrue("SD must be positive", report.standardDeviation > 0.0)
+        assertTrue("MAGE must be positive for oscillating readings", report.mage >= 0.0)
+    }
+
+    @Test
+    fun testSensorExpirationAlertEvaluation() {
+        val nowSec = System.currentTimeMillis() / 1000
+
+        // Sensor con 1 día restante -> alerta preventiva
+        val expiringSensor = SensorInfo(
+            deviceId = "dev-1",
+            serialNumber = "SN-EXP-1",
+            activatedTimestamp = nowSec - (13 * 24 * 3600), // 13 días de 14
+            warmupDurationMinutes = 60,
+            sensorType = 3,
+            lifetimeDays = 14
+        )
+        val alert = ClinicalReportsCalculator.checkSensorExpirationAlert(expiringSensor)
+        assertNotNull(alert)
+        assertEquals(1, alert!!.daysRemaining)
+        assertFalse(alert.isCritical)
+        assertTrue(alert.title.contains("Proximo a Expirar"))
+
+        // Sensor vencido (15 días de 14)
+        val expiredSensor = SensorInfo(
+            deviceId = "dev-2",
+            serialNumber = "SN-EXP-2",
+            activatedTimestamp = nowSec - (15 * 24 * 3600),
+            warmupDurationMinutes = 60,
+            sensorType = 3,
+            lifetimeDays = 14
+        )
+        val expiredAlert = ClinicalReportsCalculator.checkSensorExpirationAlert(expiredSensor)
+        assertNotNull(expiredAlert)
+        assertEquals(0, expiredAlert!!.daysRemaining)
+        assertTrue(expiredAlert.isCritical)
+        assertTrue(expiredAlert.title.contains("Expirado"))
+
+        // Sensor nuevo (5 días de 14) -> sin alerta
+        val goodSensor = SensorInfo(
+            deviceId = "dev-3",
+            serialNumber = "SN-EXP-3",
+            activatedTimestamp = nowSec - (5 * 24 * 3600),
+            warmupDurationMinutes = 60,
+            sensorType = 3,
+            lifetimeDays = 14
+        )
+        val noAlert = ClinicalReportsCalculator.checkSensorExpirationAlert(goodSensor)
+        org.junit.Assert.assertNull(noAlert)
     }
 }

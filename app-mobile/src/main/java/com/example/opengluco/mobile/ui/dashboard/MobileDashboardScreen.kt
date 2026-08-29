@@ -33,18 +33,25 @@ import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Power
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Sensors
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Watch
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Power
+import android.widget.Toast
+import com.example.opengluco.core.data.AppUpdateRepository
+import com.example.opengluco.core.model.AppReleaseInfo
+import com.example.opengluco.mobile.ui.dashboard.components.UpdateAvailableDialog
 import androidx.compose.runtime.DisposableEffect
 import com.example.opengluco.core.model.QrPairingPayload
 import com.example.opengluco.core.data.QrAuthHelper
@@ -191,6 +198,40 @@ fun MobileDashboardScreen(
     val haptic = LocalHapticFeedback.current
     val colors = ClinicalTheme.colors
     var showSettingsScreen by remember { mutableStateOf(false) }
+
+    val updateRepo = remember { AppUpdateRepository() }
+    var availableReleaseInfo by remember { mutableStateOf<AppReleaseInfo?>(null) }
+    var isCheckingUpdates by remember { mutableStateOf(false) }
+
+    fun checkAppUpdates(manual: Boolean) {
+        if (isCheckingUpdates) return
+        isCheckingUpdates = true
+        scope.launch {
+            val currentVersion = try {
+                context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "1.0.0"
+            } catch (_: Exception) { "1.0.0" }
+            val res = updateRepo.checkLatestRelease(currentVersion)
+            isCheckingUpdates = false
+            res.fold(
+                onSuccess = { info ->
+                    if (info.isUpdateAvailable) {
+                        availableReleaseInfo = info
+                    } else if (manual) {
+                        Toast.makeText(context, "OpenGluco esta actualizado (v$currentVersion)", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                onFailure = {
+                    if (manual) {
+                        Toast.makeText(context, "No se pudo conectar con GitHub", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            )
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        checkAppUpdates(manual = false)
+    }
 
     // Detección automática en segundo plano de solicitudes de emparejamiento desde el reloj
     DisposableEffect(Unit) {
@@ -404,10 +445,7 @@ fun MobileDashboardScreen(
             unit = settings?.unit ?: GlucoseUnit.MGDL,
             onBack = { showReportsScreen = false }
         )
-        return
-    }
-
-    if (showSettingsScreen) {
+    } else if (showSettingsScreen) {
         MobileSettingsScreen(
             selectedPatient = selectedPatient,
             sensor = sensor,
@@ -440,6 +478,7 @@ fun MobileDashboardScreen(
                 )
             },
             onShowLegalNotice = { type -> activeLegalNotice = type },
+            onCheckUpdates = { checkAppUpdates(manual = true) },
             onLogout = {
                 scope.launch {
                     preferencesRepository.clearSession()
@@ -448,10 +487,8 @@ fun MobileDashboardScreen(
             },
             onBack = { showSettingsScreen = false }
         )
-        return
-    }
-
-    Scaffold(
+    } else {
+        Scaffold(
         containerColor = colors.background,
         topBar = {
             TopAppBar(
@@ -682,7 +719,11 @@ fun MobileDashboardScreen(
 
                                 Spacer(modifier = Modifier.height(12.dp))
 
-                                // Period Selector Tabs (Dia | Semana | Mes | 3 Meses)
+                                // Period Selector Tabs (Solo periodos con datos reales)
+                                val availablePeriods = MetricPeriod.entries.filter {
+                                    availableDataDays >= it.days || (it == MetricPeriod.DAY && availableDataDays >= 1)
+                                }.ifEmpty { listOf(MetricPeriod.DAY) }
+
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -692,9 +733,8 @@ fun MobileDashboardScreen(
                                         .padding(3.dp),
                                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
-                                    MetricPeriod.entries.forEach { period ->
+                                    availablePeriods.forEach { period ->
                                         val isSelected = selectedPeriod == period
-                                        val isAvailable = availableDataDays >= period.days || (period == MetricPeriod.DAY && availableDataDays >= 1)
                                         Box(
                                             modifier = Modifier
                                                 .weight(1f)
@@ -704,12 +744,8 @@ fun MobileDashboardScreen(
                                                 )
                                                 .clickable {
                                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                    if (isAvailable) {
-                                                        selectedPeriod = period
-                                                        insufficientDataNotice = null
-                                                    } else {
-                                                        insufficientDataNotice = "Periodo de ${period.label} no disponible: se requieren al menos ${period.days} dias de historial (disponibles: $availableDataDays dia(s))."
-                                                    }
+                                                    selectedPeriod = period
+                                                    insufficientDataNotice = null
                                                 }
                                                 .padding(vertical = 7.dp),
                                             contentAlignment = Alignment.Center
@@ -720,8 +756,6 @@ fun MobileDashboardScreen(
                                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                                 color = if (isSelected) {
                                                     if (colors.isDark) Color.Black else Color.White
-                                                } else if (!isAvailable) {
-                                                    colors.textMuted.copy(alpha = 0.35f)
                                                 } else {
                                                     colors.textSecondary
                                                 },
@@ -907,6 +941,7 @@ fun MobileDashboardScreen(
                 }
             }
         }
+    }
 
         // Modal de Estadísticas Detalladas
         if (activeModal != DetailModalType.NONE) {
@@ -948,6 +983,14 @@ fun MobileDashboardScreen(
                         onLogout()
                     }
                 }
+            )
+        }
+
+        // Diálogo de Actualización In-App OTA
+        if (availableReleaseInfo != null) {
+            UpdateAvailableDialog(
+                releaseInfo = availableReleaseInfo!!,
+                onDismiss = { availableReleaseInfo = null }
             )
         }
 
@@ -1212,6 +1255,7 @@ private fun MobileSettingsScreen(
     onOpenQrScanner: () -> Unit,
     onExportCsv: () -> Unit,
     onShowLegalNotice: (LegalNoticeType) -> Unit,
+    onCheckUpdates: () -> Unit,
     onLogout: () -> Unit,
     onBack: () -> Unit
 ) {
@@ -1413,7 +1457,7 @@ private fun MobileSettingsScreen(
             // 5. MARCO LEGAL Y REGULATORIO
             SettingsGroupCard(title = "Legal y Cumplimiento") {
                 SettingsNavigationRow(
-                    icon = Icons.Default.Close,
+                    icon = Icons.Default.Info,
                     title = "Descargo Médico",
                     subtitle = "MDR UE 2017/745 / FDA MDDS",
                     onClick = { onShowLegalNotice(LegalNoticeType.MEDICAL_DISCLAIMER) }
@@ -1422,7 +1466,7 @@ private fun MobileSettingsScreen(
                 SettingsDivider()
 
                 SettingsNavigationRow(
-                    icon = Icons.Default.Close,
+                    icon = Icons.Default.Shield,
                     title = "Marcas Registradas",
                     subtitle = "Abbott Laboratories / FreeStyle",
                     onClick = { onShowLegalNotice(LegalNoticeType.TRADEMARKS) }
@@ -1431,10 +1475,20 @@ private fun MobileSettingsScreen(
                 SettingsDivider()
 
                 SettingsNavigationRow(
-                    icon = Icons.Default.Close,
+                    icon = Icons.Default.Lock,
                     title = "Privacidad de Salud",
                     subtitle = "Cifrado local AES-256 (Art. 9 RGPD)",
                     onClick = { onShowLegalNotice(LegalNoticeType.PRIVACY_GDPR) }
+                )
+            }
+
+            // 6. ACTUALIZACIONES DE LA APLICACIÓN
+            SettingsGroupCard(title = "Actualizaciones") {
+                SettingsNavigationRow(
+                    icon = Icons.Default.SystemUpdate,
+                    title = "Buscar Actualizaciones",
+                    subtitle = "Comprobar si hay una nueva versión disponible",
+                    onClick = onCheckUpdates
                 )
             }
 

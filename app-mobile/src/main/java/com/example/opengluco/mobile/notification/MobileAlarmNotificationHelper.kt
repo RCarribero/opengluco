@@ -53,6 +53,7 @@ object MobileAlarmNotificationHelper {
                 vibrationPattern = longArrayOf(0, 600, 150, 600, 150, 600)
                 enableVibration(true)
                 setSound(urgentSoundUri, urgentAudioAttributes)
+                setBypassDnd(true)
                 lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
             }
 
@@ -266,5 +267,37 @@ object MobileAlarmNotificationHelper {
         stopEmergencyAlarmSound()
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.cancel(alarmId.hashCode())
+    }
+
+    /**
+     * Emite una notificacion preventiva sobre la expiracion del sensor FreeStyle Libre.
+     */
+    fun notifySensorExpiration(context: Context, alert: com.example.opengluco.core.model.SensorExpirationAlert) {
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val intent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        } else {
+            PendingIntent.FLAG_UPDATE_CURRENT
+        }
+        val pendingIntent = PendingIntent.getActivity(context, 8001, intent, flags)
+
+        val channelId = if (alert.isCritical) CHANNEL_ALERT else CHANNEL_INFO
+        val icon = if (alert.isCritical) android.R.drawable.stat_sys_warning else android.R.drawable.ic_dialog_info
+        val priority = if (alert.isCritical) NotificationCompat.PRIORITY_HIGH else NotificationCompat.PRIORITY_DEFAULT
+
+        val notification = NotificationCompat.Builder(context, channelId)
+            .setSmallIcon(icon)
+            .setContentTitle(alert.title)
+            .setContentText(alert.message)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(alert.message))
+            .setPriority(priority)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .build()
+
+        notificationManager.notify(8001, notification)
     }
 }

@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.core.data
+package com.example.opengluco.core.data
 
 import com.example.opengluco.core.model.AverageGlucoseReport
 import com.example.opengluco.core.model.DailyGraphDaySummary
@@ -66,6 +66,21 @@ object ClinicalReportsCalculator {
     }
 
     /**
+     * Filtra las lecturas para conservar unicamente las correspondientes a la ventana de periodDays (relativa al maximo timestamp).
+     */
+    fun filterReadingsByPeriod(readings: List<GlucoseMeasurement>, periodDays: Int): List<GlucoseMeasurement> {
+        val valid = readings.filter { it.numericValue > 0 }
+        if (valid.isEmpty()) return emptyList()
+
+        val epochs = valid.mapNotNull { it.getEpochMillis().takeIf { t -> t > 0L } }
+        if (epochs.isEmpty()) return valid
+
+        val maxEpoch = epochs.maxOrNull() ?: return valid
+        val cutoffEpoch = maxEpoch - (periodDays.toLong() * 24L * 3600L * 1000L)
+        return valid.filter { (it.getEpochMillis().takeIf { t -> t > 0L } ?: maxEpoch) >= cutoffEpoch }
+    }
+
+    /**
      * 1. Daily Patterns (Patrones Diarios / AGP Modal Day)
      */
     fun calculateDailyPatterns(
@@ -74,7 +89,7 @@ object ClinicalReportsCalculator {
         targetLow: Double = 70.0,
         targetHigh: Double = 180.0
     ): DailyPatternsReport {
-        val valid = readings.filter { it.numericValue > 0 }
+        val valid = filterReadingsByPeriod(readings, periodDays)
         if (valid.isEmpty()) {
             val emptyHourly = (0..23).map { HourlyPercentile(it, 0.0, 0.0, 0.0, 0.0, 0.0, 0) }
             return DailyPatternsReport(periodDays, emptyHourly, 0.0, 0.0, 0.0, targetLow, targetHigh)
@@ -139,6 +154,7 @@ object ClinicalReportsCalculator {
         val variance = allValues.map { (it - mean).pow(2) }.average()
         val sd = sqrt(variance)
         val cv = if (mean > 0) (sd / mean) * 100.0 else 0.0
+        val mage = calculateMage(valid, sd)
 
         return DailyPatternsReport(
             periodDays = periodDays,
@@ -147,23 +163,24 @@ object ClinicalReportsCalculator {
             standardDeviation = roundDec(sd, 1),
             coefficientOfVariation = roundDec(cv, 1),
             targetLow = targetLow,
-            targetHigh = targetHigh
+            targetHigh = targetHigh,
+            mage = mage
         )
     }
 
     /**
-     * 2. Time In Range (Consenso Internacional ATTD 2019 - 5 Niveles)
+     * 2. Time In Range (Consenso Internacional ATTD 2019 - 5 Niveles, TiTR 70-140 y GRI)
      */
     fun calculateTimeInRange(
         readings: List<GlucoseMeasurement>,
         periodDays: Int
     ): TimeInRangeReport {
-        val valid = readings.filter { it.numericValue > 0 }
+        val valid = filterReadingsByPeriod(readings, periodDays)
         val total = valid.size
 
         if (total == 0) {
             val emptyBuckets = TirCategory.values().map { TirBucket(it, 0, 0.0, 0) }
-            return TimeInRangeReport(periodDays, 0, emptyBuckets, 0.0, 0.0, 0.0)
+            return TimeInRangeReport(periodDays, 0, emptyBuckets, 0.0, 0.0, 0.0, 0.0, 0.0, "Sin Datos")
         }
 
         val counts = mutableMapOf<TirCategory, Int>()
@@ -200,14 +217,100 @@ object ClinicalReportsCalculator {
         val high = (buckets.find { it.category == TirCategory.HIGH }?.percentage ?: 0.0) +
                 (buckets.find { it.category == TirCategory.VERY_HIGH }?.percentage ?: 0.0)
 
+        // Time in Tight Range (TiTR: 70 - 140 mg/dL)
+        val tightCount = valid.count { it.numericValue in 70.0..140.0 }
+        val tightRangePct = roundDec((tightCount.toDouble() / total.toDouble()) * 100.0, 1)
+
+        // Glycemic Risk Index (GRI: Klonoff et al. 2022)
+        // GRI = (3.0 * %VLow) + (2.4 * %Low) + (1.6 * %VHigh) + (0.8 * %High)
+        val vLowPct = buckets.find { it.category == TirCategory.VERY_LOW }?.percentage ?: 0.0
+        val lowPct = buckets.find { it.category == TirCategory.LOW }?.percentage ?: 0.0
+        val highPct = buckets.find { it.category == TirCategory.HIGH }?.percentage ?: 0.0
+        val vHighPct = buckets.find { it.category == TirCategory.VERY_HIGH }?.percentage ?: 0.0
+
+        val rawGri = (3.0 * vLowPct) + (2.4 * lowPct) + (1.6 * vHighPct) + (0.8 * highPct)
+        val gri = roundDec(rawGri.coerceIn(0.0, 100.0), 1)
+
+        val griCategory = when {
+            gri <= 20.0 -> "Zona A (Muy Bajo Riesgo)"
+            gri <= 40.0 -> "Zona B (Bajo Riesgo)"
+            gri <= 60.0 -> "Zona C (Riesgo Moderado)"
+            gri <= 80.0 -> "Zona D (Riesgo Alto)"
+            else -> "Zona E (Riesgo Muy Alto)"
+        }
+
         return TimeInRangeReport(
             periodDays = periodDays,
             totalReadings = total,
             buckets = buckets,
             inRangePercent = roundDec(inRange, 1),
             belowRangePercent = roundDec(low, 1),
-            aboveRangePercent = roundDec(high, 1)
+            aboveRangePercent = roundDec(high, 1),
+            tightRangePercent = tightRangePct,
+            gri = gri,
+            griCategory = griCategory
         )
+    }
+
+    /**
+     * Calcula la Amplitud Media de Excursiones Glucemicas (MAGE) sobre variaciones que superan 1 SD.
+     */
+    private fun calculateMage(readings: List<GlucoseMeasurement>, sd: Double): Double {
+        if (readings.size < 3 || sd <= 0.0) return 0.0
+        val values = readings.sortedBy { it.getEpochMillis() }.map { it.numericValue }
+        val extrema = mutableListOf<Double>()
+        for (i in 1 until values.size - 1) {
+            val prev = values[i - 1]
+            val curr = values[i]
+            val next = values[i + 1]
+            if ((curr >= prev && curr > next) || (curr > prev && curr >= next)) {
+                extrema.add(curr)
+            } else if ((curr <= prev && curr < next) || (curr < prev && curr <= next)) {
+                extrema.add(curr)
+            }
+        }
+        if (extrema.size < 2) return 0.0
+        val qualifyingExcursions = mutableListOf<Double>()
+        for (i in 0 until extrema.size - 1) {
+            val diff = kotlin.math.abs(extrema[i + 1] - extrema[i])
+            if (diff > sd) {
+                qualifyingExcursions.add(diff)
+            }
+        }
+        return if (qualifyingExcursions.isNotEmpty()) {
+            roundDec(qualifyingExcursions.average(), 1)
+        } else {
+            0.0
+        }
+    }
+
+    /**
+     * Evalua si el sensor requiere aviso preventivo de expiracion.
+     */
+    fun checkSensorExpirationAlert(sensor: SensorInfo?): com.example.opengluco.core.model.SensorExpirationAlert? {
+        if (sensor == null) return null
+        val daysRemaining = sensor.getRemainingDays() ?: return null
+        return when {
+            daysRemaining <= 0 -> {
+                com.example.opengluco.core.model.SensorExpirationAlert(
+                    daysRemaining = 0,
+                    hoursRemaining = 0,
+                    isCritical = true,
+                    title = "Sensor Expirado",
+                    message = "La vida util del sensor FreeStyle Libre ha finalizado. Aplica y vincula un nuevo sensor."
+                )
+            }
+            daysRemaining == 1 -> {
+                com.example.opengluco.core.model.SensorExpirationAlert(
+                    daysRemaining = 1,
+                    hoursRemaining = 24,
+                    isCritical = false,
+                    title = "Sensor Proximo a Expirar",
+                    message = "El sensor expira en menos de 24 horas. Prepara un sensor de repuesto."
+                )
+            }
+            else -> null
+        }
     }
 
     /**
@@ -217,7 +320,7 @@ object ClinicalReportsCalculator {
         readings: List<GlucoseMeasurement>,
         periodDays: Int
     ): LowGlucoseEventsReport {
-        val valid = readings.filter { it.numericValue > 0 }.sortedBy { it.getEpochMillis() }
+        val valid = filterReadingsByPeriod(readings, periodDays).sortedBy { it.getEpochMillis() }
         val events = mutableListOf<LowGlucoseEvent>()
 
         var inEvent = false
@@ -311,7 +414,7 @@ object ClinicalReportsCalculator {
         targetLow: Double = 70.0,
         targetHigh: Double = 180.0
     ): AverageGlucoseReport {
-        val valid = readings.filter { it.numericValue > 0 }
+        val valid = filterReadingsByPeriod(readings, periodDays)
         if (valid.isEmpty()) {
             val emptyBlocks = ReportTimeBlock.values().associateWith { 0.0 }
             val emptyHourly = List(24) { 0.0 }
@@ -404,7 +507,7 @@ object ClinicalReportsCalculator {
         readings: List<GlucoseMeasurement>,
         periodDays: Int
     ): EstimatedA1cReport {
-        val valid = readings.filter { it.numericValue > 0 }
+        val valid = filterReadingsByPeriod(readings, periodDays)
         if (valid.isEmpty()) {
             return EstimatedA1cReport(periodDays, 0.0, 0.0, 0.0, 0, false, GMI_LEGAL_DISCLAIMER)
         }
@@ -443,7 +546,7 @@ object ClinicalReportsCalculator {
         sensor: SensorInfo?,
         periodDays: Int
     ): SensorUsageReport {
-        val valid = readings.filter { it.numericValue > 0 }
+        val valid = filterReadingsByPeriod(readings, periodDays)
         val expected = max(1, periodDays) * 96 // 96 lecturas por dia cada 15 min
         val actual = valid.size
         val coverage = min(100.0, (actual.toDouble() / expected.toDouble()) * 100.0)

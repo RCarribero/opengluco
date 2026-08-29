@@ -44,3 +44,15 @@ Guia maestra de desarrollo para el ecosistema OpenGluco (`app-mobile`, `app-wear
 - **Objetivo:** Identificar dependencias existentes, modelos y repositorios compartidos (`core:model`, `core:data`, `core:network`), y asegurar la consistencia entre `app-mobile`, `app-wear` y `app-auto` sin introducir duplicidades ni código acoplado.
 - **Actualización Continua:** Tras finalizar modificaciones de código, ejecutar `graphify update .` para mantener el grafo sincronizado.
 
+## 8. Protocolo de Publicación y Actualizaciones OTA (Bajo Demanda)
+- **Ejecución Únicamente Bajo Petición Explícita:** El asistente de IA NUNCA debe ejecutar procesos automáticos de compilación o publicación en segundo plano ni utilizar GitHub Actions para evitar costes o consumos no deseados.
+- **Flujo Guiado Bajo Demanda:** Cuando el usuario pida publicar una versión:
+  1. Confirmar número de versión (`versionName`) y notas de la versión.
+  2. Actualizar versiones en `build.gradle.kts` de `app-mobile`, `app-wear` y `app-auto`.
+  3. Ejecutar tests locales (`.\gradlew testDebugUnitTest`).
+  4. Compilar APKs locales (`.\gradlew assembleDebug`).
+  5. Empaquetar y organizar los APKs en `releases/vX.Y.Z/`.
+  6. Crear commit y tag de Git en local y sincronizar.
+  7. Publicar la release con los APKs adjuntos.
+
+

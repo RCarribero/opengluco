@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.wear.notification
+package com.example.opengluco.wear.notification
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -39,6 +39,7 @@ object WearAlarmNotificationHelper {
                 description = "Alertas criticas de hipoglucemia e hiperglucemia urgente"
                 enableVibration(true)
                 vibrationPattern = longArrayOf(0, 600, 150, 600, 150, 600)
+                setBypassDnd(true)
             }
 
             val alertChannel = NotificationChannel(

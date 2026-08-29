@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.core.model
+package com.example.opengluco.core.model
 
 /**
  * Categorias clinicas de Tiempo en Rango segun el Consenso Internacional ATTD 2019.
@@ -35,7 +35,10 @@ data class TimeInRangeReport(
     val buckets: List<TirBucket>,
     val inRangePercent: Double,
     val belowRangePercent: Double,
-    val aboveRangePercent: Double
+    val aboveRangePercent: Double,
+    val tightRangePercent: Double = 0.0, // Time in Tight Range (70 - 140 mg/dL)
+    val gri: Double = 0.0, // Glycemic Risk Index (Klonoff et al. 2022)
+    val griCategory: String = "Bajo Riesgo"
 )
 
 data class HourlyPercentile(
@@ -55,7 +58,16 @@ data class DailyPatternsReport(
     val standardDeviation: Double,
     val coefficientOfVariation: Double, // CV % = (SD / Mean) * 100
     val targetLow: Double = 70.0,
-    val targetHigh: Double = 180.0
+    val targetHigh: Double = 180.0,
+    val mage: Double = 0.0 // Mean Amplitude of Glycemic Excursions
+)
+
+data class SensorExpirationAlert(
+    val daysRemaining: Int,
+    val hoursRemaining: Int,
+    val isCritical: Boolean,
+    val title: String,
+    val message: String
 )
 
 enum class ReportTimeBlock(val label: String, val startHour: Int, val endHour: Int) {

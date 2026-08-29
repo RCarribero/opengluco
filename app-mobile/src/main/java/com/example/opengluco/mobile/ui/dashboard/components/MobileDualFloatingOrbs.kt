@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.mobile.ui.dashboard.components
+package com.example.opengluco.mobile.ui.dashboard.components
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -26,6 +26,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -53,6 +55,10 @@ fun MobileDualFloatingOrbs(
     val mgdl = measurement?.numericValue ?: 0.0
     val statusColor = if (measurement != null) getGlucoseValueColor(mgdl, targetLow, targetHigh, alarms, colors) else colors.textMuted
 
+    val formattedVal = measurement?.getFormattedValue(isMmol = unit == GlucoseUnit.MMOL) ?: "--"
+    val glucoseDesc = "Nivel de glucosa actual: $formattedVal ${unit.label}"
+    val trendDesc = "Tendencia: ${measurement?.trendText ?: "Estable"}, direccion ${measurement?.trendSymbol ?: "→"}"
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -67,6 +73,9 @@ fun MobileDualFloatingOrbs(
                 .clip(CircleShape)
                 .background(colors.surfaceOrb)
                 .border(1.dp, colors.surfaceBorder, CircleShape)
+                .semantics {
+                    contentDescription = glucoseDesc
+                }
                 .clickable {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onGlucoseOrbClick()
@@ -114,6 +123,9 @@ fun MobileDualFloatingOrbs(
                 .clip(CircleShape)
                 .background(colors.surfaceOrb)
                 .border(1.dp, colors.surfaceBorder, CircleShape)
+                .semantics {
+                    contentDescription = trendDesc
+                }
                 .clickable {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     onTrendOrbClick()

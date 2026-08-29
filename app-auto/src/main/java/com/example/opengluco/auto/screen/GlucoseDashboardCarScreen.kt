@@ -30,6 +30,7 @@ class GlucoseDashboardCarScreen(carContext: CarContext) : Screen(carContext) {
     private var currentSettings: com.example.opengluco.core.data.UserSettings = com.example.opengluco.core.data.UserSettings()
     private var lastUpdated: String = "Cargando..."
     private var isLoading = true
+    private val ttsAlertManager = com.example.opengluco.auto.AutoTtsAlertManager(carContext)
 
     init {
         loadGlucoseData()
@@ -78,6 +79,17 @@ class GlucoseDashboardCarScreen(carContext: CarContext) : Screen(carContext) {
         lastUpdated = lastMeasurement?.timestamp ?: "Ahora"
         preferencesRepository.saveHistoricalReadings(history, patient.patientId)
         isLoading = false
+
+        // Alerta de voz TTS si la medicion esta fuera de rango
+        lastMeasurement?.let { m ->
+            ttsAlertManager.speakGlucoseAlertIfNeeded(
+                glucoseMgDl = m.numericValue,
+                trendText = m.trendText,
+                lowThreshold = currentSettings.lowThreshold.toDouble(),
+                highThreshold = currentSettings.highThreshold.toDouble()
+            )
+        }
+
         invalidate()
     }
 
