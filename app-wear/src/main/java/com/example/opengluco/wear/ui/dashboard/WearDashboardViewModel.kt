@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.wear.ui.dashboard
+package com.example.opengluco.wear.ui.dashboard
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -25,6 +25,8 @@ sealed interface WearDashboardUiState {
         val graphHistory: List<GlucoseMeasurement>,
         val sensor: SensorInfo?,
         val unit: GlucoseUnit,
+        val lowThreshold: Int = 70,
+        val highThreshold: Int = 180,
         val lastUpdatedText: String,
         val isRefreshing: Boolean = false
     ) : WearDashboardUiState
@@ -47,6 +49,8 @@ class WearDashboardViewModel(
                 val previousToken = userSettings.token
                 val previousUserId = userSettings.userId
                 val previousUnit = userSettings.unit
+                val previousLow = userSettings.lowThreshold
+                val previousHigh = userSettings.highThreshold
                 userSettings = settings
 
                 if (settings.token.isNotBlank() && settings.userId.isNotBlank()) {
@@ -54,10 +58,14 @@ class WearDashboardViewModel(
                     val authChanged = previousToken != settings.token || previousUserId != settings.userId
                     if (authChanged || _uiState.value !is WearDashboardUiState.Success) {
                         loadDashboardDataInternal()
-                    } else if (previousUnit != settings.unit) {
+                    } else if (previousUnit != settings.unit || previousLow != settings.lowThreshold || previousHigh != settings.highThreshold) {
                         val current = _uiState.value
                         if (current is WearDashboardUiState.Success) {
-                            _uiState.value = current.copy(unit = settings.unit)
+                            _uiState.value = current.copy(
+                                unit = settings.unit,
+                                lowThreshold = settings.lowThreshold,
+                                highThreshold = settings.highThreshold
+                            )
                         }
                     }
                 } else {
@@ -162,6 +170,8 @@ class WearDashboardViewModel(
             graphHistory = combinedHistory,
             sensor = activeSensor,
             unit = userSettings.unit,
+            lowThreshold = userSettings.lowThreshold,
+            highThreshold = userSettings.highThreshold,
             lastUpdatedText = latestMeasurement?.getDisplayTime() ?: "Ahora",
             isRefreshing = false
         )

@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.auto.screen
+package com.example.opengluco.auto.screen
 
 import androidx.car.app.CarContext
 import androidx.car.app.Screen
@@ -27,6 +27,7 @@ class GlucoseDashboardCarScreen(carContext: CarContext) : Screen(carContext) {
     private var allPatients: List<ConnectionItem> = emptyList()
     private var currentPatient: ConnectionItem? = null
     private var lastMeasurement: GlucoseMeasurement? = null
+    private var currentSettings: com.example.opengluco.core.data.UserSettings = com.example.opengluco.core.data.UserSettings()
     private var lastUpdated: String = "Cargando..."
     private var isLoading = true
 
@@ -40,6 +41,7 @@ class GlucoseDashboardCarScreen(carContext: CarContext) : Screen(carContext) {
 
         scope.launch {
             val settings = preferencesRepository.userSettingsFlow.first()
+            currentSettings = settings
             if (settings.token.isNotBlank() && settings.userId.isNotBlank()) {
                 repository.setSession(settings.token, settings.userId)
 
@@ -83,9 +85,13 @@ class GlucoseDashboardCarScreen(carContext: CarContext) : Screen(carContext) {
         val measurement = lastMeasurement
         val mgdl = measurement?.numericValue ?: 0.0
 
-        val displayValue = measurement?.getFormattedValue() ?: "--"
-        val trendSymbol = measurement?.trendSymbol ?: "->"
+        val isMmol = currentSettings.unit == com.example.opengluco.core.data.GlucoseUnit.MMOL
+        val displayValue = measurement?.getFormattedValue(isMmol = isMmol) ?: "--"
+        val trendSymbol = measurement?.trendSymbol ?: "→"
         val trendText = measurement?.trendText ?: "Estable"
+        val unitLabel = currentSettings.unit.label
+        val lowThreshold = currentSettings.lowThreshold
+        val highThreshold = currentSettings.highThreshold
 
         val paneBuilder = Pane.Builder()
 
@@ -101,16 +107,19 @@ class GlucoseDashboardCarScreen(carContext: CarContext) : Screen(carContext) {
 
             paneBuilder.addRow(
                 Row.Builder()
-                    .setTitle("$displayValue mg/dL  $trendSymbol $trendText")
+                    .setTitle("$displayValue $unitLabel  $trendSymbol $trendText")
                     .addText(patientTitle)
                     .build()
             )
 
-            // Fila 2: Estado del rango
+            // Fila 2: Estado del rango dinámico
             val statusText = when {
-                mgdl < 70 -> "[Alerta] Nivel bajo de glucosa"
-                mgdl > 180 -> "[Alerta] Nivel alto de glucosa"
-                else -> "[Normal] Nivel dentro del rango objetivo (70 - 180)"
+                mgdl <= 55 -> "[Urgente] Nivel muy bajo de glucosa (<= 55)"
+                mgdl < lowThreshold -> "[Alerta] Nivel bajo de glucosa (< $lowThreshold)"
+                mgdl > 250 -> "[Urgente] Nivel muy alto de glucosa (>= 250)"
+                mgdl > highThreshold -> "[Alerta] Nivel alto de glucosa (> $highThreshold)"
+                mgdl > 0 -> "[Normal] Nivel dentro del rango objetivo ($lowThreshold - $highThreshold)"
+                else -> "[Info] Sin datos recientes"
             }
             paneBuilder.addRow(
                 Row.Builder()

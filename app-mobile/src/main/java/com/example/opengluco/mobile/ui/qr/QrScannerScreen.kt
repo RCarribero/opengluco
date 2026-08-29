@@ -243,7 +243,7 @@ fun QrScannerScreen(
                                     shape = RoundedCornerShape(12.dp),
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    Text("Emparejar (✓)", fontWeight = FontWeight.Bold)
+                                    Text("Emparejar", fontWeight = FontWeight.Bold)
                                 }
                             }
                         }

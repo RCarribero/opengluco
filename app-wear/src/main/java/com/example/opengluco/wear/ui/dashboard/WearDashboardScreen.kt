@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.wear.ui.dashboard
+package com.example.opengluco.wear.ui.dashboard
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -138,6 +138,8 @@ fun WearDashboardScreen(
                         DualFloatingOrbs(
                             measurement = state.currentMeasurement,
                             unit = state.unit,
+                            targetLow = state.lowThreshold,
+                            targetHigh = state.highThreshold,
                             onGlucoseOrbClick = { activeModal = DetailModalType.GLUCOSE_STATS },
                             onTrendOrbClick = { activeModal = DetailModalType.TREND_INFO }
                         )
@@ -152,8 +154,8 @@ fun WearDashboardScreen(
                         ClinicalSparklineWithSensor(
                             history = state.graphHistory,
                             sensor = state.sensor,
-                            targetLow = state.selectedPatient.targetLow,
-                            targetHigh = state.selectedPatient.targetHigh,
+                            targetLow = state.lowThreshold,
+                            targetHigh = state.highThreshold,
                             onSensorBadgeClick = { activeModal = DetailModalType.SENSOR_INFO }
                         )
                     }

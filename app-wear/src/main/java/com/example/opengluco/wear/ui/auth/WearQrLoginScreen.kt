@@ -72,7 +72,7 @@ import java.net.ServerSocket
 
 /**
  * Pantalla de inicio de sesión y emparejamiento con verificación numérica SAS (6 dígitos)
- * y confirmación interactiva por Tick (✓) con apagado total de sockets para ahorro de batería.
+ * y confirmación interactiva con apagado total de sockets para ahorro de batería.
  */
 @Composable
 fun WearQrLoginScreen(

@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.wear.ui.dashboard.components
+package com.example.opengluco.wear.ui.dashboard.components
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -42,13 +42,15 @@ import com.example.opengluco.wear.ui.theme.getClinicalStatusColor
 fun DualFloatingOrbs(
     measurement: GlucoseMeasurement?,
     unit: GlucoseUnit = GlucoseUnit.MGDL,
+    targetLow: Int = 70,
+    targetHigh: Int = 180,
     onGlucoseOrbClick: () -> Unit = {},
     onTrendOrbClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
     val mgdl = measurement?.numericValue ?: 0.0
-    val statusColor = if (measurement != null) getClinicalStatusColor(mgdl) else Color(0xFF64748B)
+    val statusColor = if (measurement != null) getClinicalStatusColor(mgdl, targetLow, targetHigh) else Color(0xFF64748B)
 
     Row(
         modifier = modifier

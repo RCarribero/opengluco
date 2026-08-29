@@ -106,7 +106,7 @@ object QrAuthHelper {
         } else {
             java.security.SecureRandom().nextInt(900000) + 100000
         }
-        return "${number / 1000} ${number % 1000}"
+        return String.format(java.util.Locale.US, "%03d %03d", number / 1000, number % 1000)
     }
 
     fun createPairingPayload(deviceType: QrDeviceType, deviceName: String, port: Int = 8888): QrPairingPayload {
