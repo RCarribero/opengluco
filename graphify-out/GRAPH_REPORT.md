@@ -1,7 +1,7 @@
 # Graph Report - librelinkup-ecosystem-master  (2026-08-29)
 
 ## Corpus Check
-- 132 files · ~76,667 words
+- 132 files · ~76,663 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `faa42311`
+- Built from commit: `a7745ab7`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 

@@ -481,10 +481,10 @@ fun MobileDashboardScreen(
     val tirPercent = if (validHistory.isNotEmpty()) ((inRangeCount.toDouble() / validHistory.size) * 100).toInt() else 100
 
     val sensor = currentSensor ?: selectedPatient?.sensor
-    val sensorDays = sensor?.getRemainingDays() ?: 2
-    val sensorSerial = sensor?.serialNumber ?: "0M001A8934"
+    val sensorDays = sensor?.getRemainingDays() ?: 14
+    val sensorSerial = sensor?.serialNumber ?: selectedPatient?.sensor?.serialNumber ?: "Sensor Vinculado"
     val sensorModel = sensor?.sensorModelName ?: "FreeStyle Libre 3"
-    val isSensorActive = (sensor?.getRemainingDays() ?: 1) > 0
+    val isSensorActive = (sensor?.getRemainingDays() ?: 14) > 0
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (showReportsScreen) {

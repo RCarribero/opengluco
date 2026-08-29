@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.mobile.ui.dashboard.components
+package com.example.opengluco.mobile.ui.dashboard.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -164,7 +164,7 @@ fun MobileStatDetailModal(
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                 StatRow("Días restantes:", "$sensorDays días", highlight = sensorDays > 2)
-                                StatRow("Número de Serie (S/N):", sensorSerial.ifBlank { "0M001A8934" })
+                                StatRow("Número de Serie (S/N):", sensorSerial.ifBlank { "Sensor Vinculado" })
                                 StatRow("Estado Operativo:", if (sensorDays > 0) "Activo y Calibrado" else "Caducado")
                                 StatRow("Tipo de Dispositivo:", "FreeStyle Libre Sensor")
                             }
