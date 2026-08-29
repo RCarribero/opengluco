@@ -190,7 +190,7 @@ fun MobileDashboardScreen(
     val scope = rememberCoroutineScope()
     val haptic = LocalHapticFeedback.current
     val colors = ClinicalTheme.colors
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    var showSettingsScreen by remember { mutableStateOf(false) }
 
     // Detección automática en segundo plano de solicitudes de emparejamiento desde el reloj
     DisposableEffect(Unit) {
@@ -407,143 +407,100 @@ fun MobileDashboardScreen(
         return
     }
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            ModalDrawerSheet(
-                drawerContainerColor = colors.background,
-                drawerContentColor = colors.textPrimary,
-                modifier = Modifier
-                    .fillMaxWidth(0.92f)
-                    .fillMaxHeight()
-            ) {
-                SettingsDrawerContent(
-                    selectedPatient = selectedPatient,
-                    sensor = sensor,
-                    isDarkMode = settings?.isDarkMode ?: true,
-                    onToggleDarkMode = { isDark ->
-                        scope.launch {
-                            preferencesRepository.saveDarkMode(isDark)
-                        }
-                    },
-                    currentUnit = settings?.unit ?: GlucoseUnit.MGDL,
-                    onToggleUnit = { unit ->
-                        scope.launch {
-                            preferencesRepository.setUnit(unit)
-                        }
-                    },
-                    targetLow = targetLow,
-                    targetHigh = targetHigh,
-                    onOpenTargetRange = {
-                        scope.launch { drawerState.close() }
-                        showTargetRangeDialog = true
-                    },
-                    alarmsCount = configuredAlarms.size,
-                    onOpenAlarms = {
-                        scope.launch { drawerState.close() }
-                        showAlarmsManagementDialog = true
-                    },
-                    onOpenDiagnostics = {
-                        scope.launch { drawerState.close() }
-                        showDiagnosticsDialog = true
-                    },
-                    onOpenReports = {
-                        scope.launch { drawerState.close() }
-                        showReportsScreen = true
-                    },
-                    onOpenQrScanner = {
-                        scope.launch { drawerState.close() }
-                        onOpenQrScanner()
-                    },
-                    onExportCsv = {
-                        HealthDataExporter.shareCsv(
-                            context,
-                            history,
-                            settings?.unit ?: GlucoseUnit.MGDL,
-                            selectedPatient?.fullName ?: "Paciente"
-                        )
-                    },
-                    onShowLegalNotice = { type ->
-                        activeLegalNotice = type
-                    },
-                    onLogout = {
-                        scope.launch {
-                            drawerState.close()
-                            preferencesRepository.clearSession()
-                            onLogout()
-                        }
-                    },
-                    onCloseDrawer = {
-                        scope.launch { drawerState.close() }
-                    }
+    if (showSettingsScreen) {
+        MobileSettingsScreen(
+            selectedPatient = selectedPatient,
+            sensor = sensor,
+            isDarkMode = settings?.isDarkMode ?: true,
+            onToggleDarkMode = { isDark ->
+                scope.launch {
+                    preferencesRepository.saveDarkMode(isDark)
+                }
+            },
+            currentUnit = settings?.unit ?: GlucoseUnit.MGDL,
+            onToggleUnit = { unit ->
+                scope.launch {
+                    preferencesRepository.setUnit(unit)
+                }
+            },
+            targetLow = targetLow,
+            targetHigh = targetHigh,
+            onOpenTargetRange = { showTargetRangeDialog = true },
+            alarmsCount = configuredAlarms.size,
+            onOpenAlarms = { showAlarmsManagementDialog = true },
+            onOpenDiagnostics = { showDiagnosticsDialog = true },
+            onOpenReports = { showReportsScreen = true },
+            onOpenQrScanner = onOpenQrScanner,
+            onExportCsv = {
+                HealthDataExporter.shareCsv(
+                    context,
+                    history,
+                    settings?.unit ?: GlucoseUnit.MGDL,
+                    selectedPatient?.fullName ?: "Paciente"
                 )
-            }
-        }
-    ) {
-        Scaffold(
-            containerColor = colors.background,
-            topBar = {
-                TopAppBar(
-                    navigationIcon = {
-                        IconButton(onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            scope.launch { drawerState.open() }
-                        }) {
-                            Icon(
-                                Icons.Default.Menu,
-                                contentDescription = "Menu lateral de configuracion",
-                                tint = colors.textPrimary,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                    },
-                    title = {
-                        PatientHeaderChip(
-                            selectedPatient = selectedPatient,
-                            patientCount = patients.size,
-                            unit = settings?.unit ?: GlucoseUnit.MGDL,
-                            onClick = {
-                                if (patients.isNotEmpty()) {
-                                    showPatientSelector = true
-                                }
-                            }
-                        )
-                    },
-                    actions = {
-                        // Boton Informes Clinicos (Reports)
-                        IconButton(onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            showReportsScreen = true
-                        }) {
-                            Icon(
-                                Icons.Default.Assessment,
-                                contentDescription = "Informes Clinicos",
-                                tint = colors.mint,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
+            },
+            onShowLegalNotice = { type -> activeLegalNotice = type },
+            onLogout = {
+                scope.launch {
+                    preferencesRepository.clearSession()
+                    onLogout()
+                }
+            },
+            onBack = { showSettingsScreen = false }
+        )
+        return
+    }
 
-                        // Boton Refrescar
-                        IconButton(onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            loadData()
-                        }) {
-                            Icon(
-                                Icons.Default.Refresh,
-                                contentDescription = "Refrescar",
-                                tint = colors.mint,
-                                modifier = Modifier.size(22.dp)
-                            )
+    Scaffold(
+        containerColor = colors.background,
+        topBar = {
+            TopAppBar(
+                title = {
+                    PatientHeaderChip(
+                        selectedPatient = selectedPatient,
+                        patientCount = patients.size,
+                        unit = settings?.unit ?: GlucoseUnit.MGDL,
+                        onClick = {
+                            if (patients.isNotEmpty()) {
+                                showPatientSelector = true
+                            }
                         }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = colors.background,
-                        titleContentColor = colors.textPrimary,
-                        actionIconContentColor = colors.mint,
-                        navigationIconContentColor = colors.textPrimary
                     )
+                },
+                actions = {
+                    // Boton Refrescar
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        loadData()
+                    }) {
+                        Icon(
+                            Icons.Default.Refresh,
+                            contentDescription = "Refrescar datos",
+                            tint = colors.mint,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+
+                    // Boton Ajustes
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        showSettingsScreen = true
+                    }) {
+                        Icon(
+                            Icons.Default.Settings,
+                            contentDescription = "Ajustes",
+                            tint = colors.textPrimary,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = colors.background,
+                    titleContentColor = colors.textPrimary,
+                    actionIconContentColor = colors.mint
                 )
-            }
+            )
+        }
     ) { padding ->
         Box(
             modifier = modifier
@@ -1235,10 +1192,10 @@ fun MobileDashboardScreen(
         }
     }
 }
-}
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SettingsDrawerContent(
+private fun MobileSettingsScreen(
     selectedPatient: ConnectionItem?,
     sensor: com.example.opengluco.core.model.SensorInfo?,
     isDarkMode: Boolean,
@@ -1256,65 +1213,51 @@ private fun SettingsDrawerContent(
     onExportCsv: () -> Unit,
     onShowLegalNotice: (LegalNoticeType) -> Unit,
     onLogout: () -> Unit,
-    onCloseDrawer: () -> Unit
+    onBack: () -> Unit
 ) {
     val colors = ClinicalTheme.colors
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(colors.background)
-    ) {
-        // Header Superior Limpio y Elegante
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(colors.surfaceOrb)
-                .padding(horizontal = 18.dp, vertical = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text(
-                    text = "Ajustes",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = colors.textPrimary
+    Scaffold(
+        containerColor = colors.background,
+        topBar = {
+            TopAppBar(
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Volver al dashboard",
+                            tint = colors.textPrimary,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                },
+                title = {
+                    Column {
+                        Text(
+                            text = "Ajustes",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = colors.textPrimary
+                        )
+                        Text(
+                            text = selectedPatient?.fullName ?: "Preferencias Clínicas",
+                            fontSize = 12.sp,
+                            color = colors.textSecondary
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = colors.surfaceOrb,
+                    titleContentColor = colors.textPrimary,
+                    navigationIconContentColor = colors.textPrimary
                 )
-                Text(
-                    text = selectedPatient?.fullName ?: "OpenGluco",
-                    fontSize = 12.sp,
-                    color = colors.textSecondary
-                )
-            }
-
-            IconButton(
-                onClick = onCloseDrawer,
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(colors.surfaceCard)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = "Cerrar ajustes",
-                    tint = colors.textPrimary,
-                    modifier = Modifier.size(18.dp)
-                )
-            }
+            )
         }
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(colors.surfaceBorder)
-        )
-
-        // Contenido Scrollable Limpio
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(padding)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
