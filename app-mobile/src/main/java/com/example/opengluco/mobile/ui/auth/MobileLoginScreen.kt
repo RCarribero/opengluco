@@ -12,9 +12,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Lock
@@ -85,21 +88,28 @@ fun MobileLoginScreen(
         cursorColor = colors.mint
     )
 
+    val responsive = ClinicalTheme.responsive
+
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(colors.background)
-            .padding(24.dp),
+            .padding(responsive.horizontalPadding),
         contentAlignment = Alignment.Center
     ) {
         Card(
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(containerColor = colors.surfaceOrb),
             border = BorderStroke(1.dp, colors.surfaceBorder),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .widthIn(max = responsive.formMaxWidth)
+                .fillMaxWidth()
         ) {
             Column(
-                modifier = Modifier.padding(24.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(if (responsive.isNarrowPhone) 16.dp else 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {

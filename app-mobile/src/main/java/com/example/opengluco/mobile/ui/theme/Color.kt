@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.mobile.ui.theme
+package com.example.opengluco.mobile.ui.theme
 
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -123,6 +123,11 @@ object ClinicalTheme {
         @Composable
         @ReadOnlyComposable
         get() = LocalClinicalColors.current
+
+    val responsive: ResponsiveDimensions
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalResponsiveDimensions.current
 }
 
 val DarkColorScheme = darkColorScheme(

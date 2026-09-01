@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.mobile.ui.theme
+package com.example.opengluco.mobile.ui.theme
 
 import android.app.Activity
 import androidx.compose.material3.MaterialTheme
@@ -30,7 +30,12 @@ fun LibreMobileTheme(
         }
     }
 
-    CompositionLocalProvider(LocalClinicalColors provides clinicalPalette) {
+    val responsiveDimensions = rememberResponsiveDimensions()
+
+    CompositionLocalProvider(
+        LocalClinicalColors provides clinicalPalette,
+        LocalResponsiveDimensions provides responsiveDimensions
+    ) {
         MaterialTheme(
             colorScheme = colorScheme,
             content = content

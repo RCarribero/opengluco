@@ -59,17 +59,23 @@ fun MobileDualFloatingOrbs(
     val glucoseDesc = "Nivel de glucosa actual: $formattedVal ${unit.label}"
     val trendDesc = "Tendencia: ${measurement?.trendText ?: "Estable"}, direccion ${measurement?.trendSymbol ?: "→"}"
 
+    val responsive = ClinicalTheme.responsive
+    val orbSize = responsive.orbSize
+    val valFontSize = if (responsive.isNarrowPhone) 28.sp else if (orbSize > 125.dp) 38.sp else 34.sp
+    val symbolFontSize = if (responsive.isNarrowPhone) 28.sp else if (orbSize > 125.dp) 38.sp else 34.sp
+    val orbSpacing = if (responsive.isNarrowPhone) 10.dp else 16.dp
+
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = responsive.horizontalPadding, vertical = 8.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
         // --- ESFERA IZQUIERDA: NIVEL DE GLUCOSA (PASIVA / SIN ACCIÓN AL PULSAR) ---
         Box(
             modifier = Modifier
-                .size(120.dp)
+                .size(orbSize)
                 .clip(CircleShape)
                 .background(colors.surfaceOrb)
                 .border(1.dp, colors.surfaceBorder, CircleShape)
@@ -95,7 +101,7 @@ fun MobileDualFloatingOrbs(
             ) {
                 Text(
                     text = measurement?.getFormattedValue(isMmol = unit == GlucoseUnit.MMOL) ?: "--",
-                    fontSize = 36.sp,
+                    fontSize = valFontSize,
                     fontWeight = FontWeight.Bold,
                     color = colors.textPrimary,
                     textAlign = TextAlign.Center
@@ -103,19 +109,19 @@ fun MobileDualFloatingOrbs(
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = unit.label,
-                    fontSize = 12.sp,
+                    fontSize = if (responsive.isNarrowPhone) 10.5.sp else 12.sp,
                     fontWeight = FontWeight.Medium,
                     color = colors.textSecondary
                 )
             }
         }
 
-        Spacer(modifier = Modifier.size(16.dp))
+        Spacer(modifier = Modifier.size(orbSpacing))
 
         // --- ESFERA DERECHA: TENDENCIA CLÍNICA ---
         Box(
             modifier = Modifier
-                .size(120.dp)
+                .size(orbSize)
                 .clip(CircleShape)
                 .background(colors.surfaceOrb)
                 .border(1.dp, colors.surfaceBorder, CircleShape)
@@ -134,20 +140,20 @@ fun MobileDualFloatingOrbs(
             ) {
                 Text(
                     text = measurement?.trendSymbol ?: "→",
-                    fontSize = 36.sp,
+                    fontSize = symbolFontSize,
                     fontWeight = FontWeight.Bold,
                     color = colors.textPrimary,
                     textAlign = TextAlign.Center
                 )
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(if (responsive.isNarrowPhone) 4.dp else 6.dp))
                 Box(
                     modifier = Modifier
                         .background(statusColor.copy(alpha = if (colors.isDark) 0.2f else 0.15f), shape = RoundedCornerShape(12.dp))
-                        .padding(horizontal = 10.dp, vertical = 3.dp)
+                        .padding(horizontal = if (responsive.isNarrowPhone) 7.dp else 10.dp, vertical = 3.dp)
                 ) {
                     Text(
                         text = measurement?.trendText ?: "Estable",
-                        fontSize = 11.sp,
+                        fontSize = if (responsive.isNarrowPhone) 9.5.sp else 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = statusColor,
                         textAlign = TextAlign.Center

@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -526,7 +527,12 @@ fun MobileDashboardScreen(
                     selectedPatient?.fullName ?: "Paciente"
                 )
             },
-            onRequestDeleteData = { activeLegalNotice = LegalNoticeType.DELETE_CONFIRMATION },
+            onRequestDeleteData = {
+                scope.launch {
+                    preferencesRepository.purgeAllLocalData()
+                    onLogout()
+                }
+            },
             onCheckUpdates = { checkAppUpdates(manual = true) },
             onLogout = {
                 scope.launch {
@@ -588,554 +594,209 @@ fun MobileDashboardScreen(
             )
         }
     ) { padding ->
+        val responsive = ClinicalTheme.responsive
+
         Box(
             modifier = modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(colors.background)
+                .background(colors.background),
+            contentAlignment = Alignment.TopCenter
         ) {
             if (isLoading && selectedPatient == null) {
                 CircularProgressIndicator(
                     color = colors.mint,
                     modifier = Modifier.align(Alignment.Center)
                 )
+            } else if (responsive.isDualColumn) {
+                // Layout 2 Columnas para Tablets, Foldables y Landscape
+                Row(
+                    modifier = Modifier
+                        .widthIn(max = responsive.contentMaxWidth)
+                        .fillMaxWidth()
+                        .padding(horizontal = responsive.horizontalPadding, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(responsive.cardSpacing)
+                ) {
+                    // Columna Izquierda (40%): Banners de error, Hero Orbs, Tarjeta de Sensor
+                    Column(
+                        modifier = Modifier
+                            .weight(0.40f)
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(responsive.cardSpacing),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Spacer(modifier = Modifier.height(2.dp))
+
+                        if (clinicalError !is ClinicalErrorType.None) {
+                            DashboardClinicalErrorBanner(
+                                clinicalError = clinicalError,
+                                onReconnect = {
+                                    scope.launch {
+                                        preferencesRepository.clearSession()
+                                        onLogout()
+                                    }
+                                },
+                                onRetry = { loadData(silent = false) }
+                            )
+                        }
+
+                        DashboardHeroSection(
+                            currentMeasurement = currentMeasurement,
+                            unit = settings?.unit ?: GlucoseUnit.MGDL,
+                            targetLow = targetLow,
+                            targetHigh = targetHigh,
+                            configuredAlarms = configuredAlarms
+                        )
+
+                        DashboardSensorCard(
+                            sensorModel = sensorModel,
+                            sensorDays = sensorDays,
+                            isSensorActive = isSensorActive,
+                            sensorSerial = sensorSerial,
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                activeModal = DetailModalType.SENSOR_INFO
+                            }
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
+
+                    // Columna Derecha (60%): Gráfica Continua Bézier, Métricas Estadísticas
+                    Column(
+                        modifier = Modifier
+                            .weight(0.60f)
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(responsive.cardSpacing)
+                    ) {
+                        Spacer(modifier = Modifier.height(2.dp))
+
+                        DashboardChartCard(
+                            chartHistory = chartHistory,
+                            selectedChartTimeframe = selectedChartTimeframe,
+                            sensorDays = sensorDays,
+                            targetLow = targetLow,
+                            targetHigh = targetHigh,
+                            configuredAlarms = configuredAlarms,
+                            unit = settings?.unit ?: GlucoseUnit.MGDL,
+                            onCycleTimeframe = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                selectedChartTimeframe = selectedChartTimeframe.next()
+                            },
+                            onSensorClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                activeModal = DetailModalType.SENSOR_INFO
+                            }
+                        )
+
+                        DashboardStatsCard(
+                            selectedPeriod = selectedPeriod,
+                            availableDataDays = availableDataDays,
+                            insufficientDataNotice = insufficientDataNotice,
+                            tirPercent = tirPercent,
+                            avgVal = avgVal,
+                            minVal = minVal,
+                            maxVal = maxVal,
+                            onSelectPeriod = { period ->
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                selectedPeriod = period
+                                insufficientDataNotice = null
+                            }
+                        )
+
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
+                }
             } else {
+                // Layout Columna Única (Móviles Portrait y Ultra-compactos)
                 LazyColumn(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                        .widthIn(max = responsive.contentMaxWidth)
+                        .fillMaxWidth()
+                        .padding(horizontal = responsive.horizontalPadding),
+                    verticalArrangement = Arrangement.spacedBy(responsive.cardSpacing)
                 ) {
                     item {
                         Spacer(modifier = Modifier.height(4.dp))
                     }
 
-                    // BANNER DE ESTADO CLÍNICO / CONECTIVIDAD / SESIÓN
-                    if (clinicalError is ClinicalErrorType.AuthExpired) {
+                    if (clinicalError !is ClinicalErrorType.None) {
                         item {
-                            Card(
-                                shape = RoundedCornerShape(14.dp),
-                                colors = CardDefaults.cardColors(containerColor = colors.urgentCrimson.copy(alpha = if (colors.isDark) 0.16f else 0.10f)),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, colors.urgentCrimson.copy(alpha = 0.45f)),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(12.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.LockReset,
-                                        contentDescription = null,
-                                        tint = colors.urgentCrimson,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(10.dp))
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = "Sesión Caducada",
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 13.sp,
-                                            color = colors.urgentCrimson
-                                        )
-                                        Text(
-                                            text = "Tus credenciales de LibreLinkUp han expirado. Vuelve a iniciar sesión.",
-                                            fontSize = 11.5.sp,
-                                            color = colors.textSecondary,
-                                            lineHeight = 15.sp
-                                        )
+                            DashboardClinicalErrorBanner(
+                                clinicalError = clinicalError,
+                                onReconnect = {
+                                    scope.launch {
+                                        preferencesRepository.clearSession()
+                                        onLogout()
                                     }
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Button(
-                                        onClick = {
-                                            scope.launch {
-                                                preferencesRepository.clearSession()
-                                                onLogout()
-                                            }
-                                        },
-                                        colors = ButtonDefaults.buttonColors(containerColor = colors.urgentCrimson),
-                                        shape = RoundedCornerShape(8.dp)
-                                    ) {
-                                        Text("Reconectar", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                    }
-                                }
-                            }
-                        }
-                    } else if (clinicalError is ClinicalErrorType.NetworkError) {
-                        item {
-                            Card(
-                                shape = RoundedCornerShape(12.dp),
-                                colors = CardDefaults.cardColors(containerColor = colors.highAmber.copy(alpha = if (colors.isDark) 0.15f else 0.10f)),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, colors.highAmber.copy(alpha = 0.40f)),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.CloudOff,
-                                        contentDescription = null,
-                                        tint = colors.highAmber,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(10.dp))
-                                    Text(
-                                        text = "Sin conexión a Internet • Mostrando datos locales",
-                                        fontSize = 11.5.sp,
-                                        color = colors.highAmber,
-                                        modifier = Modifier.weight(1f),
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                    TextButton(onClick = { loadData(silent = false) }) {
-                                        Text(
-                                            text = "Reintentar",
-                                            fontSize = 11.5.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = colors.highAmber
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    } else if (clinicalError is ClinicalErrorType.NoPatients) {
-                        item {
-                            Card(
-                                shape = RoundedCornerShape(14.dp),
-                                colors = CardDefaults.cardColors(containerColor = colors.surfaceCard),
-                                border = androidx.compose.foundation.BorderStroke(1.dp, colors.surfaceBorder),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.PersonOff,
-                                        contentDescription = null,
-                                        tint = colors.mint,
-                                        modifier = Modifier.size(36.dp)
-                                    )
-                                    Spacer(modifier = Modifier.height(6.dp))
-                                    Text(
-                                        text = "Sin Pacientes Vinculados",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 14.sp,
-                                        color = colors.textPrimary
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
-                                        text = "Esta cuenta de LibreLinkUp no tiene pacientes asignados. Comparte la glucosa desde la app FreeStyle Libre del paciente a este email.",
-                                        fontSize = 11.5.sp,
-                                        color = colors.textSecondary,
-                                        textAlign = TextAlign.Center,
-                                        lineHeight = 15.sp
-                                    )
-                                    Spacer(modifier = Modifier.height(10.dp))
-                                    Button(
-                                        onClick = { loadData(silent = false) },
-                                        colors = ButtonDefaults.buttonColors(containerColor = colors.mint),
-                                        shape = RoundedCornerShape(10.dp)
-                                    ) {
-                                        Text("Comprobar de Nuevo", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                    }
-                                }
-                            }
+                                },
+                                onRetry = { loadData(silent = false) }
+                            )
                         }
                     }
 
                     // 1. HERO SECTION: DUAL FLOATING ORBS (GLUCOSA & TENDENCIA)
                     item {
-                        Column(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            MobileDualFloatingOrbs(
-                                measurement = currentMeasurement,
-                                unit = settings?.unit ?: GlucoseUnit.MGDL,
-                                targetLow = targetLow,
-                                targetHigh = targetHigh,
-                                alarms = configuredAlarms,
-                                onGlucoseOrbClick = {},
-                                onTrendOrbClick = {}
-                            )
-
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "Última medición: ${currentMeasurement?.timestamp ?: "Ahora"}",
-                                fontSize = 12.sp,
-                                color = colors.textMuted,
-                                textAlign = TextAlign.Center
-                            )
-                        }
+                        DashboardHeroSection(
+                            currentMeasurement = currentMeasurement,
+                            unit = settings?.unit ?: GlucoseUnit.MGDL,
+                            targetLow = targetLow,
+                            targetHigh = targetHigh,
+                            configuredAlarms = configuredAlarms
+                        )
                     }
 
                     // 2. GRÁFICA CONTINUA DE BÉZIER CON SENSOR COMPACTO Y SCRUBBING TÁCTIL
                     item {
-                        Card(
-                            shape = RoundedCornerShape(20.dp),
-                            colors = CardDefaults.cardColors(containerColor = colors.surfaceCard),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, colors.surfaceBorder),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            Icons.AutoMirrored.Filled.TrendingUp,
-                                            contentDescription = null,
-                                            tint = colors.mint,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text(
-                                            text = "Curva Continua",
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 15.sp,
-                                            color = colors.textPrimary
-                                        )
-                                    }
-
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        // Boton interactivo de ciclo horario: 24h -> 12h -> 6h -> 2h -> 1h -> 24h
-                                        Box(
-                                            modifier = Modifier
-                                                .clip(RoundedCornerShape(10.dp))
-                                                .background(colors.surfaceOrb)
-                                                .border(1.dp, colors.mint.copy(alpha = 0.45f), RoundedCornerShape(10.dp))
-                                                .clickable {
-                                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                    selectedChartTimeframe = selectedChartTimeframe.next()
-                                                }
-                                                .padding(horizontal = 9.dp, vertical = 4.dp),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                                Icon(
-                                                    Icons.Default.AccessTime,
-                                                    contentDescription = "Cambiar intervalo",
-                                                    tint = colors.mint,
-                                                    modifier = Modifier.size(12.dp)
-                                                )
-                                                Spacer(modifier = Modifier.width(4.dp))
-                                                Text(
-                                                    text = selectedChartTimeframe.label,
-                                                    fontWeight = FontWeight.Bold,
-                                                    fontSize = 11.5.sp,
-                                                    color = colors.mint
-                                                )
-                                            }
-                                        }
-
-                                        // Pastilla compacta del sensor
-                                        Box(
-                                            modifier = Modifier
-                                                .clip(RoundedCornerShape(10.dp))
-                                                .background(colors.surfaceOrb)
-                                                .border(1.dp, colors.surfaceBorder, RoundedCornerShape(10.dp))
-                                                .clickable {
-                                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                    activeModal = DetailModalType.SENSOR_INFO
-                                                }
-                                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                                        ) {
-                                            Text(
-                                                text = "${sensorDays}d",
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 11.5.sp,
-                                                color = if (sensorDays <= 2) colors.highAmber else colors.mint
-                                            )
-                                        }
-                                    }
-                                }
-                                Spacer(modifier = Modifier.height(12.dp))
-                                MobileGlucoseChart(
-                                    history = chartHistory,
-                                    timeframe = selectedChartTimeframe,
-                                    targetLow = targetLow,
-                                    targetHigh = targetHigh,
-                                    alarms = configuredAlarms,
-                                    unit = settings?.unit ?: GlucoseUnit.MGDL
-                                )
+                        DashboardChartCard(
+                            chartHistory = chartHistory,
+                            selectedChartTimeframe = selectedChartTimeframe,
+                            sensorDays = sensorDays,
+                            targetLow = targetLow,
+                            targetHigh = targetHigh,
+                            configuredAlarms = configuredAlarms,
+                            unit = settings?.unit ?: GlucoseUnit.MGDL,
+                            onCycleTimeframe = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                selectedChartTimeframe = selectedChartTimeframe.next()
+                            },
+                            onSensorClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                activeModal = DetailModalType.SENSOR_INFO
                             }
-                        }
+                        )
                     }
 
-                    // 3. SECCIÓN DE ESTADÍSTICAS CON SELECTOR DE PERÍODO (DÍA | SEMANA | MES | 3 MESES)
+                    // 3. SECCIÓN DE ESTADÍSTICAS
                     item {
-                        Card(
-                            shape = RoundedCornerShape(20.dp),
-                            colors = CardDefaults.cardColors(containerColor = colors.surfaceCard),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, colors.surfaceBorder),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = "Métricas Estadísticas",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 15.sp,
-                                        color = colors.textPrimary
-                                    )
-                                    Text(
-                                        text = selectedPeriod.label,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = colors.mint
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.height(12.dp))
-
-                                // Period Selector Tabs (Solo periodos con datos reales)
-                                val availablePeriods = MetricPeriod.entries.filter {
-                                    availableDataDays >= it.days || (it == MetricPeriod.DAY && availableDataDays >= 1)
-                                }.ifEmpty { listOf(MetricPeriod.DAY) }
-
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(colors.surfaceOrb)
-                                        .border(1.dp, colors.surfaceBorder, RoundedCornerShape(12.dp))
-                                        .padding(3.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    availablePeriods.forEach { period ->
-                                        val isSelected = selectedPeriod == period
-                                        Box(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .clip(RoundedCornerShape(9.dp))
-                                                .background(
-                                                    if (isSelected) colors.mint else Color.Transparent
-                                                )
-                                                .clickable {
-                                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                                    selectedPeriod = period
-                                                    insufficientDataNotice = null
-                                                }
-                                                .padding(vertical = 7.dp),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Text(
-                                                text = period.label,
-                                                fontSize = 12.sp,
-                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                                color = if (isSelected) {
-                                                    if (colors.isDark) Color.Black else Color.White
-                                                } else {
-                                                    colors.textSecondary
-                                                },
-                                                textAlign = TextAlign.Center
-                                            )
-                                        }
-                                    }
-                                }
-
-                                insufficientDataNotice?.let { notice ->
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(colors.lowCoral.copy(alpha = 0.12f))
-                                            .border(1.dp, colors.lowCoral.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
-                                            .padding(horizontal = 10.dp, vertical = 6.dp)
-                                    ) {
-                                        Text(
-                                            text = "[Aviso] $notice",
-                                            fontSize = 11.5.sp,
-                                            color = colors.lowCoral,
-                                            lineHeight = 15.sp
-                                        )
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.height(14.dp))
-
-                                // 4 Métricas reales calculadas
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    DailyStatItem(
-                                        title = "En Rango",
-                                        value = "$tirPercent%",
-                                        unit = "TIR",
-                                        accentColor = colors.mint,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    DailyStatItem(
-                                        title = "Media",
-                                        value = "${avgVal.toInt()}",
-                                        unit = "mg/dL",
-                                        accentColor = colors.arcticCyan,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    DailyStatItem(
-                                        title = "Mín",
-                                        value = "${minVal.toInt()}",
-                                        unit = "mg/dL",
-                                        accentColor = colors.textPrimary,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                    DailyStatItem(
-                                        title = "Máx",
-                                        value = "${maxVal.toInt()}",
-                                        unit = "mg/dL",
-                                        accentColor = colors.textPrimary,
-                                        modifier = Modifier.weight(1f)
-                                    )
-                                }
+                        DashboardStatsCard(
+                            selectedPeriod = selectedPeriod,
+                            availableDataDays = availableDataDays,
+                            insufficientDataNotice = insufficientDataNotice,
+                            tirPercent = tirPercent,
+                            avgVal = avgVal,
+                            minVal = minVal,
+                            maxVal = maxVal,
+                            onSelectPeriod = { period ->
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                selectedPeriod = period
+                                insufficientDataNotice = null
                             }
-                        }
+                        )
                     }
 
                     // 4. TARJETA DEDICADA DE INFORMACIÓN DEL SENSOR
                     item {
-                        Card(
-                            shape = RoundedCornerShape(20.dp),
-                            colors = CardDefaults.cardColors(containerColor = colors.surfaceCard),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, colors.surfaceBorder),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                    activeModal = DetailModalType.SENSOR_INFO
-                                }
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(42.dp)
-                                            .clip(CircleShape)
-                                            .background(colors.surfaceOrb)
-                                            .border(1.dp, colors.surfaceBorder, CircleShape),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            Icons.Default.Sensors,
-                                            contentDescription = "Sensor",
-                                            tint = colors.mint,
-                                            modifier = Modifier.size(24.dp)
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = "FreeStyle Sensor",
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 15.sp,
-                                            color = colors.textPrimary
-                                        )
-                                        Text(
-                                            text = "$sensorModel • $sensorDays días restantes",
-                                            fontSize = 12.sp,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = if (sensorDays <= 2) colors.lowCoral else colors.mint
-                                        )
-                                    }
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(
-                                                if (isSensorActive) colors.mint.copy(alpha = if (colors.isDark) 0.2f else 0.15f)
-                                                else colors.lowCoral.copy(alpha = 0.2f)
-                                            )
-                                            .padding(horizontal = 10.dp, vertical = 5.dp)
-                                    ) {
-                                        Text(
-                                            text = if (isSensorActive) "Activo" else "Caducado",
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = if (isSensorActive) colors.mint else colors.lowCoral
-                                        )
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.height(14.dp))
-
-                                // Detalle de datos del sensor
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(colors.surfaceOrb)
-                                        .border(1.dp, colors.surfaceBorder, RoundedCornerShape(12.dp))
-                                        .padding(12.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Column {
-                                        Text(
-                                            text = "Nº de Serie (S/N)",
-                                            fontSize = 11.sp,
-                                            color = colors.textSecondary
-                                        )
-                                        Spacer(modifier = Modifier.height(2.dp))
-                                        Text(
-                                            text = sensorSerial,
-                                            fontSize = 13.sp,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = colors.textPrimary
-                                        )
-                                    }
-                                    Column(horizontalAlignment = Alignment.End) {
-                                        Text(
-                                            text = "Tipo / Modelo",
-                                            fontSize = 11.sp,
-                                            color = colors.textSecondary
-                                        )
-                                        Spacer(modifier = Modifier.height(2.dp))
-                                        Text(
-                                            text = sensorModel,
-                                            fontSize = 13.sp,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = colors.textPrimary
-                                        )
-                                    }
-                                }
-
-                                if (!isSensorActive || sensorDays <= 0) {
-                                    Spacer(modifier = Modifier.height(10.dp))
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .clip(RoundedCornerShape(10.dp))
-                                            .background(colors.lowCoral.copy(alpha = 0.12f))
-                                            .border(1.dp, colors.lowCoral.copy(alpha = 0.35f), RoundedCornerShape(10.dp))
-                                            .padding(10.dp)
-                                    ) {
-                                        Text(
-                                            text = "Sensor finalizado o no detectado. Si acabas de aplicar un sensor nuevo, inicia el escaneo en la aplicación oficial de FreeStyle Libre y aguarda el período de calentamiento de 60 minutos.",
-                                            fontSize = 11.sp,
-                                            color = colors.lowCoral,
-                                            lineHeight = 15.sp
-                                        )
-                                    }
-                                }
+                        DashboardSensorCard(
+                            sensorModel = sensorModel,
+                            sensorDays = sensorDays,
+                            isSensorActive = isSensorActive,
+                            sensorSerial = sensorSerial,
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                activeModal = DetailModalType.SENSOR_INFO
                             }
-                        }
+                        )
                     }
 
                     item {
@@ -1145,6 +806,7 @@ fun MobileDashboardScreen(
             }
         }
     }
+}
 
         // Modal de Estadísticas Detalladas
         if (activeModal != DetailModalType.NONE) {
@@ -1438,7 +1100,6 @@ fun MobileDashboardScreen(
         }
     }
 }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -1504,14 +1165,22 @@ private fun MobileSettingsScreen(
             )
         }
     ) { padding ->
-        Column(
+        val responsive = ClinicalTheme.responsive
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .background(colors.background),
+            contentAlignment = Alignment.TopCenter
         ) {
+            Column(
+                modifier = Modifier
+                    .widthIn(max = responsive.settingsMaxWidth)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = responsive.horizontalPadding, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(responsive.cardSpacing)
+            ) {
             // Mini Perfil de Sensor y Conexión
             Card(
                 shape = RoundedCornerShape(16.dp),
@@ -1766,13 +1435,17 @@ private fun MobileSettingsScreen(
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
+}
 
     // Diálogos Legales — se muestran directamente sobre esta pantalla de Ajustes
     if (activeLegalNotice != LegalNoticeType.NONE) {
         LegalNoticeDialog(
             type = activeLegalNotice,
             onDismiss = { activeLegalNotice = LegalNoticeType.NONE },
-            onConfirmDelete = { /* La confirmación de borrado la gestiona MobileDashboardScreen via onRequestDeleteData */ }
+            onConfirmDelete = {
+                activeLegalNotice = LegalNoticeType.NONE
+                onRequestDeleteData()
+            }
         )
     }
 }
@@ -2027,13 +1700,16 @@ fun DailyStatItem(
     modifier: Modifier = Modifier
 ) {
     val colors = ClinicalTheme.colors
+    val responsive = ClinicalTheme.responsive
+    val isNarrow = responsive.isNarrowPhone
+
     Box(
         modifier = modifier
-            .padding(horizontal = 3.dp)
+            .padding(horizontal = if (isNarrow) 1.5.dp else 3.dp)
             .clip(RoundedCornerShape(12.dp))
             .background(colors.surfaceOrb)
             .border(1.dp, colors.surfaceBorder, RoundedCornerShape(12.dp))
-            .padding(vertical = 10.dp, horizontal = 6.dp),
+            .padding(vertical = if (isNarrow) 8.dp else 10.dp, horizontal = if (isNarrow) 4.dp else 6.dp),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -2042,22 +1718,22 @@ fun DailyStatItem(
         ) {
             Text(
                 text = title,
-                fontSize = 11.sp,
+                fontSize = if (isNarrow) 9.5.sp else 11.sp,
                 fontWeight = FontWeight.Medium,
                 color = colors.textSecondary,
                 textAlign = TextAlign.Center
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(if (isNarrow) 2.dp else 4.dp))
             Text(
                 text = value,
-                fontSize = 16.sp,
+                fontSize = if (isNarrow) 13.5.sp else 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = accentColor,
                 textAlign = TextAlign.Center
             )
             Text(
                 text = unit,
-                fontSize = 10.sp,
+                fontSize = if (isNarrow) 8.5.sp else 10.sp,
                 color = colors.textMuted,
                 textAlign = TextAlign.Center
             )
@@ -2257,11 +1933,14 @@ fun MobileGlucoseChart(
 
             Spacer(modifier = Modifier.height(4.dp))
 
+            val responsive = ClinicalTheme.responsive
+            val canvasHeight = if (responsive.heightClass == com.example.opengluco.mobile.ui.theme.WindowHeightClass.COMPACT) 120.dp else if (responsive.widthClass != com.example.opengluco.mobile.ui.theme.WindowWidthClass.COMPACT) 165.dp else 150.dp
+
             // Lienzo grafico continuo con interaccion tactil (scrubbing y arrastre)
             Canvas(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(150.dp)
+                    .height(canvasHeight)
                     .padding(vertical = 4.dp)
                     .pointerInput(validMeasurements.size, timeframe) {
                         awaitEachGesture {
@@ -2484,6 +2163,556 @@ fun MobileGlucoseChart(
                     fontWeight = FontWeight.Bold,
                     color = colors.mint
                 )
+            }
+        }
+    }
+}
+
+// =========================================================================================
+// COMPONENTES MODULARES RESPONSIVOS DEL DASHBOARD
+// =========================================================================================
+
+@Composable
+private fun DashboardClinicalErrorBanner(
+    clinicalError: ClinicalErrorType,
+    onReconnect: () -> Unit,
+    onRetry: () -> Unit
+) {
+    val colors = ClinicalTheme.colors
+    if (clinicalError is ClinicalErrorType.AuthExpired) {
+        Card(
+            shape = RoundedCornerShape(14.dp),
+            colors = CardDefaults.cardColors(containerColor = colors.urgentCrimson.copy(alpha = if (colors.isDark) 0.16f else 0.10f)),
+            border = androidx.compose.foundation.BorderStroke(1.dp, colors.urgentCrimson.copy(alpha = 0.45f)),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.LockReset,
+                    contentDescription = null,
+                    tint = colors.urgentCrimson,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Sesión Caducada",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                        color = colors.urgentCrimson
+                    )
+                    Text(
+                        text = "Tus credenciales de LibreLinkUp han expirado. Vuelve a iniciar sesión.",
+                        fontSize = 11.5.sp,
+                        color = colors.textSecondary,
+                        lineHeight = 15.sp
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(
+                    onClick = onReconnect,
+                    colors = ButtonDefaults.buttonColors(containerColor = colors.urgentCrimson),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("Reconectar", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    } else if (clinicalError is ClinicalErrorType.NetworkError) {
+        Card(
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = colors.highAmber.copy(alpha = if (colors.isDark) 0.15f else 0.10f)),
+            border = androidx.compose.foundation.BorderStroke(1.dp, colors.highAmber.copy(alpha = 0.40f)),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CloudOff,
+                    contentDescription = null,
+                    tint = colors.highAmber,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = "Sin conexión a Internet • Mostrando datos locales",
+                    fontSize = 11.5.sp,
+                    color = colors.highAmber,
+                    modifier = Modifier.weight(1f),
+                    fontWeight = FontWeight.Medium
+                )
+                TextButton(onClick = onRetry) {
+                    Text(
+                        text = "Reintentar",
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = colors.highAmber
+                    )
+                }
+            }
+        }
+    } else if (clinicalError is ClinicalErrorType.NoPatients) {
+        Card(
+            shape = RoundedCornerShape(14.dp),
+            colors = CardDefaults.cardColors(containerColor = colors.surfaceCard),
+            border = androidx.compose.foundation.BorderStroke(1.dp, colors.surfaceBorder),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    imageVector = Icons.Default.PersonOff,
+                    contentDescription = null,
+                    tint = colors.mint,
+                    modifier = Modifier.size(36.dp)
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "Sin Pacientes Vinculados",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    color = colors.textPrimary
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Esta cuenta de LibreLinkUp no tiene pacientes asignados. Comparte la glucosa desde la app FreeStyle Libre del paciente a este email.",
+                    fontSize = 11.5.sp,
+                    color = colors.textSecondary,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 15.sp
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Button(
+                    onClick = onRetry,
+                    colors = ButtonDefaults.buttonColors(containerColor = colors.mint),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text("Comprobar de Nuevo", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DashboardHeroSection(
+    currentMeasurement: GlucoseMeasurement?,
+    unit: GlucoseUnit,
+    targetLow: Int,
+    targetHigh: Int,
+    configuredAlarms: List<GlucoseAlarm>
+) {
+    val colors = ClinicalTheme.colors
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        MobileDualFloatingOrbs(
+            measurement = currentMeasurement,
+            unit = unit,
+            targetLow = targetLow,
+            targetHigh = targetHigh,
+            alarms = configuredAlarms,
+            onGlucoseOrbClick = {},
+            onTrendOrbClick = {}
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = "Última medición: ${currentMeasurement?.timestamp ?: "Ahora"}",
+            fontSize = 12.sp,
+            color = colors.textMuted,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+private fun DashboardChartCard(
+    chartHistory: List<GlucoseMeasurement>,
+    selectedChartTimeframe: DashboardTimeframe,
+    sensorDays: Int,
+    targetLow: Int,
+    targetHigh: Int,
+    configuredAlarms: List<GlucoseAlarm>,
+    unit: GlucoseUnit,
+    onCycleTimeframe: () -> Unit,
+    onSensorClick: () -> Unit
+) {
+    val colors = ClinicalTheme.colors
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceCard),
+        border = androidx.compose.foundation.BorderStroke(1.dp, colors.surfaceBorder),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.TrendingUp,
+                        contentDescription = null,
+                        tint = colors.mint,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Curva Continua",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = colors.textPrimary
+                    )
+                }
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Boton interactivo de ciclo horario: 24h -> 12h -> 6h -> 2h -> 1h -> 24h
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(colors.surfaceOrb)
+                            .border(1.dp, colors.mint.copy(alpha = 0.45f), RoundedCornerShape(10.dp))
+                            .clickable(onClick = onCycleTimeframe)
+                            .padding(horizontal = 9.dp, vertical = 4.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Default.AccessTime,
+                                contentDescription = "Cambiar intervalo",
+                                tint = colors.mint,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = selectedChartTimeframe.label,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.5.sp,
+                                color = colors.mint
+                            )
+                        }
+                    }
+
+                    // Pastilla compacta del sensor
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(colors.surfaceOrb)
+                            .border(1.dp, colors.surfaceBorder, RoundedCornerShape(10.dp))
+                            .clickable(onClick = onSensorClick)
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "${sensorDays}d",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.5.sp,
+                            color = if (sensorDays <= 2) colors.highAmber else colors.mint
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            MobileGlucoseChart(
+                history = chartHistory,
+                timeframe = selectedChartTimeframe,
+                targetLow = targetLow,
+                targetHigh = targetHigh,
+                alarms = configuredAlarms,
+                unit = unit
+            )
+        }
+    }
+}
+
+@Composable
+private fun DashboardStatsCard(
+    selectedPeriod: MetricPeriod,
+    availableDataDays: Int,
+    insufficientDataNotice: String?,
+    tirPercent: Int,
+    avgVal: Double,
+    minVal: Double,
+    maxVal: Double,
+    onSelectPeriod: (MetricPeriod) -> Unit
+) {
+    val colors = ClinicalTheme.colors
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceCard),
+        border = androidx.compose.foundation.BorderStroke(1.dp, colors.surfaceBorder),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Métricas Estadísticas",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                    color = colors.textPrimary
+                )
+                Text(
+                    text = selectedPeriod.label,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = colors.mint
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Period Selector Tabs (Solo periodos con datos reales)
+            val availablePeriods = MetricPeriod.entries.filter {
+                availableDataDays >= it.days || (it == MetricPeriod.DAY && availableDataDays >= 1)
+            }.ifEmpty { listOf(MetricPeriod.DAY) }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(colors.surfaceOrb)
+                    .border(1.dp, colors.surfaceBorder, RoundedCornerShape(12.dp))
+                    .padding(3.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                availablePeriods.forEach { period ->
+                    val isSelected = selectedPeriod == period
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(9.dp))
+                            .background(
+                                if (isSelected) colors.mint else Color.Transparent
+                            )
+                            .clickable { onSelectPeriod(period) }
+                            .padding(vertical = 7.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = period.label,
+                            fontSize = 12.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            color = if (isSelected) {
+                                if (colors.isDark) Color.Black else Color.White
+                            } else {
+                                colors.textSecondary
+                            },
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
+
+            insufficientDataNotice?.let { notice ->
+                Spacer(modifier = Modifier.height(8.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(colors.lowCoral.copy(alpha = 0.12f))
+                        .border(1.dp, colors.lowCoral.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = "[Aviso] $notice",
+                        fontSize = 11.5.sp,
+                        color = colors.lowCoral,
+                        lineHeight = 15.sp
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // 4 Métricas reales calculadas
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                DailyStatItem(
+                    title = "En Rango",
+                    value = "$tirPercent%",
+                    unit = "TIR",
+                    accentColor = colors.mint,
+                    modifier = Modifier.weight(1f)
+                )
+                DailyStatItem(
+                    title = "Media",
+                    value = "${avgVal.toInt()}",
+                    unit = "mg/dL",
+                    accentColor = colors.arcticCyan,
+                    modifier = Modifier.weight(1f)
+                )
+                DailyStatItem(
+                    title = "Mín",
+                    value = "${minVal.toInt()}",
+                    unit = "mg/dL",
+                    accentColor = colors.textPrimary,
+                    modifier = Modifier.weight(1f)
+                )
+                DailyStatItem(
+                    title = "Máx",
+                    value = "${maxVal.toInt()}",
+                    unit = "mg/dL",
+                    accentColor = colors.textPrimary,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DashboardSensorCard(
+    sensorModel: String,
+    sensorDays: Int,
+    isSensorActive: Boolean,
+    sensorSerial: String,
+    onClick: () -> Unit
+) {
+    val colors = ClinicalTheme.colors
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = colors.surfaceCard),
+        border = androidx.compose.foundation.BorderStroke(1.dp, colors.surfaceBorder),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(CircleShape)
+                        .background(colors.surfaceOrb)
+                        .border(1.dp, colors.surfaceBorder, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Sensors,
+                        contentDescription = "Sensor",
+                        tint = colors.mint,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "FreeStyle Sensor",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = colors.textPrimary
+                    )
+                    Text(
+                        text = "$sensorModel • $sensorDays días restantes",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (sensorDays <= 2) colors.lowCoral else colors.mint
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(
+                            if (isSensorActive) colors.mint.copy(alpha = if (colors.isDark) 0.2f else 0.15f)
+                            else colors.lowCoral.copy(alpha = 0.2f)
+                        )
+                        .padding(horizontal = 10.dp, vertical = 5.dp)
+                ) {
+                    Text(
+                        text = if (isSensorActive) "Activo" else "Caducado",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isSensorActive) colors.mint else colors.lowCoral
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Detalle de datos del sensor
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(colors.surfaceOrb)
+                    .border(1.dp, colors.surfaceBorder, RoundedCornerShape(12.dp))
+                    .padding(12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        text = "Nº de Serie (S/N)",
+                        fontSize = 11.sp,
+                        color = colors.textSecondary
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = sensorSerial,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = colors.textPrimary
+                    )
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = "Tipo / Modelo",
+                        fontSize = 11.sp,
+                        color = colors.textSecondary
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = sensorModel,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = colors.textPrimary
+                    )
+                }
+            }
+
+            if (!isSensorActive || sensorDays <= 0) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(colors.lowCoral.copy(alpha = 0.12f))
+                        .border(1.dp, colors.lowCoral.copy(alpha = 0.35f), RoundedCornerShape(10.dp))
+                        .padding(10.dp)
+                ) {
+                    Text(
+                        text = "Sensor finalizado o no detectado. Si acabas de aplicar un sensor nuevo, inicia el escaneo en la aplicación oficial de FreeStyle Libre y aguarda el período de calentamiento de 60 minutos.",
+                        fontSize = 11.sp,
+                        color = colors.lowCoral,
+                        lineHeight = 15.sp
+                    )
+                }
             }
         }
     }

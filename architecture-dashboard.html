@@ -1,0 +1,1481 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Architecture Specification & Governance Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11.17.2/dist/mermaid.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'Menlo', 'monospace']
+          },
+          colors: {
+            surface: {
+              DEFAULT: '#090d16',
+              subtle: '#0f172a',
+              card: '#131d31',
+              border: '#1e293b',
+              hover: '#1e293b'
+            },
+            accent: {
+              blue: '#38bdf8',
+              emerald: '#34d399',
+              amber: '#fbbf24',
+              purple: '#a78bfa',
+              rose: '#f43f5e'
+            }
+          }
+        }
+      }
+    };
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'dark',
+      themeVariables: {
+        darkMode: true,
+        background: '#090d16',
+        primaryColor: '#1e293b',
+        primaryTextColor: '#f8fafc',
+        primaryBorderColor: '#334155',
+        lineColor: '#64748b',
+        secondaryColor: '#0f172a',
+        tertiaryColor: '#131e33'
+      },
+      securityLevel: 'loose'
+    });
+  </script>
+  <style>
+    body {
+      background-color: #060911;
+      color: #e2e8f0;
+      letter-spacing: -0.011em;
+    }
+    .badge-domain { background: rgba(56, 189, 248, 0.1); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.25); }
+    .badge-application { background: rgba(52, 211, 153, 0.1); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.25); }
+    .badge-infrastructure { background: rgba(251, 191, 36, 0.1); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.25); }
+    .badge-presentation { background: rgba(167, 139, 250, 0.1); color: #a78bfa; border: 1px solid rgba(167, 139, 250, 0.25); }
+    .badge-shared { background: rgba(148, 163, 184, 0.1); color: #94a3b8; border: 1px solid rgba(148, 163, 184, 0.25); }
+
+    .border-layer-domain { border-left: 3px solid #38bdf8; }
+    .border-layer-application { border-left: 3px solid #34d399; }
+    .border-layer-infrastructure { border-left: 3px solid #fbbf24; }
+    .border-layer-presentation { border-left: 3px solid #a78bfa; }
+
+    #mermaid-render-container svg {
+      max-width: 100% !important;
+      height: auto !important;
+      filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.6));
+    }
+    .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #090d16; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #334155; }
+
+    .tree-toggle-icon {
+      transition: transform 0.15s ease;
+    }
+    .tree-toggle-icon.collapsed {
+      transform: rotate(-90deg);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-sky-500/20 selection:text-sky-300">
+
+  <!-- Main Container: Begins directly with the 4 Layer Bands (No top header) -->
+  <main class="max-w-7xl mx-auto px-6 pt-6 pb-12 flex-1 w-full space-y-6">
+
+    <!-- Top Bar with Status & Language Switcher -->
+    <div class="space-y-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
+          <span class="text-[11px] font-mono text-slate-400 tracking-wider uppercase" id="status-label">ESPECIFICACIÓN ARQUITECTÓNICA ACTIVA</span>
+        </div>
+        
+        <!-- Language Switcher Button -->
+        <div class="flex items-center rounded-lg bg-slate-900 border border-slate-800 p-0.5 text-xs font-mono">
+          <button onclick="setLanguage('es')" id="btn-lang-es" class="px-2.5 py-1 rounded-md bg-sky-500/20 text-sky-300 font-semibold border border-sky-500/30 transition">ES</button>
+          <button onclick="setLanguage('en')" id="btn-lang-en" class="px-2.5 py-1 rounded-md text-slate-400 hover:text-slate-200 transition">EN</button>
+        </div>
+      </div>
+
+      <!-- KPI / Layer Status Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div class="bg-slate-900/50 border border-slate-800/80 rounded-lg p-4 border-layer-domain hover:border-slate-700 transition">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-[11px] font-mono font-medium tracking-wider uppercase text-sky-400" id="layer-domain-badge">Capa 1 &middot; Núcleo</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-sky-950/60 text-sky-300 border border-sky-800/40" id="layer-domain-tag">Cero Deps Externas</span>
+          </div>
+          <div class="text-sm font-semibold text-white font-mono" id="layer-domain-title">Capa de Dominio</div>
+          <p class="text-xs text-slate-400 mt-1 leading-relaxed" id="layer-domain-desc">Entidades de negocio, Value Objects y eventos de dominio puros.</p>
+        </div>
+
+        <div class="bg-slate-900/50 border border-slate-800/80 rounded-lg p-4 border-layer-application hover:border-slate-700 transition">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-[11px] font-mono font-medium tracking-wider uppercase text-emerald-400" id="layer-app-badge">Capa 2 &middot; Casos de Uso</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-950/60 text-emerald-300 border border-emerald-800/40" id="layer-app-tag">Puertos Definidos</span>
+          </div>
+          <div class="text-sm font-semibold text-white font-mono" id="layer-app-title">Servicios de Aplicación</div>
+          <p class="text-xs text-slate-400 mt-1 leading-relaxed" id="layer-app-desc">Interactores, orquestación, contratos DTO y manejadores de comandos.</p>
+        </div>
+
+        <div class="bg-slate-900/50 border border-slate-800/80 rounded-lg p-4 border-layer-infrastructure hover:border-slate-700 transition">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-[11px] font-mono font-medium tracking-wider uppercase text-amber-400" id="layer-infra-badge">Capa 3 &middot; Adaptadores Salida</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-950/60 text-amber-300 border border-amber-800/40" id="layer-infra-tag">DIP Implementado</span>
+          </div>
+          <div class="text-sm font-semibold text-white font-mono" id="layer-infra-title">Infraestructura</div>
+          <p class="text-xs text-slate-400 mt-1 leading-relaxed" id="layer-infra-desc">Repositorios SQL/NoSQL, clientes API externos y publicadores de eventos.</p>
+        </div>
+
+        <div class="bg-slate-900/50 border border-slate-800/80 rounded-lg p-4 border-layer-presentation hover:border-slate-700 transition">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-[11px] font-mono font-medium tracking-wider uppercase text-purple-400" id="layer-pres-badge">Capa 4 &middot; Adaptadores Entrada</span>
+            <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-950/60 text-purple-300 border border-purple-800/40" id="layer-pres-tag">Puntos de Entrada</span>
+          </div>
+          <div class="text-sm font-semibold text-white font-mono" id="layer-pres-title">Presentación y Entrega</div>
+          <p class="text-xs text-slate-400 mt-1 leading-relaxed" id="layer-pres-desc">Controladores HTTP REST, CLI, WebSockets e interfaces de usuario.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs Bar -->
+    <div class="flex items-center justify-between border-b border-slate-800 pt-2 text-xs font-mono tracking-tight">
+      <div class="flex gap-8">
+        <button onclick="switchTab('explorer')" id="tab-btn-explorer" class="pb-3 border-b-2 border-sky-400 text-sky-400 font-semibold flex items-center gap-2 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>
+          <span id="tab-title-explorer">TOPOLOGÍA DEL PROYECTO</span>
+        </button>
+        <button onclick="switchTab('diagram')" id="tab-btn-diagram" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+          <span id="tab-title-diagram">DIAGRAMA C4 Y FLUJO</span>
+        </button>
+        <button onclick="switchTab('adrs')" id="tab-btn-adrs" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          <span id="tab-title-adrs">REGISTRO DE DECISIONES (ADR)</span>
+        </button>
+        <button onclick="switchTab('guardrails')" id="tab-btn-guardrails" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+          <span id="tab-title-guardrails">GUARDRAILS Y FRONTERAS</span>
+        </button>
+      </div>
+
+      <div class="pb-2 hidden sm:flex items-center gap-2 text-[11px] font-mono text-slate-500">
+        <span>Clean Architecture &middot; Hexagonal</span>
+      </div>
+    </div>
+
+    <!-- TAB 1: Collapsible Workspace Topology with Live File Preview Pane -->
+    <section id="tab-explorer" class="space-y-3">
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-900/40 p-3 rounded-lg border border-slate-800">
+        <div class="relative flex-1 max-w-md">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          </div>
+          <input type="text" id="folder-search" placeholder="Filtrar archivos o módulos..." oninput="filterTree()"
+            class="w-full bg-slate-950 border border-slate-800 rounded-md pl-8 pr-3 py-1 text-xs text-slate-200 font-mono placeholder-slate-500 focus:outline-none focus:border-sky-500 transition">
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="toggleAllFolders(true)" id="btn-expand-all" class="px-2.5 py-1 text-[11px] font-mono rounded bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+            Desplegar Todo
+          </button>
+          <button onclick="toggleAllFolders(false)" id="btn-collapse-all" class="px-2.5 py-1 text-[11px] font-mono rounded bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+            Contraer Todo
+          </button>
+        </div>
+      </div>
+
+      <!-- Split Layout: Tree on Left, File Code Preview on Right -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+        <div class="lg:col-span-6 bg-slate-950 border border-slate-800/80 rounded-lg p-4 shadow-xl overflow-x-auto custom-scrollbar">
+          <div class="text-[10px] font-mono uppercase tracking-wider text-slate-500 pb-2 border-b border-slate-800/60 mb-2 flex items-center justify-between">
+            <span id="lbl-tree-guide">Árbol de Archivos (Clic en archivo para ver código)</span>
+            <span class="text-[10px] text-sky-400 font-mono">Interactive</span>
+          </div>
+          <div id="tree-container" class="space-y-0.5 font-mono text-xs select-none"></div>
+        </div>
+
+        <div class="lg:col-span-6 bg-slate-950 border border-slate-800/80 rounded-lg shadow-xl overflow-hidden flex flex-col">
+          <div class="px-4 py-2.5 bg-slate-900/80 border-b border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-2 min-w-0">
+              <svg class="w-3.5 h-3.5 text-sky-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+              <span id="preview-filename" class="text-xs font-mono text-white font-semibold truncate">user.entity.ts</span>
+              <span id="preview-badge" class="px-1.5 py-0.2 text-[9px] rounded badge-domain uppercase">Domain</span>
+            </div>
+            <button onclick="copyPreviewCode()" id="btn-copy-code" class="px-2 py-0.5 text-[10px] font-mono rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center gap-1">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+              <span>Copiar</span>
+            </button>
+          </div>
+          <div class="px-4 py-2 bg-slate-900/30 border-b border-slate-800/60 text-[11px] text-slate-400 font-sans" id="preview-desc">
+            Modelo de dominio puro que encapsula la identidad, validaciones de invariantes y reglas de negocio.
+          </div>
+          <div class="p-4 max-h-[450px] overflow-y-auto custom-scrollbar bg-slate-950 font-mono text-xs text-slate-300">
+            <pre><code id="preview-code-content">// Clic en un archivo para inspeccionar su código</code></pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: C4 System Diagram (Dynamically Rendered via Mermaid 11.17.2) -->
+    <section id="tab-diagram" class="hidden space-y-3">
+      <div class="bg-slate-950 border border-slate-800/80 rounded-lg p-6 shadow-xl flex flex-col items-center">
+        <div class="w-full flex items-center justify-between pb-3 mb-4 border-b border-slate-800">
+          <div>
+            <h3 class="text-xs font-semibold text-white font-mono uppercase tracking-wider" id="c4-header-title">DIAGRAMA C4 DE CONTENEDORES Y CONTROL DE DEPENDENCIAS</h3>
+            <p class="text-[11px] text-slate-400 mt-0.5" id="c4-header-desc">Flujo estricto de dependencias hacia el interior mediante el Principio de Inversión de Dependencias (DIP)</p>
+          </div>
+          <button onclick="renderMermaidDiagram()" class="text-[10px] font-mono px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 transition flex items-center gap-1.5">
+            <svg class="w-3 h-3 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            <span>Re-render</span>
+          </button>
+        </div>
+
+        <div id="mermaid-render-container" class="w-full flex justify-center py-4 overflow-x-auto min-h-[300px]">
+          <div class="text-xs font-mono text-slate-500 flex items-center gap-2">
+            <span>Renderizando diagrama C4...</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: Decision Records (ADR) with Interactive Viewer Modal -->
+    <section id="tab-adrs" class="hidden space-y-3">
+      <div class="flex items-center justify-between pb-2">
+        <div>
+          <h3 class="text-xs font-semibold text-white font-mono uppercase tracking-wider" id="adr-header-title">REGISTRO HISTÓRICO DE DECISIONES DE ARQUITECTURA</h3>
+          <p class="text-[11px] text-slate-400 mt-0.5" id="adr-header-desc">Haz clic en cualquier ficha para inspeccionar el contexto, alternativas y consecuencias asumidas</p>
+        </div>
+        <span class="text-[11px] font-mono text-slate-500">docs/adr/</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5" id="adr-cards-container">
+        <!-- Injected dynamically via JS based on language -->
+      </div>
+    </section>
+
+    <!-- TAB 4: Boundary Guardrails Matrix -->
+    <section id="tab-guardrails" class="hidden space-y-3">
+      <div class="bg-slate-950 border border-slate-800/80 rounded-lg p-5 shadow-xl space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+          <div>
+            <h3 class="text-xs font-semibold text-white font-mono uppercase tracking-wider" id="guardrails-header-title">MATRIZ DE FRONTERAS ARQUITECTÓNICAS</h3>
+            <p class="text-[11px] text-slate-400 mt-0.5" id="guardrails-header-desc">Reglas deterministas de validación forzadas en desarrollo y compilación CI/CD</p>
+          </div>
+          <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-emerald-400" id="guardrails-active-tag">Control Activo</span>
+        </div>
+
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-left text-xs font-mono">
+            <thead class="text-[10px] uppercase bg-slate-900/80 text-slate-400 border-b border-slate-800">
+              <tr>
+                <th class="px-4 py-2.5 font-medium" id="th-src">Capa Origen</th>
+                <th class="px-4 py-2.5 font-medium" id="th-perm">Imports Permitidos</th>
+                <th class="px-4 py-2.5 font-medium" id="th-forb">Imports Prohibidos</th>
+                <th class="px-4 py-2.5 font-medium" id="th-rule">Regla Linter</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/60 text-slate-300" id="guardrails-tbody">
+              <!-- Injected dynamically via JS based on language -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Interactive ADR Modal Drawer -->
+  <div id="adr-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
+        <div>
+          <span id="modal-adr-id" class="text-xs font-mono text-sky-400 font-semibold">ADR-0001</span>
+          <h3 id="modal-adr-title" class="text-sm font-semibold text-white mt-0.5">Title</h3>
+        </div>
+        <button onclick="closeAdrModal()" class="text-slate-400 hover:text-white p-1 rounded-md hover:bg-slate-800 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <div class="p-6 overflow-y-auto space-y-5 text-xs text-slate-300 custom-scrollbar" id="modal-adr-body"></div>
+
+      <div class="px-6 py-3 border-t border-slate-800 bg-slate-950/60 flex items-center justify-between text-[11px] font-mono text-slate-500">
+        <span id="modal-adr-file">docs/adr/0001-adopcion-arquitectura.md</span>
+        <button id="modal-btn-close" onclick="closeAdrModal()" class="px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 transition">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentLang = 'es';
+
+    const I18N = {
+      es: {
+        status: 'ESPECIFICACIÓN ARQUITECTÓNICA ACTIVA',
+        layerDomainBadge: 'Capa 1 · Núcleo',
+        layerDomainTag: 'Cero Deps Externas',
+        layerDomainTitle: 'Capa de Dominio',
+        layerDomainDesc: 'Entidades de negocio, Value Objects y eventos de dominio puros.',
+        layerAppBadge: 'Capa 2 · Casos de Uso',
+        layerAppTag: 'Puertos Definidos',
+        layerAppTitle: 'Servicios de Aplicación',
+        layerAppDesc: 'Interactores, orquestación, contratos DTO y manejadores de comandos.',
+        layerInfraBadge: 'Capa 3 · Adaptadores Salida',
+        layerInfraTag: 'DIP Implementado',
+        layerInfraTitle: 'Infraestructura',
+        layerInfraDesc: 'Repositorios SQL/NoSQL, clientes API externos y publicadores de eventos.',
+        layerPresBadge: 'Capa 4 · Adaptadores Entrada',
+        layerPresTag: 'Puntos de Entrada',
+        layerPresTitle: 'Presentación y Entrega',
+        layerPresDesc: 'Controladores HTTP REST, CLI, WebSockets e interfaces de usuario.',
+        tabExplorer: 'TOPOLOGÍA DEL PROYECTO',
+        tabDiagram: 'DIAGRAMA C4 Y FLUJO',
+        tabAdrs: 'REGISTRO DE DECISIONES (ADR)',
+        tabGuardrails: 'GUARDRAILS Y FRONTERAS',
+        filterPlaceholder: 'Filtrar archivos o módulos...',
+        expandAll: 'Desplegar Todo',
+        collapseAll: 'Contraer Todo',
+        treeGuide: 'Árbol de Archivos (Clic en archivo para ver código)',
+        copyBtn: 'Copiar',
+        copiedBtn: '¡Copiado!',
+        c4HeaderTitle: 'DIAGRAMA C4 DE CONTENEDORES Y CONTROL DE DEPENDENCIAS',
+        c4HeaderDesc: 'Flujo estricto de dependencias hacia el interior mediante el Principio de Inversión de Dependencias (DIP)',
+        adrHeaderTitle: 'REGISTRO HISTÓRICO DE DECISIONES DE ARQUITECTURA',
+        adrHeaderDesc: 'Haz clic en cualquier ficha para inspeccionar el contexto, alternativas y consecuencias asumidas',
+        guardrailsHeaderTitle: 'MATRIZ DE FRONTERAS ARQUITECTÓNICAS',
+        guardrailsHeaderDesc: 'Reglas deterministas de validación forzadas en desarrollo y compilación CI/CD',
+        guardrailsActiveTag: 'Control Activo',
+        thSrc: 'Capa Origen',
+        thPerm: 'Imports Permitidos',
+        thForb: 'Imports Prohibidos',
+        thRule: 'Regla Linter',
+        modalClose: 'Cerrar',
+        inspectRecord: 'Inspeccionar Registro',
+        adrSectionContext: '1. Contexto y Problema de Negocio',
+        adrSectionDrivers: '2. Factores Clave de Decisión',
+        adrSectionDecision: '3. Decisión Técnica Aprobada',
+        adrSectionPos: 'Consecuencias Positivas',
+        adrSectionNeg: 'Compromisos y Restricciones'
+      },
+      en: {
+        status: 'ACTIVE SPECIFICATION & GOVERNANCE',
+        layerDomainBadge: 'Layer 1 · Core',
+        layerDomainTag: 'Zero External',
+        layerDomainTitle: 'Domain Layer',
+        layerDomainDesc: 'Enterprise entities, value objects and domain events with pure business logic.',
+        layerAppBadge: 'Layer 2 · Use Cases',
+        layerAppTag: 'Ports Defined',
+        layerAppTitle: 'Application Services',
+        layerAppDesc: 'Interactors, workflow orchestration, command handlers and DTO schemas.',
+        layerInfraBadge: 'Layer 3 · Driven',
+        layerInfraTag: 'DIP Implemented',
+        layerInfraTitle: 'Infrastructure Adapters',
+        layerInfraDesc: 'Database repositories, external API clients, cloud SDKs and event publishers.',
+        layerPresBadge: 'Layer 4 · Driving',
+        layerPresTag: 'Entry Points',
+        layerPresTitle: 'Presentation Layer',
+        layerPresDesc: 'HTTP REST controllers, CLI handlers, WebSockets and user interfaces.',
+        tabExplorer: 'WORKSPACE TOPOLOGY',
+        tabDiagram: 'C4 SYSTEM DIAGRAM',
+        tabAdrs: 'DECISION RECORDS (ADR)',
+        tabGuardrails: 'BOUNDARY GUARDRAILS',
+        filterPlaceholder: 'Filter files or modules...',
+        expandAll: 'Expand All',
+        collapseAll: 'Collapse All',
+        treeGuide: 'File Tree (Click file to inspect code)',
+        copyBtn: 'Copy',
+        copiedBtn: 'Copied!',
+        c4HeaderTitle: 'C4 CONTAINER & DEPENDENCY CONTROL GRAPH',
+        c4HeaderDesc: 'Strict inward dependency flow enforced via Dependency Inversion Principle',
+        adrHeaderTitle: 'ARCHITECTURE DECISION RECORDS INDEX',
+        adrHeaderDesc: 'Click any record to inspect full problem context, decision drivers and consequences',
+        guardrailsHeaderTitle: 'ARCHITECTURAL BOUNDARY MATRIX',
+        guardrailsHeaderDesc: 'Automated validation rules enforced in development and continuous integration',
+        guardrailsActiveTag: 'Active Enforcement',
+        thSrc: 'Source Layer',
+        thPerm: 'Permitted Imports',
+        thForb: 'Forbidden Imports',
+        thRule: 'Linter Rule',
+        modalClose: 'Close',
+        inspectRecord: 'Inspect Full Record',
+        adrSectionContext: '1. Context & Problem',
+        adrSectionDrivers: '2. Decision Drivers',
+        adrSectionDecision: '3. Chosen Decision',
+        adrSectionPos: 'Positive Consequences',
+        adrSectionNeg: 'Trade-offs & Constraints'
+      }
+    };
+
+    // File Preview Code Catalog
+    const FILE_PREVIEWS = {
+      'file-user-entity': {
+        name: 'user.entity.ts',
+        path: 'src/domain/entities/user.entity.ts',
+        layer: 'domain',
+        desc: {
+          es: 'Modelo de dominio puro que encapsula la identidad, validaciones de invariantes y reglas de negocio.',
+          en: 'Pure domain model encapsulating identity, invariant validations and business methods.'
+        },
+        code: `export class User {
+  private constructor(
+    public readonly id: string,
+    public name: string,
+    public email: string,
+    public isActive: boolean,
+    public readonly createdAt: Date
+  ) {}
+
+  public static create(id: string, name: string, email: string): User {
+    if (!name || name.trim().length < 2) {
+      throw new Error('InvalidUserName: Name must be at least 2 characters');
+    }
+    if (!email.includes('@')) {
+      throw new Error('InvalidUserEmail: Malformed email address');
+    }
+    return new User(id, name, email, true, new Date());
+  }
+
+  public deactivate(): void {
+    this.isActive = false;
+  }
+}`
+      },
+      'file-order-entity': {
+        name: 'order.entity.ts',
+        path: 'src/domain/entities/order.entity.ts',
+        layer: 'domain',
+        desc: {
+          es: 'Aggregate Root que garantiza la consistencia transaccional y el cálculo de importes.',
+          en: 'Aggregate root enforcing transactional consistency and monetary order totals.'
+        },
+        code: `export class Order {
+  constructor(
+    public readonly id: string,
+    public readonly customerId: string,
+    public readonly items: Array<{ sku: string; price: number; quantity: number }>,
+    public status: 'PENDING' | 'PAID' | 'CANCELLED' = 'PENDING'
+  ) {}
+
+  public calculateTotal(): number {
+    return this.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  }
+
+  public markAsPaid(): void {
+    if (this.status === 'CANCELLED') {
+      throw new Error('InvalidOrderState: Cannot pay a cancelled order');
+    }
+    this.status = 'PAID';
+  }
+}`
+      },
+      'file-email-vo': {
+        name: 'email.vo.ts',
+        path: 'src/domain/value_objects/email.vo.ts',
+        layer: 'domain',
+        desc: {
+          es: 'Value Object inmutable que garantiza el formato estricto de correos electrónicos.',
+          en: 'Immutable value object enforcing strict RFC-compliant email formatting.'
+        },
+        code: `export class Email {
+  private static readonly REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$/;
+
+  private constructor(public readonly value: string) {}
+
+  public static fromString(candidate: string): Email {
+    const sanitized = candidate.trim().toLowerCase();
+    if (!this.REGEX.test(sanitized)) {
+      throw new Error(\`InvalidEmailFormat: '\${candidate}' is not a valid email\`);
+    }
+    return new Email(sanitized);
+  }
+
+  public equals(other: Email): boolean {
+    return this.value === other.value;
+  }
+}`
+      },
+      'file-money-vo': {
+        name: 'money.vo.ts',
+        path: 'src/domain/value_objects/money.vo.ts',
+        layer: 'domain',
+        desc: {
+          es: 'Value Object para aritmética monetaria de precisión entera (centavos) evitando errores de coma flotante.',
+          en: 'Value object for integer-precision monetary arithmetic preventing float errors.'
+        },
+        code: `export class Money {
+  private constructor(
+    public readonly amountInCents: number,
+    public readonly currency: string = 'EUR'
+  ) {}
+
+  public static of(amount: number, currency: string = 'EUR'): Money {
+    return new Money(Math.round(amount * 100), currency);
+  }
+
+  public add(other: Money): Money {
+    if (this.currency !== other.currency) {
+      throw new Error('CurrencyMismatchError: Cannot add different currencies');
+    }
+    return new Money(this.amountInCents + other.amountInCents, this.currency);
+  }
+}`
+      },
+      'file-user-repo-port': {
+        name: 'user-repository.port.ts',
+        path: 'src/domain/ports/user-repository.port.ts',
+        layer: 'domain',
+        desc: {
+          es: 'Contrato de puerto secundario (Driven Port) para abstracción de persistencia.',
+          en: 'Secondary driven port contract abstracting user storage persistence.'
+        },
+        code: `import { User } from '../entities/user.entity';
+
+export interface UserRepositoryPort {
+  save(user: User): Promise<void>;
+  findById(id: string): Promise<User | null>;
+  findByEmail(email: string): Promise<User | null>;
+  delete(id: string): Promise<void>;
+}`
+      },
+      'file-payment-port': {
+        name: 'payment-gateway.port.ts',
+        path: 'src/domain/ports/payment-gateway.port.ts',
+        layer: 'domain',
+        desc: {
+          es: 'Contrato de puerto para pasarelas de pago externas (Stripe, PayPal).',
+          en: 'Outbound port interface for external payment gateway processors.'
+        },
+        code: `export interface ChargePaymentInput {
+  orderId: string;
+  amountInCents: number;
+  currency: string;
+  paymentMethodToken: string;
+}
+
+export interface PaymentGatewayPort {
+  charge(input: ChargePaymentInput): Promise<{ transactionId: string; status: 'SUCCESS' | 'FAILED' }>;
+}`
+      },
+      'file-register-uc': {
+        name: 'register-user.use-case.ts',
+        path: 'src/application/use_cases/register-user.use-case.ts',
+        layer: 'application',
+        desc: {
+          es: 'Caso de uso que orquesta el registro de usuario sin conocer la base de datos subyacente.',
+          en: 'Use case interactor orchestrating registration without database coupling.'
+        },
+        code: `import { User } from '../../domain/entities/user.entity';
+import { UserRepositoryPort } from '../../domain/ports/user-repository.port';
+import { RegisterUserInputDto, RegisterUserOutputDto } from '../dto/register-user.dto';
+
+export class RegisterUserUseCase {
+  constructor(private readonly userRepo: UserRepositoryPort) {}
+
+  public async execute(input: RegisterUserInputDto): Promise<RegisterUserOutputDto> {
+    const existing = await this.userRepo.findByEmail(input.email);
+    if (existing) {
+      throw new Error('UserAlreadyExistsError: Email is already registered');
+    }
+
+    const user = User.create(crypto.randomUUID(), input.name, input.email);
+    await this.userRepo.save(user);
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      createdAt: user.createdAt.toISOString()
+    };
+  }
+}`
+      },
+      'file-order-uc': {
+        name: 'process-order.use-case.ts',
+        path: 'src/application/use_cases/process-order.use-case.ts',
+        layer: 'application',
+        desc: {
+          es: 'Orquesta el cobro de la orden y la transición de estado.',
+          en: 'Orchestrates order payment capture and status transitions.'
+        },
+        code: `import { PaymentGatewayPort } from '../../domain/ports/payment-gateway.port';
+
+export class ProcessOrderUseCase {
+  constructor(private readonly paymentGateway: PaymentGatewayPort) {}
+
+  public async execute(orderId: string, amount: number, token: string) {
+    const result = await this.paymentGateway.charge({
+      orderId,
+      amountInCents: amount,
+      currency: 'EUR',
+      paymentMethodToken: token
+    });
+    return result;
+  }
+}`
+      },
+      'file-reg-in-dto': {
+        name: 'register-user-input.dto.ts',
+        path: 'src/application/dto/register-user-input.dto.ts',
+        layer: 'application',
+        desc: {
+          es: 'Esquema de comando de entrada para el caso de uso.',
+          en: 'Validated command payload for user registration use case.'
+        },
+        code: `export interface RegisterUserInputDto {
+  readonly name: string;
+  readonly email: string;
+  readonly passwordHash?: string;
+}`
+      },
+      'file-reg-out-dto': {
+        name: 'register-user-output.dto.ts',
+        path: 'src/application/dto/register-user-output.dto.ts',
+        layer: 'application',
+        desc: {
+          es: 'DTO serializado de respuesta sanitizado.',
+          en: 'Sanitized output data transfer object returned to presentation.'
+        },
+        code: `export interface RegisterUserOutputDto {
+  readonly id: string;
+  readonly name: string;
+  readonly email: string;
+  readonly createdAt: string;
+}`
+      },
+      'file-prisma-repo': {
+        name: 'prisma-user.repository.ts',
+        path: 'src/infrastructure/persistence/prisma-user.repository.ts',
+        layer: 'infrastructure',
+        desc: {
+          es: 'Implementación del puerto UserRepositoryPort usando Prisma ORM.',
+          en: 'Implements user-repository.port contract using Prisma ORM client.'
+        },
+        code: `import { UserRepositoryPort } from '../../domain/ports/user-repository.port';
+import { User } from '../../domain/entities/user.entity';
+import { UserMapper } from './user.mapper';
+
+export class PrismaUserRepository implements UserRepositoryPort {
+  constructor(private readonly prismaClient: any) {}
+
+  async save(user: User): Promise<void> {
+    const raw = UserMapper.toPersistence(user);
+    await this.prismaClient.user.upsert({
+      where: { id: user.id },
+      create: raw,
+      update: raw
+    });
+  }
+
+  async findById(id: string): Promise<User | null> {
+    const raw = await this.prismaClient.user.findUnique({ where: { id } });
+    return raw ? UserMapper.toDomain(raw) : null;
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    const raw = await this.prismaClient.user.findUnique({ where: { email } });
+    return raw ? UserMapper.toDomain(raw) : null;
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.prismaClient.user.delete({ where: { id } });
+  }
+}`
+      },
+      'file-user-mapper': {
+        name: 'user.mapper.ts',
+        path: 'src/infrastructure/persistence/user.mapper.ts',
+        layer: 'infrastructure',
+        desc: {
+          es: 'Mapper bidireccional entre registros de base de datos y Entidades de Dominio.',
+          en: 'Bidirectional mapper translating DB records to pure Domain Entities.'
+        },
+        code: `import { User } from '../../domain/entities/user.entity';
+
+export class UserMapper {
+  public static toDomain(raw: any): User {
+    return User.create(raw.id, raw.name, raw.email);
+  }
+
+  public static toPersistence(user: User): any {
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      isActive: user.isActive,
+      createdAt: user.createdAt
+    };
+  }
+}`
+      },
+      'file-stripe-adapter': {
+        name: 'stripe-payment.adapter.ts',
+        path: 'src/infrastructure/services/stripe-payment.adapter.ts',
+        layer: 'infrastructure',
+        desc: {
+          es: 'Adaptador de infraestructura que implementa PaymentGatewayPort usando el SDK de Stripe.',
+          en: 'Infrastructure adapter implementing payment port via official Stripe SDK.'
+        },
+        code: `import { PaymentGatewayPort, ChargePaymentInput } from '../../domain/ports/payment-gateway.port';
+
+export class StripePaymentAdapter implements PaymentGatewayPort {
+  constructor(private readonly stripeApiKey: string) {}
+
+  async charge(input: ChargePaymentInput): Promise<{ transactionId: string; status: 'SUCCESS' | 'FAILED' }> {
+    return {
+      transactionId: 'ch_' + Math.random().toString(36).substring(7),
+      status: 'SUCCESS'
+    };
+  }
+}`
+      },
+      'file-auth-ctrl': {
+        name: 'auth.controller.ts',
+        path: 'src/presentation/controllers/auth.controller.ts',
+        layer: 'presentation',
+        desc: {
+          es: 'Controlador HTTP que recibe peticiones REST y delega en RegisterUserUseCase.',
+          en: 'HTTP controller routing REST requests to the use case interactor.'
+        },
+        code: `import { RegisterUserUseCase } from '../../application/use_cases/register-user.use-case';
+
+export class AuthController {
+  constructor(private readonly registerUserUseCase: RegisterUserUseCase) {}
+
+  public async register(req: any, res: any): Promise<void> {
+    try {
+      const { name, email } = req.body;
+      const result = await this.registerUserUseCase.execute({ name, email });
+      res.status(201).json(result);
+    } catch (err: any) {
+      res.status(400).json({ error: err.message });
+    }
+  }
+}`
+      },
+      'file-order-ctrl': {
+        name: 'order.controller.ts',
+        path: 'src/presentation/controllers/order.controller.ts',
+        layer: 'presentation',
+        desc: {
+          es: 'Endpoints HTTP REST para creación y pago de órdenes.',
+          en: 'HTTP REST endpoints for order checkout workflows.'
+        },
+        code: `export class OrderController {
+  public async checkout(req: any, res: any): Promise<void> {
+    res.status(200).json({ success: true, message: 'Order processed' });
+  }
+}`
+      },
+      'file-auth-mw': {
+        name: 'auth.middleware.ts',
+        path: 'src/presentation/middlewares/auth.middleware.ts',
+        layer: 'presentation',
+        desc: {
+          es: 'Middleware de validación de tokens JWT y extracción de claims.',
+          en: 'Middleware verifying JWT bearer tokens and extracting tenant claims.'
+        },
+        code: `export function authMiddleware(req: any, res: any, next: Function) {
+  const token = req.headers['authorization'];
+  if (!token) {
+    return res.status(401).json({ error: 'Unauthorized: Missing token' });
+  }
+  next();
+}`
+      }
+    };
+
+    const treeData = [
+      {
+        id: "root-src",
+        name: "src",
+        path: "src",
+        type: "dir",
+        layer: "root",
+        collapsed: false,
+        children: [
+          {
+            id: "dir-domain",
+            name: "domain",
+            path: "src/domain",
+            type: "dir",
+            layer: "domain",
+            collapsed: false,
+            children: [
+              {
+                id: "dir-entities",
+                name: "entities",
+                path: "src/domain/entities",
+                type: "dir",
+                layer: "domain",
+                collapsed: false,
+                children: [
+                  { id: "file-user-entity", name: "user.entity.ts", path: "src/domain/entities/user.entity.ts", type: "file", layer: "domain" },
+                  { id: "file-order-entity", name: "order.entity.ts", path: "src/domain/entities/order.entity.ts", type: "file", layer: "domain" }
+                ]
+              },
+              {
+                id: "dir-value-objects",
+                name: "value_objects",
+                path: "src/domain/value_objects",
+                type: "dir",
+                layer: "domain",
+                collapsed: false,
+                children: [
+                  { id: "file-email-vo", name: "email.vo.ts", path: "src/domain/value_objects/email.vo.ts", type: "file", layer: "domain" },
+                  { id: "file-money-vo", name: "money.vo.ts", path: "src/domain/value_objects/money.vo.ts", type: "file", layer: "domain" }
+                ]
+              },
+              {
+                id: "dir-ports",
+                name: "ports",
+                path: "src/domain/ports",
+                type: "dir",
+                layer: "domain",
+                collapsed: false,
+                children: [
+                  { id: "file-user-repo-port", name: "user-repository.port.ts", path: "src/domain/ports/user-repository.port.ts", type: "file", layer: "domain" },
+                  { id: "file-payment-port", name: "payment-gateway.port.ts", path: "src/domain/ports/payment-gateway.port.ts", type: "file", layer: "domain" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "dir-application",
+            name: "application",
+            path: "src/application",
+            type: "dir",
+            layer: "application",
+            collapsed: false,
+            children: [
+              {
+                id: "dir-use-cases",
+                name: "use_cases",
+                path: "src/application/use_cases",
+                type: "dir",
+                layer: "application",
+                collapsed: false,
+                children: [
+                  { id: "file-register-uc", name: "register-user.use-case.ts", path: "src/application/use_cases/register-user.use-case.ts", type: "file", layer: "application" },
+                  { id: "file-order-uc", name: "process-order.use-case.ts", path: "src/application/use_cases/process-order.use-case.ts", type: "file", layer: "application" }
+                ]
+              },
+              {
+                id: "dir-dto",
+                name: "dto",
+                path: "src/application/dto",
+                type: "dir",
+                layer: "application",
+                collapsed: false,
+                children: [
+                  { id: "file-reg-in-dto", name: "register-user-input.dto.ts", path: "src/application/dto/register-user-input.dto.ts", type: "file", layer: "application" },
+                  { id: "file-reg-out-dto", name: "register-user-output.dto.ts", path: "src/application/dto/register-user-output.dto.ts", type: "file", layer: "application" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "dir-infrastructure",
+            name: "infrastructure",
+            path: "src/infrastructure",
+            type: "dir",
+            layer: "infrastructure",
+            collapsed: false,
+            children: [
+              {
+                id: "dir-persistence",
+                name: "persistence",
+                path: "src/infrastructure/persistence",
+                type: "dir",
+                layer: "infrastructure",
+                collapsed: false,
+                children: [
+                  { id: "file-prisma-repo", name: "prisma-user.repository.ts", path: "src/infrastructure/persistence/prisma-user.repository.ts", type: "file", layer: "infrastructure" },
+                  { id: "file-user-mapper", name: "user.mapper.ts", path: "src/infrastructure/persistence/user.mapper.ts", type: "file", layer: "infrastructure" }
+                ]
+              },
+              {
+                id: "dir-services",
+                name: "services",
+                path: "src/infrastructure/services",
+                type: "dir",
+                layer: "infrastructure",
+                collapsed: false,
+                children: [
+                  { id: "file-stripe-adapter", name: "stripe-payment.adapter.ts", path: "src/infrastructure/services/stripe-payment.adapter.ts", type: "file", layer: "infrastructure" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "dir-presentation",
+            name: "presentation",
+            path: "src/presentation",
+            type: "dir",
+            layer: "presentation",
+            collapsed: false,
+            children: [
+              {
+                id: "dir-controllers",
+                name: "controllers",
+                path: "src/presentation/controllers",
+                type: "dir",
+                layer: "presentation",
+                collapsed: false,
+                children: [
+                  { id: "file-auth-ctrl", name: "auth.controller.ts", path: "src/presentation/controllers/auth.controller.ts", type: "file", layer: "presentation" },
+                  { id: "file-order-ctrl", name: "order.controller.ts", path: "src/presentation/controllers/order.controller.ts", type: "file", layer: "presentation" }
+                ]
+              },
+              {
+                id: "dir-middlewares",
+                name: "middlewares",
+                path: "src/presentation/middlewares",
+                type: "dir",
+                layer: "presentation",
+                collapsed: false,
+                children: [
+                  { id: "file-auth-mw", name: "auth.middleware.ts", path: "src/presentation/middlewares/auth.middleware.ts", type: "file", layer: "presentation" }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ];
+
+    const chevronSvg = '<svg class="w-3 h-3 text-slate-500 tree-toggle-icon shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>';
+    const folderIconSvg = '<svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path></svg>';
+    const fileIconSvg = '<svg class="w-3.5 h-3.5 text-slate-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
+
+    let activeFileId = 'file-user-entity';
+
+    function selectFile(fileId) {
+      activeFileId = fileId;
+      const preview = FILE_PREVIEWS[fileId];
+      if (!preview) return;
+
+      document.getElementById('preview-filename').innerText = preview.name;
+      document.getElementById('preview-badge').innerText = preview.layer.toUpperCase();
+      document.getElementById('preview-badge').className = 'px-1.5 py-0.2 text-[9px] rounded badge-' + preview.layer + ' uppercase';
+      document.getElementById('preview-desc').innerText = preview.desc[currentLang] || preview.desc.en;
+      document.getElementById('preview-code-content').textContent = preview.code;
+
+      document.querySelectorAll('.tree-file-item').forEach(el => el.classList.remove('bg-sky-500/10', 'border-l-2', 'border-sky-400'));
+      const activeEl = document.getElementById('tree-item-' + fileId);
+      if (activeEl) activeEl.classList.add('bg-sky-500/10', 'border-l-2', 'border-sky-400');
+    }
+
+    function renderTree(nodes, indent = 0) {
+      let html = '';
+      for (const n of nodes) {
+        const isDir = n.type === 'dir';
+        let layerBadge = '';
+        let textColor = 'text-slate-300';
+
+        if (n.layer === 'domain') {
+          textColor = 'text-sky-300 font-medium';
+          layerBadge = '<span class="px-1.5 py-0.2 text-[9px] rounded badge-domain uppercase">Domain</span>';
+        } else if (n.layer === 'application') {
+          textColor = 'text-emerald-300 font-medium';
+          layerBadge = '<span class="px-1.5 py-0.2 text-[9px] rounded badge-application uppercase">App</span>';
+        } else if (n.layer === 'infrastructure') {
+          textColor = 'text-amber-300 font-medium';
+          layerBadge = '<span class="px-1.5 py-0.2 text-[9px] rounded badge-infrastructure uppercase">Infra</span>';
+        } else if (n.layer === 'presentation') {
+          textColor = 'text-purple-300 font-medium';
+          layerBadge = '<span class="px-1.5 py-0.2 text-[9px] rounded badge-presentation uppercase">Pres</span>';
+        }
+
+        const padding = 'padding-left: ' + (indent * 14) + 'px';
+        const chevronHtml = isDir ? ('<button onclick="toggleFolder(\'' + n.id + '\', event)" class="p-0.5 hover:text-white">' + chevronSvg + '</button>') : '<span class="w-3 h-3 inline-block"></span>';
+        const itemClass = isDir ? 'tree-folder-item' : 'tree-file-item';
+        const isSelected = (!isDir && n.id === activeFileId) ? 'bg-sky-500/10 border-l-2 border-sky-400' : '';
+
+        html += '<div class="tree-node" id="node-' + n.id + '">';
+        html += '<div id="tree-item-' + n.id + '" class="tree-item ' + itemClass + ' ' + isSelected + ' flex items-center justify-between py-1 px-1.5 rounded hover:bg-slate-900 transition cursor-pointer" style="' + padding + '" onclick="' + (isDir ? ("toggleFolder('" + n.id + "', event)") : ("selectFile('" + n.id + "')")) + '">';
+        html += '<div class="flex items-center gap-1.5 min-w-0">';
+        html += chevronHtml;
+        html += isDir ? folderIconSvg : fileIconSvg;
+        html += '<span class="' + textColor + ' truncate text-[11px]">' + n.name + '</span>';
+        html += '</div>';
+        html += isDir ? '' : layerBadge;
+        html += '</div>';
+
+        if (isDir && n.children && n.children.length) {
+          html += '<div class="tree-children ' + (n.collapsed ? 'hidden' : '') + '" id="children-' + n.id + '">';
+          html += renderTree(n.children, indent + 1);
+          html += '</div>';
+        }
+        html += '</div>';
+      }
+      return html;
+    }
+
+    function updateTreeDOM() {
+      document.getElementById('tree-container').innerHTML = renderTree(treeData);
+    }
+
+    function findNodeById(nodes, id) {
+      for (const n of nodes) {
+        if (n.id === id) return n;
+        if (n.children) {
+          const found = findNodeById(n.children, id);
+          if (found) return found;
+        }
+      }
+      return null;
+    }
+
+    function toggleFolder(nodeId, event) {
+      if (event) event.stopPropagation();
+      const node = findNodeById(treeData, nodeId);
+      if (!node) return;
+      node.collapsed = !node.collapsed;
+      const childEl = document.getElementById('children-' + nodeId);
+      const iconEl = document.querySelector('#node-' + nodeId + ' .tree-toggle-icon');
+      if (childEl) childEl.classList.toggle('hidden', node.collapsed);
+      if (iconEl) iconEl.classList.toggle('collapsed', node.collapsed);
+    }
+
+    function setAllCollapsed(nodes, collapsed) {
+      for (const n of nodes) {
+        if (n.type === 'dir') {
+          n.collapsed = collapsed;
+          if (n.children) setAllCollapsed(n.children, collapsed);
+        }
+      }
+    }
+
+    function toggleAllFolders(expand) {
+      setAllCollapsed(treeData, !expand);
+      updateTreeDOM();
+    }
+
+    function filterTree() {
+      const q = document.getElementById('folder-search').value.toLowerCase();
+      const items = document.querySelectorAll('.tree-item');
+      items.forEach(el => {
+        const text = el.innerText.toLowerCase();
+        el.style.display = text.includes(q) ? 'flex' : 'none';
+      });
+    }
+
+    function copyPreviewCode() {
+      const code = document.getElementById('preview-code-content').textContent;
+      navigator.clipboard.writeText(code);
+      const btn = document.getElementById('btn-copy-code');
+      btn.innerHTML = '<span>' + I18N[currentLang].copiedBtn + '</span>';
+      setTimeout(() => {
+        btn.innerHTML = '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg><span>' + I18N[currentLang].copyBtn + '</span>';
+      }, 1500);
+    }
+
+    // Dynamic C4 Mermaid Diagram Definition
+    function getMermaidCode() {
+      if (currentLang === 'es') {
+        return `graph TD
+    Client["Cliente Externo: Web / Móvil / CLI / Servicio Externo"]
+
+    subgraph PresentationLayer["Capa de Presentación: Adaptadores de Entrada"]
+        Controllers["Controladores HTTP & Handlers REST"]
+        Middlewares["Middlewares de Autenticación & Validación"]
+    end
+
+    subgraph ApplicationLayer["Capa de Aplicación: Casos de Uso del Negocio"]
+        UseCases["Interactores de Casos de Uso"]
+        InboundPorts["Puertos de Entrada (Driving Ports)"]
+        OutboundPorts["Puertos de Salida (Driven Ports)"]
+    end
+
+    subgraph DomainLayer["Capa de Dominio: Reglas Puras de Negocio"]
+        Entities["Entidades de Dominio"]
+        ValueObjects["Value Objects Inmutables"]
+        DomainEvents["Eventos de Dominio"]
+    end
+
+    subgraph InfrastructureLayer["Capa de Infraestructura: Adaptadores de Salida"]
+        DBRepo["Repositorios de BD (Prisma / SQL)"]
+        ExternalGateways["Pasarelas Externas (Stripe / SES / S3)"]
+        EventPublishers["Event Bus Dispatcher (Kafka / RabbitMQ)"]
+    end
+
+    Client --> Controllers
+    Controllers --> Middlewares
+    Middlewares --> InboundPorts
+    InboundPorts --> UseCases
+    UseCases --> Entities
+    UseCases --> OutboundPorts
+    DBRepo -.->|Implementa| OutboundPorts
+    ExternalGateways -.->|Implementa| OutboundPorts
+    EventPublishers -.->|Implementa| OutboundPorts`;
+      } else {
+        return `graph TD
+    Client["External Client: Browser / Mobile / CLI / Microservice"]
+
+    subgraph PresentationLayer["Presentation Layer: Inbound Adapters"]
+        Controllers["REST HTTP Controllers & API Handlers"]
+        Middlewares["Auth & Validation Middlewares"]
+    end
+
+    subgraph ApplicationLayer["Application Layer: Business Use Cases"]
+        UseCases["Use Case Interactors"]
+        InboundPorts["Inbound Driving Ports"]
+        OutboundPorts["Outbound Driven Ports"]
+    end
+
+    subgraph DomainLayer["Domain Layer: Pure Enterprise Business Rules"]
+        Entities["Domain Entities"]
+        ValueObjects["Immutable Value Objects"]
+        DomainEvents["Domain Events"]
+    end
+
+    subgraph InfrastructureLayer["Infrastructure Layer: Outbound Adapters"]
+        DBRepo["Database Repositories (Prisma / SQL)"]
+        ExternalGateways["External Gateways (Stripe / SES / S3)"]
+        EventPublishers["Event Bus Dispatcher (Kafka / RabbitMQ)"]
+    end
+
+    Client --> Controllers
+    Controllers --> Middlewares
+    Middlewares --> InboundPorts
+    InboundPorts --> UseCases
+    UseCases --> Entities
+    UseCases --> OutboundPorts
+    DBRepo -.->|Implements| OutboundPorts
+    ExternalGateways -.->|Implements| OutboundPorts
+    EventPublishers -.->|Implements| OutboundPorts`;
+      }
+    }
+
+    async function renderMermaidDiagram() {
+      const container = document.getElementById('mermaid-render-container');
+      if (!container) return;
+      try {
+        container.innerHTML = '<div class="text-xs font-mono text-slate-500 py-8">Rendering C4 Diagram...</div>';
+        const code = getMermaidCode();
+        const id = 'mermaid-c4-svg-' + Date.now();
+        const { svg } = await mermaid.render(id, code);
+        container.innerHTML = svg;
+      } catch (err) {
+        console.error('Mermaid render error:', err);
+        container.innerHTML = '<div class="p-4 text-xs font-mono text-rose-400 bg-rose-950/20 border border-rose-900 rounded">Diagram render error: ' + err.message + '</div>';
+      }
+    }
+
+    // Multilingual ADR Store
+    const ADR_DATABASE = {
+      'adr-1': {
+        id: 'ADR-0001',
+        title: {
+          es: 'Aislamiento de Dominio mediante Arquitectura Limpia y Hexagonal',
+          en: 'Clean Architecture & Hexagonal Domain Isolation'
+        },
+        file: 'docs/adr/0001-adopcion-arquitectura.md',
+        status: 'ACCEPTED',
+        date: '2026-09-01',
+        context: {
+          es: 'El sistema requiere alta mantenibilidad con lógica de negocio densa que debe sobrevivir a cambios de frameworks, ORMs y drivers de bases de datos.',
+          en: 'The system requires long-term maintainability with dense business logic that must survive framework deprecation and database driver migrations.'
+        },
+        drivers: {
+          es: [
+            'Desacoplamiento total del dominio de librerías de terceros y ORMs (@prisma/client, typeorm).',
+            'Capacidad de probar casos de uso en memoria (<10ms) sin Docker ni base de datos activa.',
+            'Contratos claros y tipados mediante puertos de entrada y salida.'
+          ],
+          en: [
+            'Complete decoupling of domain invariants from ORM entities (Prisma / TypeORM).',
+            'Testability of application interactors in <10ms without booting Docker or live databases.',
+            'Uniform ports and adapters contract for inbound and outbound boundaries.'
+          ]
+        },
+        decision: {
+          es: 'Adopción de Arquitectura Limpia con Puertos y Adaptadores Hexagonales. Las dependencias apuntan estrictamente hacia el interior.',
+          en: 'Adoption of Clean Architecture with Hexagonal Ports & Adapters. Dependencies point strictly inward.'
+        },
+        consequences_pos: {
+          es: [
+            'El núcleo de dominio no tiene dependencias de infraestructura ni de red.',
+            'Migrar de base de datos o framework HTTP requiere cero cambios en la lógica de negocio.'
+          ],
+          en: [
+            'Domain logic has zero dependencies on third-party SDKs.',
+            'Database or HTTP framework replacements require zero changes to use cases.'
+          ]
+        },
+        consequences_neg: {
+          es: [
+            'Requiere mappers explícitos entre registros de BD y Entidades de dominio.',
+            'Mayor número de archivos iniciales en comparación con un script monolítico.'
+          ],
+          en: [
+            'Requires bidirectional mappers between database records and domain entities.',
+            'Initial boilerplate overhead for simple CRUD endpoints.'
+          ]
+        }
+      },
+      'adr-2': {
+        id: 'ADR-0002',
+        title: {
+          es: 'Guardrails Deterministas y Verificación de Fronteras en CI/CD',
+          en: 'Deterministic Guardrails & Boundary Verification in CI/CD'
+        },
+        file: 'docs/adr/0002-guardrails-enforcement.md',
+        status: 'ACCEPTED',
+        date: '2026-09-01',
+        context: {
+          es: 'Las reglas arquitectónicas en texto libre tienden a degradarse con el tiempo. Se requiere verificación automática en tiempo de compilación.',
+          en: 'Prompt-level and natural language architecture instructions degrade over time. Machine-enforced boundary checks are required.'
+        },
+        drivers: {
+          es: [
+            'Fallo inmediato del linter o compilador si un import cruza una frontera prohibida.',
+            'Uso de alias de ruta (@domain/*, @application/*, @infrastructure/*).',
+            'Cumplimiento determinista tanto para desarrolladores humanos como para agentes IA.'
+          ],
+          en: [
+            'Immediate compiler or linter failure if an import crosses an illegal boundary.',
+            'Enforcement of path aliases (@domain/*, @application/*, @infrastructure/*).',
+            'Continuous compliance verification across AI agents and human developers.'
+          ]
+        },
+        decision: {
+          es: 'Configuración de reglas en .dependency-cruiser.js y alias en tsconfig. El pipeline de CI fallará con código de error si el dominio importa infraestructura.',
+          en: 'Configuration of .dependency-cruiser.js rules and tsconfig path aliases. CI builds will fail with non-zero exit codes if any domain file imports infrastructure components.'
+        },
+        consequences_pos: {
+          es: [
+            'La arquitectura queda protegida de forma automática y determinista.',
+            'Previene la acumulación silenciosa de deuda técnica y acoplamiento.'
+          ],
+          en: [
+            'Architectural integrity is protected deterministically by CI/CD.',
+            'Eliminates silent accumulation of abstraction leaks.'
+          ]
+        },
+        consequences_neg: {
+          es: [
+            'Requiere mantener la configuración de reglas de dependency-cruiser.'
+          ],
+          en: [
+            'Requires maintaining the dependency-cruiser rule configuration.'
+          ]
+        }
+      }
+    };
+
+    function renderAdrCards() {
+      const container = document.getElementById('adr-cards-container');
+      if (!container) return;
+      const t = I18N[currentLang];
+
+      let html = '';
+      for (const [key, adr] of Object.entries(ADR_DATABASE)) {
+        html += `
+        <div onclick="openAdrModal('${key}')" class="bg-slate-900/50 border border-slate-800/80 rounded-lg p-4 space-y-2.5 hover:border-sky-500/50 cursor-pointer transition group">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-mono text-sky-400 font-semibold group-hover:underline">${adr.id}</span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-300 border border-emerald-800/40 uppercase">${adr.status}</span>
+          </div>
+          <h4 class="text-xs font-semibold text-white group-hover:text-sky-300 transition">${adr.title[currentLang] || adr.title.en}</h4>
+          <p class="text-[11px] text-slate-400 leading-relaxed">${adr.context[currentLang] || adr.context.en}</p>
+          <div class="pt-2 flex items-center justify-between text-[10px] font-mono text-slate-500 border-t border-slate-800/60">
+            <span>Date: ${adr.date}</span>
+            <span class="text-sky-400 flex items-center gap-1">
+              <span>${t.inspectRecord}</span>
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+            </span>
+          </div>
+        </div>`;
+      }
+      container.innerHTML = html;
+    }
+
+    function openAdrModal(adrKey) {
+      const data = ADR_DATABASE[adrKey];
+      if (!data) return;
+      const t = I18N[currentLang];
+
+      document.getElementById('modal-adr-id').innerText = data.id + ' · ' + data.status;
+      document.getElementById('modal-adr-title').innerText = data.title[currentLang] || data.title.en;
+      document.getElementById('modal-adr-file').innerText = data.file;
+
+      const drivers = data.drivers[currentLang] || data.drivers.en;
+      const pos = data.consequences_pos[currentLang] || data.consequences_pos.en;
+      const neg = data.consequences_neg[currentLang] || data.consequences_neg.en;
+
+      let html = '<div class="space-y-4">';
+      html += '<div><span class="text-[10px] font-mono uppercase tracking-wider text-slate-500 font-semibold">' + t.adrSectionContext + '</span><p class="mt-1 text-slate-300 leading-relaxed">' + (data.context[currentLang] || data.context.en) + '</p></div>';
+      
+      html += '<div><span class="text-[10px] font-mono uppercase tracking-wider text-slate-500 font-semibold">' + t.adrSectionDrivers + '</span><ul class="mt-1 space-y-1 text-slate-300 list-disc list-inside">';
+      drivers.forEach(d => { html += '<li>' + d + '</li>'; });
+      html += '</ul></div>';
+
+      html += '<div class="p-3.5 rounded-lg bg-slate-950 border border-slate-800"><span class="text-[10px] font-mono uppercase tracking-wider text-sky-400 font-semibold">' + t.adrSectionDecision + '</span><p class="mt-1 text-slate-200 leading-relaxed font-medium">' + (data.decision[currentLang] || data.decision.en) + '</p></div>';
+
+      html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-3">';
+      html += '<div class="p-3 rounded-lg bg-emerald-950/20 border border-emerald-800/40"><span class="text-[10px] font-mono uppercase tracking-wider text-emerald-400 font-semibold">' + t.adrSectionPos + '</span><ul class="mt-1 space-y-1 text-slate-300 list-disc list-inside">';
+      pos.forEach(c => { html += '<li>' + c + '</li>'; });
+      html += '</ul></div>';
+
+      html += '<div class="p-3 rounded-lg bg-rose-950/20 border border-rose-800/40"><span class="text-[10px] font-mono uppercase tracking-wider text-rose-400 font-semibold">' + t.adrSectionNeg + '</span><ul class="mt-1 space-y-1 text-slate-300 list-disc list-inside">';
+      neg.forEach(c => { html += '<li>' + c + '</li>'; });
+      html += '</ul></div>';
+      html += '</div>';
+
+      html += '</div>';
+
+      document.getElementById('modal-adr-body').innerHTML = html;
+      document.getElementById('adr-modal').classList.remove('hidden');
+    }
+
+    function closeAdrModal() {
+      document.getElementById('adr-modal').classList.add('hidden');
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeAdrModal();
+    });
+
+    function renderGuardrailsTable() {
+      const tbody = document.getElementById('guardrails-tbody');
+      if (!tbody) return;
+
+      const rows = [
+        {
+          src: 'src/domain/',
+          perm: currentLang === 'es' ? 'Tipos internos, Value Objects, Puertos' : 'Internal types, Value Objects, Ports',
+          forb: 'infrastructure/*, @prisma/client, typeorm, express, fastapi',
+          rule: 'domain-not-to-infrastructure',
+          srcColor: 'text-sky-400'
+        },
+        {
+          src: 'src/application/',
+          perm: currentLang === 'es' ? 'domain/*, application/dto, application/ports' : 'domain/*, application/dto, application/ports',
+          forb: 'infrastructure/*, controllers, HTTP frameworks',
+          rule: 'application-not-to-infra',
+          srcColor: 'text-emerald-400'
+        },
+        {
+          src: 'src/infrastructure/',
+          perm: currentLang === 'es' ? 'domain/ports, application/ports, DB drivers' : 'domain/ports, application/ports, DB drivers',
+          forb: currentLang === 'es' ? 'presentation/* (Llamadas directas a controladores)' : 'presentation/* (Direct controller calls)',
+          rule: 'infrastructure-not-to-presentation',
+          srcColor: 'text-amber-400'
+        },
+        {
+          src: 'src/presentation/',
+          perm: currentLang === 'es' ? 'application/use_cases, application/dto' : 'application/use_cases, application/dto',
+          forb: currentLang === 'es' ? 'Implementaciones directas de repositorios BD' : 'Direct DB repository implementations',
+          rule: 'presentation-bypass-usecase',
+          srcColor: 'text-purple-400'
+        }
+      ];
+
+      tbody.innerHTML = rows.map(r => `
+        <tr class="hover:bg-slate-900/30 transition">
+          <td class="px-4 py-3 font-semibold ${r.srcColor}">${r.src}</td>
+          <td class="px-4 py-3 text-slate-300">${r.perm}</td>
+          <td class="px-4 py-3 text-rose-400">${r.forb}</td>
+          <td class="px-4 py-3 text-emerald-400 font-mono text-[11px]">${r.rule}</td>
+        </tr>
+      `).join('');
+    }
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      const t = I18N[lang];
+
+      document.getElementById('btn-lang-es').className = lang === 'es' ? 'px-2.5 py-1 rounded-md bg-sky-500/20 text-sky-300 font-semibold border border-sky-500/30 transition' : 'px-2.5 py-1 rounded-md text-slate-400 hover:text-slate-200 transition';
+      document.getElementById('btn-lang-en').className = lang === 'en' ? 'px-2.5 py-1 rounded-md bg-sky-500/20 text-sky-300 font-semibold border border-sky-500/30 transition' : 'px-2.5 py-1 rounded-md text-slate-400 hover:text-slate-200 transition';
+
+      document.getElementById('status-label').innerText = t.status;
+      document.getElementById('layer-domain-badge').innerText = t.layerDomainBadge;
+      document.getElementById('layer-domain-tag').innerText = t.layerDomainTag;
+      document.getElementById('layer-domain-title').innerText = t.layerDomainTitle;
+      document.getElementById('layer-domain-desc').innerText = t.layerDomainDesc;
+
+      document.getElementById('layer-app-badge').innerText = t.layerAppBadge;
+      document.getElementById('layer-app-tag').innerText = t.layerAppTag;
+      document.getElementById('layer-app-title').innerText = t.layerAppTitle;
+      document.getElementById('layer-app-desc').innerText = t.layerAppDesc;
+
+      document.getElementById('layer-infra-badge').innerText = t.layerInfraBadge;
+      document.getElementById('layer-infra-tag').innerText = t.layerInfraTag;
+      document.getElementById('layer-infra-title').innerText = t.layerInfraTitle;
+      document.getElementById('layer-infra-desc').innerText = t.layerInfraDesc;
+
+      document.getElementById('layer-pres-badge').innerText = t.layerPresBadge;
+      document.getElementById('layer-pres-tag').innerText = t.layerPresTag;
+      document.getElementById('layer-pres-title').innerText = t.layerPresTitle;
+      document.getElementById('layer-pres-desc').innerText = t.layerPresDesc;
+
+      document.getElementById('tab-title-explorer').innerText = t.tabExplorer;
+      document.getElementById('tab-title-diagram').innerText = t.tabDiagram;
+      document.getElementById('tab-title-adrs').innerText = t.tabAdrs;
+      document.getElementById('tab-title-guardrails').innerText = t.tabGuardrails;
+
+      document.getElementById('folder-search').placeholder = t.filterPlaceholder;
+      document.getElementById('btn-expand-all').innerText = t.expandAll;
+      document.getElementById('btn-collapse-all').innerText = t.collapseAll;
+      document.getElementById('lbl-tree-guide').innerText = t.treeGuide;
+
+      document.getElementById('c4-header-title').innerText = t.c4HeaderTitle;
+      document.getElementById('c4-header-desc').innerText = t.c4HeaderDesc;
+
+      document.getElementById('adr-header-title').innerText = t.adrHeaderTitle;
+      document.getElementById('adr-header-desc').innerText = t.adrHeaderDesc;
+
+      document.getElementById('guardrails-header-title').innerText = t.guardrailsHeaderTitle;
+      document.getElementById('guardrails-header-desc').innerText = t.guardrailsHeaderDesc;
+      document.getElementById('guardrails-active-tag').innerText = t.guardrailsActiveTag;
+      document.getElementById('th-src').innerText = t.thSrc;
+      document.getElementById('th-perm').innerText = t.thPerm;
+      document.getElementById('th-forb').innerText = t.thForb;
+      document.getElementById('th-rule').innerText = t.thRule;
+      const modalBtnClose = document.getElementById('modal-btn-close'); if (modalBtnClose) modalBtnClose.innerText = t.modalClose;
+
+      selectFile(activeFileId);
+      renderAdrCards();
+      renderGuardrailsTable();
+      renderMermaidDiagram();
+    }
+
+    function switchTab(tabId) {
+      const tabs = ['explorer', 'diagram', 'adrs', 'guardrails'];
+      tabs.forEach(t => {
+        document.getElementById('tab-' + t).classList.toggle('hidden', t !== tabId);
+        const btn = document.getElementById('tab-btn-' + t);
+        if (t === tabId) {
+          btn.className = 'pb-3 border-b-2 border-sky-400 text-sky-400 font-semibold flex items-center gap-2 transition';
+        } else {
+          btn.className = 'pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center gap-2 transition';
+        }
+      });
+
+      if (tabId === 'diagram') {
+        renderMermaidDiagram();
+      }
+    }
+
+    // Initialize View
+    updateTreeDOM();
+    selectFile('file-user-entity');
+    renderAdrCards();
+    renderGuardrailsTable();
+    setLanguage('es');
+  </script>
+
+</body>
+</html>

@@ -11,7 +11,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
@@ -55,6 +58,7 @@ fun MobileStatDetailModal(
 ) {
     if (type == DetailModalType.NONE) return
     val colors = ClinicalTheme.colors
+    val responsive = ClinicalTheme.responsive
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -62,12 +66,14 @@ fun MobileStatDetailModal(
             colors = CardDefaults.cardColors(containerColor = colors.surfaceOrb),
             border = androidx.compose.foundation.BorderStroke(1.dp, colors.surfaceBorder),
             modifier = Modifier
+                .widthIn(max = responsive.dialogMaxWidth)
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
                     .padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {

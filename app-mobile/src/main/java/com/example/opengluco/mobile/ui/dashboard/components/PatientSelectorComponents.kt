@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.mobile.ui.dashboard.components
+package com.example.opengluco.mobile.ui.dashboard.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -133,6 +134,7 @@ fun PatientSelectorModal(
     onDismiss: () -> Unit
 ) {
     val colors = ClinicalTheme.colors
+    val responsive = ClinicalTheme.responsive
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -140,6 +142,7 @@ fun PatientSelectorModal(
             colors = CardDefaults.cardColors(containerColor = colors.surfaceOrb),
             border = androidx.compose.foundation.BorderStroke(1.dp, colors.surfaceBorder),
             modifier = Modifier
+                .widthIn(max = responsive.dialogMaxWidth)
                 .fillMaxWidth()
                 .padding(12.dp)
         ) {
