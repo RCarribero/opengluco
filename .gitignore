@@ -70,8 +70,8 @@ hs_err_pid*
 .agents/worker_*/
 
 # ---- Test Results (regenerable) ----
-**/test-results/
-**/reports/
+**/build/test-results/
+**/build/reports/
 
 # ---- Misc ----
 captures/

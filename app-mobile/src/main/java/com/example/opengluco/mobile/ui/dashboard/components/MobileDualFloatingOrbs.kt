@@ -61,8 +61,11 @@ fun MobileDualFloatingOrbs(
 
     val responsive = ClinicalTheme.responsive
     val orbSize = responsive.orbSize
-    val valFontSize = if (responsive.isNarrowPhone) 28.sp else if (orbSize > 125.dp) 38.sp else 34.sp
-    val symbolFontSize = if (responsive.isNarrowPhone) 28.sp else if (orbSize > 125.dp) 38.sp else 34.sp
+    val baseValSp = if (responsive.isNarrowPhone) 28f else if (orbSize > 125.dp) 38f else 34f
+    val valFontSize = responsive.clampedSp(baseValSp, maxScale = 1.25f)
+    val symbolFontSize = responsive.clampedSp(baseValSp, maxScale = 1.25f)
+    val unitFontSize = responsive.clampedSp(if (responsive.isNarrowPhone) 10.5f else 12f, maxScale = 1.30f)
+    val trendFontSize = responsive.clampedSp(if (responsive.isNarrowPhone) 9.5f else 11f, maxScale = 1.30f)
     val orbSpacing = if (responsive.isNarrowPhone) 10.dp else 16.dp
 
     Row(
@@ -104,14 +107,16 @@ fun MobileDualFloatingOrbs(
                     fontSize = valFontSize,
                     fontWeight = FontWeight.Bold,
                     color = colors.textPrimary,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    maxLines = 1
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = unit.label,
-                    fontSize = if (responsive.isNarrowPhone) 10.5.sp else 12.sp,
+                    fontSize = unitFontSize,
                     fontWeight = FontWeight.Medium,
-                    color = colors.textSecondary
+                    color = colors.textSecondary,
+                    maxLines = 1
                 )
             }
         }
@@ -143,7 +148,8 @@ fun MobileDualFloatingOrbs(
                     fontSize = symbolFontSize,
                     fontWeight = FontWeight.Bold,
                     color = colors.textPrimary,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    maxLines = 1
                 )
                 Spacer(modifier = Modifier.height(if (responsive.isNarrowPhone) 4.dp else 6.dp))
                 Box(
@@ -153,10 +159,11 @@ fun MobileDualFloatingOrbs(
                 ) {
                     Text(
                         text = measurement?.trendText ?: "Estable",
-                        fontSize = if (responsive.isNarrowPhone) 9.5.sp else 11.sp,
+                        fontSize = trendFontSize,
                         fontWeight = FontWeight.Bold,
                         color = statusColor,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        maxLines = 1
                     )
                 }
             }

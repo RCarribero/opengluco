@@ -206,6 +206,7 @@ fun MobileDashboardScreen(
     val scope = rememberCoroutineScope()
     val haptic = LocalHapticFeedback.current
     val colors = ClinicalTheme.colors
+    val responsive = ClinicalTheme.responsive
     var showSettingsScreen by remember { mutableStateOf(false) }
 
     val updateRepo = remember { AppUpdateRepository() }
@@ -594,8 +595,6 @@ fun MobileDashboardScreen(
             )
         }
     ) { padding ->
-        val responsive = ClinicalTheme.responsive
-
         Box(
             modifier = modifier
                 .fillMaxSize()
@@ -617,10 +616,13 @@ fun MobileDashboardScreen(
                         .padding(horizontal = responsive.horizontalPadding, vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(responsive.cardSpacing)
                 ) {
-                    // Columna Izquierda (40%): Banners de error, Hero Orbs, Tarjeta de Sensor
+                    val leftWeight = if (responsive.isLandscape && responsive.heightClass == com.example.opengluco.mobile.ui.theme.WindowHeightClass.COMPACT) 0.36f else if (responsive.widthClass == com.example.opengluco.mobile.ui.theme.WindowWidthClass.EXPANDED) 0.44f else 0.40f
+                    val rightWeight = 1f - leftWeight
+
+                    // Columna Izquierda: Banners de error, Hero Orbs, Tarjeta de Sensor
                     Column(
                         modifier = Modifier
-                            .weight(0.40f)
+                            .weight(leftWeight)
                             .verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(responsive.cardSpacing),
                         horizontalAlignment = Alignment.CenterHorizontally
@@ -662,10 +664,10 @@ fun MobileDashboardScreen(
                         Spacer(modifier = Modifier.height(24.dp))
                     }
 
-                    // Columna Derecha (60%): Gráfica Continua Bézier, Métricas Estadísticas
+                    // Columna Derecha: Gráfica Continua Bézier, Métricas Estadísticas
                     Column(
                         modifier = Modifier
-                            .weight(0.60f)
+                            .weight(rightWeight)
                             .verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(responsive.cardSpacing)
                     ) {
@@ -870,6 +872,7 @@ fun MobileDashboardScreen(
                     colors = CardDefaults.cardColors(containerColor = colors.surfaceOrb),
                     border = androidx.compose.foundation.BorderStroke(1.dp, colors.surfaceBorder),
                     modifier = Modifier
+                        .widthIn(max = responsive.dialogMaxWidth)
                         .fillMaxWidth(0.92f)
                         .padding(16.dp)
                 ) {
@@ -1056,15 +1059,22 @@ fun MobileDashboardScreen(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .verticalScroll(rememberScrollState())
-                                .padding(horizontal = 16.dp, vertical = 16.dp)
+                                .padding(horizontal = 16.dp, vertical = 16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            com.example.opengluco.mobile.ui.settings.AlarmConfigSection(
-                                alarmRepository = alarmRepo,
-                                unit = settings?.unit ?: GlucoseUnit.MGDL,
-                                targetLow = targetLow,
-                                targetHigh = targetHigh,
-                                onConfigureTargetRange = { showTargetRangeDialog = true }
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .widthIn(max = responsive.settingsMaxWidth)
+                                    .fillMaxWidth()
+                            ) {
+                                com.example.opengluco.mobile.ui.settings.AlarmConfigSection(
+                                    alarmRepository = alarmRepo,
+                                    unit = settings?.unit ?: GlucoseUnit.MGDL,
+                                    targetLow = targetLow,
+                                    targetHigh = targetHigh,
+                                    onConfigureTargetRange = { showTargetRangeDialog = true }
+                                )
+                            }
                             Spacer(modifier = Modifier.height(28.dp))
                         }
                     }
@@ -1703,6 +1713,10 @@ fun DailyStatItem(
     val responsive = ClinicalTheme.responsive
     val isNarrow = responsive.isNarrowPhone
 
+    val titleSp = responsive.clampedSp(if (isNarrow) 9.5f else 11f, maxScale = 1.25f)
+    val valueSp = responsive.clampedSp(if (isNarrow) 13.5f else 16f, maxScale = 1.25f)
+    val unitSp = responsive.clampedSp(if (isNarrow) 8.5f else 10f, maxScale = 1.25f)
+
     Box(
         modifier = modifier
             .padding(horizontal = if (isNarrow) 1.5.dp else 3.dp)
@@ -1718,24 +1732,27 @@ fun DailyStatItem(
         ) {
             Text(
                 text = title,
-                fontSize = if (isNarrow) 9.5.sp else 11.sp,
+                fontSize = titleSp,
                 fontWeight = FontWeight.Medium,
                 color = colors.textSecondary,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                maxLines = 1
             )
             Spacer(modifier = Modifier.height(if (isNarrow) 2.dp else 4.dp))
             Text(
                 text = value,
-                fontSize = if (isNarrow) 13.5.sp else 16.sp,
+                fontSize = valueSp,
                 fontWeight = FontWeight.Bold,
                 color = accentColor,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                maxLines = 1
             )
             Text(
                 text = unit,
-                fontSize = if (isNarrow) 8.5.sp else 10.sp,
+                fontSize = unitSp,
                 color = colors.textMuted,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                maxLines = 1
             )
         }
     }
@@ -1859,6 +1876,7 @@ fun MobileGlucoseChart(
         formatChartTime(raw)
     }
 
+    val responsive = ClinicalTheme.responsive
     val formattedValue = activeMeasurement.getFormattedValue(isMmol = unit == GlucoseUnit.MMOL) + " " + unit.label
 
     Box(
@@ -1868,72 +1886,140 @@ fun MobileGlucoseChart(
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             // Tooltip flotante / Barra de estado interactivo con estatus clinico, valor y hora
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
+            val stackScrubberHeader = responsive.isExtraLargeFont || (responsive.isLargeFont && responsive.isNarrowPhone)
+            if (stackScrubberHeader) {
+                Column(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(activeStatusColor.copy(alpha = if (colors.isDark) 0.18f else 0.12f))
-                        .border(1.dp, activeStatusColor.copy(alpha = 0.35f), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp, vertical = 2.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Box(
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
-                            .size(7.dp)
-                            .clip(CircleShape)
-                            .background(activeStatusColor)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = formattedValue,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = activeStatusColor
-                    )
-                    if (isInteracting) {
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(activeStatusColor.copy(alpha = if (colors.isDark) 0.18f else 0.12f))
+                            .border(1.dp, activeStatusColor.copy(alpha = 0.35f), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(7.dp)
+                                .clip(CircleShape)
+                                .background(activeStatusColor)
+                        )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "(${activeMeasurement.trendText})",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = colors.textSecondary
+                            text = formattedValue,
+                            fontSize = responsive.clampedSp(13f, maxScale = 1.25f),
+                            fontWeight = FontWeight.Bold,
+                            color = activeStatusColor,
+                            maxLines = 1
+                        )
+                        if (isInteracting) {
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "(${activeMeasurement.trendText})",
+                                fontSize = responsive.clampedSp(11f, maxScale = 1.25f),
+                                fontWeight = FontWeight.Medium,
+                                color = colors.textSecondary,
+                                maxLines = 1
+                            )
+                        }
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(colors.surfaceOrb)
+                            .border(1.dp, colors.surfaceBorder, RoundedCornerShape(8.dp))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.AccessTime,
+                            contentDescription = "Hora",
+                            tint = colors.textSecondary,
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = if (isInteracting) formattedTime else "Ultima: $formattedTime",
+                            fontSize = responsive.clampedSp(11f, maxScale = 1.25f),
+                            fontWeight = FontWeight.SemiBold,
+                            color = colors.textSecondary,
+                            maxLines = 1
                         )
                     }
                 }
-
+            } else {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(colors.surfaceOrb)
-                        .border(1.dp, colors.surfaceBorder, RoundedCornerShape(8.dp))
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        Icons.Default.AccessTime,
-                        contentDescription = "Hora",
-                        tint = colors.textSecondary,
-                        modifier = Modifier.size(12.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = if (isInteracting) formattedTime else "Ultima: $formattedTime",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = colors.textSecondary
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(activeStatusColor.copy(alpha = if (colors.isDark) 0.18f else 0.12f))
+                            .border(1.dp, activeStatusColor.copy(alpha = 0.35f), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(7.dp)
+                                .clip(CircleShape)
+                                .background(activeStatusColor)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = formattedValue,
+                            fontSize = responsive.clampedSp(13f, maxScale = 1.25f),
+                            fontWeight = FontWeight.Bold,
+                            color = activeStatusColor,
+                            maxLines = 1
+                        )
+                        if (isInteracting) {
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "(${activeMeasurement.trendText})",
+                                fontSize = responsive.clampedSp(11f, maxScale = 1.25f),
+                                fontWeight = FontWeight.Medium,
+                                color = colors.textSecondary,
+                                maxLines = 1
+                            )
+                        }
+                    }
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(colors.surfaceOrb)
+                            .border(1.dp, colors.surfaceBorder, RoundedCornerShape(8.dp))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.AccessTime,
+                            contentDescription = "Hora",
+                            tint = colors.textSecondary,
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = if (isInteracting) formattedTime else "Ultima: $formattedTime",
+                            fontSize = responsive.clampedSp(11f, maxScale = 1.25f),
+                            fontWeight = FontWeight.SemiBold,
+                            color = colors.textSecondary,
+                            maxLines = 1
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(4.dp))
-
-            val responsive = ClinicalTheme.responsive
             val canvasHeight = if (responsive.heightClass == com.example.opengluco.mobile.ui.theme.WindowHeightClass.COMPACT) 120.dp else if (responsive.widthClass != com.example.opengluco.mobile.ui.theme.WindowWidthClass.COMPACT) 165.dp else 150.dp
 
             // Lienzo grafico continuo con interaccion tactil (scrubbing y arrastre)
@@ -2547,38 +2633,86 @@ private fun DashboardStatsCard(
             Spacer(modifier = Modifier.height(14.dp))
 
             // 4 Métricas reales calculadas
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                DailyStatItem(
-                    title = "En Rango",
-                    value = "$tirPercent%",
-                    unit = "TIR",
-                    accentColor = colors.mint,
-                    modifier = Modifier.weight(1f)
-                )
-                DailyStatItem(
-                    title = "Media",
-                    value = "${avgVal.toInt()}",
-                    unit = "mg/dL",
-                    accentColor = colors.arcticCyan,
-                    modifier = Modifier.weight(1f)
-                )
-                DailyStatItem(
-                    title = "Mín",
-                    value = "${minVal.toInt()}",
-                    unit = "mg/dL",
-                    accentColor = colors.textPrimary,
-                    modifier = Modifier.weight(1f)
-                )
-                DailyStatItem(
-                    title = "Máx",
-                    value = "${maxVal.toInt()}",
-                    unit = "mg/dL",
-                    accentColor = colors.textPrimary,
-                    modifier = Modifier.weight(1f)
-                )
+            val responsive = ClinicalTheme.responsive
+            val useTwoByTwo = responsive.isLargeFont || responsive.isNarrowPhone
+            if (useTwoByTwo) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        DailyStatItem(
+                            title = "En Rango",
+                            value = "$tirPercent%",
+                            unit = "TIR",
+                            accentColor = colors.mint,
+                            modifier = Modifier.weight(1f)
+                        )
+                        DailyStatItem(
+                            title = "Media",
+                            value = "${avgVal.toInt()}",
+                            unit = "mg/dL",
+                            accentColor = colors.arcticCyan,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        DailyStatItem(
+                            title = "Mín",
+                            value = "${minVal.toInt()}",
+                            unit = "mg/dL",
+                            accentColor = colors.textPrimary,
+                            modifier = Modifier.weight(1f)
+                        )
+                        DailyStatItem(
+                            title = "Máx",
+                            value = "${maxVal.toInt()}",
+                            unit = "mg/dL",
+                            accentColor = colors.textPrimary,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    DailyStatItem(
+                        title = "En Rango",
+                        value = "$tirPercent%",
+                        unit = "TIR",
+                        accentColor = colors.mint,
+                        modifier = Modifier.weight(1f)
+                    )
+                    DailyStatItem(
+                        title = "Media",
+                        value = "${avgVal.toInt()}",
+                        unit = "mg/dL",
+                        accentColor = colors.arcticCyan,
+                        modifier = Modifier.weight(1f)
+                    )
+                    DailyStatItem(
+                        title = "Mín",
+                        value = "${minVal.toInt()}",
+                        unit = "mg/dL",
+                        accentColor = colors.textPrimary,
+                        modifier = Modifier.weight(1f)
+                    )
+                    DailyStatItem(
+                        title = "Máx",
+                        value = "${maxVal.toInt()}",
+                        unit = "mg/dL",
+                        accentColor = colors.textPrimary,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         }
     }

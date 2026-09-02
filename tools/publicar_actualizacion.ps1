@@ -95,7 +95,7 @@ git tag -a "$versionTag" -m "OpenGluco $versionTag: $notesInput"
 Write-Host "¿Deseas subir los cambios y la etiqueta a GitHub ahora? (s/n)" -ForegroundColor Cyan
 $pushConfirm = Read-Host
 if ($pushConfirm -eq "s" -or $pushConfirm -eq "S" -or [string]::IsNullOrWhiteSpace($pushConfirm)) {
-    git push origin main --tags
+    git push origin HEAD --tags
     Write-Host "Etiqueta $versionTag subida a GitHub." -ForegroundColor Green
 }
 

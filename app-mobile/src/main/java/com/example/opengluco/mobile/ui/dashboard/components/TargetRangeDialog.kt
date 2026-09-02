@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.mobile.ui.dashboard.components
+package com.example.opengluco.mobile.ui.dashboard.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -9,11 +9,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -78,24 +81,32 @@ fun TargetRangeDialog(
         highMg.toInt().toString()
     }
 
+    val responsive = ClinicalTheme.responsive
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Card(
-            shape = RoundedCornerShape(22.dp),
-            colors = CardDefaults.cardColors(containerColor = colors.surfaceOrb),
-            border = androidx.compose.foundation.BorderStroke(1.dp, colors.surfaceBorder),
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp)
+                .fillMaxSize()
+                .padding(14.dp),
+            contentAlignment = Alignment.Center
         ) {
-            Column(
+            Card(
+                shape = RoundedCornerShape(22.dp),
+                colors = CardDefaults.cardColors(containerColor = colors.surfaceOrb),
+                border = androidx.compose.foundation.BorderStroke(1.dp, colors.surfaceBorder),
                 modifier = Modifier
+                    .widthIn(max = responsive.dialogMaxWidth)
                     .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(20.dp)
             ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(if (responsive.isNarrowPhone) 16.dp else 20.dp)
+                ) {
                 // Header
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -359,45 +370,87 @@ fun TargetRangeDialog(
                 Spacer(modifier = Modifier.height(20.dp))
 
                 // Botones Cancelar y Guardar
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    TextButton(
-                        onClick = onDismiss,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(46.dp)
+                if (responsive.isExtraLargeFont) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(
-                            text = "Cancelar",
-                            color = colors.textSecondary,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
+                        Button(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onSave(lowMg.roundToInt(), highMg.roundToInt())
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 46.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colors.mint,
+                                contentColor = if (colors.isDark) Color.Black else Color.White
+                            )
+                        ) {
+                            Text(
+                                text = "Guardar Rango",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp
+                            )
+                        }
 
-                    Button(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onSave(lowMg.roundToInt(), highMg.roundToInt())
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(46.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = colors.mint,
-                            contentColor = if (colors.isDark) Color.Black else Color.White
-                        )
+                        TextButton(
+                            onClick = onDismiss,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 46.dp)
+                        ) {
+                            Text(
+                                text = "Cancelar",
+                                color = colors.textSecondary,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Text(
-                            text = "Guardar Rango",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 13.sp
-                        )
+                        TextButton(
+                            onClick = onDismiss,
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = 46.dp)
+                        ) {
+                            Text(
+                                text = "Cancelar",
+                                color = colors.textSecondary,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+
+                        Button(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                onSave(lowMg.roundToInt(), highMg.roundToInt())
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = 46.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = colors.mint,
+                                contentColor = if (colors.isDark) Color.Black else Color.White
+                            )
+                        ) {
+                            Text(
+                                text = "Guardar Rango",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp
+                            )
+                        }
                     }
                 }
             }
         }
     }
+}
 }

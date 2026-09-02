@@ -17,11 +17,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -168,133 +173,191 @@ fun ConfigurationDiagnosticsDialog(
 ) {
     val colors = ClinicalTheme.colors
     val context = LocalContext.current
+    val responsive = ClinicalTheme.responsive
 
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Card(
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = colors.surfaceOrb),
-            border = BorderStroke(1.dp, colors.surfaceBorder),
+        Box(
             modifier = Modifier
-                .fillMaxWidth(0.92f)
-                .padding(16.dp)
+                .fillMaxSize()
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
         ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                // Cabecera
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+            Card(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = colors.surfaceOrb),
+                border = BorderStroke(1.dp, colors.surfaceBorder),
+                modifier = Modifier
+                    .widthIn(max = responsive.dialogMaxWidth)
+                    .fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(if (responsive.isNarrowPhone) 16.dp else 20.dp)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Warning,
-                            contentDescription = null,
-                            tint = colors.highAmber,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Ajustes de Telemetría Requeridos",
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = colors.textPrimary
-                        )
-                    }
-                    IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Cerrar",
-                            tint = colors.textSecondary
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Text(
-                    text = "Para que OpenGluco no se cierre en segundo plano y las alarmas de glucosa suenen con la pantalla apagada, configura los siguientes permisos:",
-                    fontSize = 12.5.sp,
-                    color = colors.textSecondary,
-                    lineHeight = 17.sp
-                )
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                // 1. Elemento: Optimización de Batería
-                DiagnosticItemCard(
-                    isCorrect = diagnostics.isBatteryIgnored,
-                    icon = Icons.Default.Power,
-                    title = "Ahorro de Batería (Sin Restricciones)",
-                    description = if (diagnostics.isBatteryIgnored) "Configurado correctamente. No se suspenderá." else "Samsung suspenderá la app con pantalla apagada.",
-                    actionButtonText = "Desactivar Ahorro",
-                    onActionClick = {
-                        SystemDiagnosticsHelper.requestIgnoreBatteryOptimization(context)
-                    }
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // 2. Elemento: Permiso de Notificaciones
-                DiagnosticItemCard(
-                    isCorrect = diagnostics.hasNotificationPermission,
-                    icon = Icons.Default.Notifications,
-                    title = "Permiso de Notificaciones",
-                    description = if (diagnostics.hasNotificationPermission) "Activadas para glucosa en vivo y alertas." else "Las alertas de glucosa no podrán mostrarse.",
-                    actionButtonText = "Permitir",
-                    onActionClick = {
-                        SystemDiagnosticsHelper.openNotificationSettings(context)
-                    }
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // 3. Elemento: Alarmas Exactas
-                DiagnosticItemCard(
-                    isCorrect = diagnostics.canScheduleExactAlarms,
-                    icon = Icons.Default.Tune,
-                    title = "Alarmas Clínicas Exactas",
-                    description = if (diagnostics.canScheduleExactAlarms) "Disparo exacto en milisegundos activo." else "Permite disparar alarmas críticas al instante.",
-                    actionButtonText = "Habilitar",
-                    onActionClick = {
-                        SystemDiagnosticsHelper.openExactAlarmSettings(context)
-                    }
-                )
-
-                Spacer(modifier = Modifier.height(18.dp))
-
-                // Botones de acción inferior
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Button(
-                        onClick = { SystemDiagnosticsHelper.openAppSettings(context) },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = colors.surfaceBorder,
-                            contentColor = colors.textPrimary
-                        ),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1f)
+                    // Cabecera
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Ajustes App", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f, fill = false)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = null,
+                                tint = colors.highAmber,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Ajustes de Telemetría Requeridos",
+                                fontSize = responsive.clampedSp(15f, maxScale = 1.20f),
+                                fontWeight = FontWeight.Bold,
+                                color = colors.textPrimary
+                            )
+                        }
+                        IconButton(onClick = onDismiss, modifier = Modifier.size(28.dp)) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Cerrar",
+                                tint = colors.textSecondary
+                            )
+                        }
                     }
 
-                    Button(
-                        onClick = {
-                            onRefreshState()
-                            onDismiss()
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = colors.mint,
-                            contentColor = if (colors.isDark) Color.Black else Color.White
-                        ),
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.weight(1.3f)
-                    ) {
-                        Text("Continuar", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Text(
+                        text = "Para que OpenGluco no se cierre en segundo plano y las alarmas de glucosa suenen con la pantalla apagada, configura los siguientes permisos:",
+                        fontSize = responsive.clampedSp(12.5f, maxScale = 1.25f),
+                        color = colors.textSecondary,
+                        lineHeight = 17.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // 1. Elemento: Optimización de Batería
+                    DiagnosticItemCard(
+                        isCorrect = diagnostics.isBatteryIgnored,
+                        icon = Icons.Default.Power,
+                        title = "Ahorro de Batería (Sin Restricciones)",
+                        description = if (diagnostics.isBatteryIgnored) "Configurado correctamente. No se suspenderá." else "Samsung suspenderá la app con pantalla apagada.",
+                        actionButtonText = "Desactivar Ahorro",
+                        onActionClick = {
+                            SystemDiagnosticsHelper.requestIgnoreBatteryOptimization(context)
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // 2. Elemento: Permiso de Notificaciones
+                    DiagnosticItemCard(
+                        isCorrect = diagnostics.hasNotificationPermission,
+                        icon = Icons.Default.Notifications,
+                        title = "Permiso de Notificaciones",
+                        description = if (diagnostics.hasNotificationPermission) "Activadas para glucosa en vivo y alertas." else "Las alertas de glucosa no podrán mostrarse.",
+                        actionButtonText = "Permitir",
+                        onActionClick = {
+                            SystemDiagnosticsHelper.openNotificationSettings(context)
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // 3. Elemento: Alarmas Exactas
+                    DiagnosticItemCard(
+                        isCorrect = diagnostics.canScheduleExactAlarms,
+                        icon = Icons.Default.Tune,
+                        title = "Alarmas Clínicas Exactas",
+                        description = if (diagnostics.canScheduleExactAlarms) "Disparo exacto en milisegundos activo." else "Permite disparar alarmas críticas al instante.",
+                        actionButtonText = "Habilitar",
+                        onActionClick = {
+                            SystemDiagnosticsHelper.openExactAlarmSettings(context)
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    // Botones de acción inferior
+                    if (responsive.isExtraLargeFont) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Button(
+                                onClick = {
+                                    onRefreshState()
+                                    onDismiss()
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = colors.mint,
+                                    contentColor = if (colors.isDark) Color.Black else Color.White
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 46.dp)
+                            ) {
+                                Text("Continuar", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            }
+
+                            Button(
+                                onClick = { SystemDiagnosticsHelper.openAppSettings(context) },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = colors.surfaceBorder,
+                                    contentColor = colors.textPrimary
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 46.dp)
+                            ) {
+                                Text("Ajustes App", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            }
+                        }
+                    } else {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Button(
+                                onClick = { SystemDiagnosticsHelper.openAppSettings(context) },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = colors.surfaceBorder,
+                                    contentColor = colors.textPrimary
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .heightIn(min = 46.dp)
+                            ) {
+                                Text("Ajustes App", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                            }
+
+                            Button(
+                                onClick = {
+                                    onRefreshState()
+                                    onDismiss()
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = colors.mint,
+                                    contentColor = if (colors.isDark) Color.Black else Color.White
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier
+                                    .weight(1.3f)
+                                    .heightIn(min = 46.dp)
+                            ) {
+                                Text("Continuar", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
                     }
                 }
             }

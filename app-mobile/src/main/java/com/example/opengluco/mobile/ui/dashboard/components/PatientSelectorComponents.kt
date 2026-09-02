@@ -53,12 +53,21 @@ fun PatientHeaderChip(
     modifier: Modifier = Modifier
 ) {
     val colors = ClinicalTheme.colors
+    val responsive = ClinicalTheme.responsive
     val displayName = selectedPatient?.fullName ?: "Paciente"
     val measurement = selectedPatient?.effectiveMeasurement
     val statusColor = if (measurement != null) getClinicalStatusColor(measurement.numericValue) else colors.mint
 
+    val chipMaxWidth = when {
+        responsive.isNarrowPhone -> 150.dp
+        responsive.widthClass == com.example.opengluco.mobile.ui.theme.WindowWidthClass.COMPACT -> 190.dp
+        else -> 320.dp
+    }
+    val nameFontSize = responsive.clampedSp(13f, maxScale = 1.20f)
+
     Box(
         modifier = modifier
+            .widthIn(max = chipMaxWidth)
             .clip(RoundedCornerShape(20.dp))
             .background(colors.surfaceCard)
             .border(1.dp, colors.surfaceBorder, RoundedCornerShape(20.dp))
@@ -81,7 +90,7 @@ fun PatientHeaderChip(
                 val initial = displayName.firstOrNull()?.uppercaseChar()?.toString() ?: "P"
                 Text(
                     text = initial,
-                    fontSize = 11.sp,
+                    fontSize = responsive.clampedSp(11f, maxScale = 1.20f),
                     fontWeight = FontWeight.Bold,
                     color = colors.textPrimary
                 )
@@ -90,11 +99,12 @@ fun PatientHeaderChip(
             // Nombre Paciente
             Text(
                 text = displayName,
-                fontSize = 13.sp,
+                fontSize = nameFontSize,
                 fontWeight = FontWeight.SemiBold,
                 color = colors.textPrimary,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false)
             )
 
             // Indicador de cuenta si hay más de 1

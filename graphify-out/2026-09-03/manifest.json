@@ -982,11 +982,5 @@
     "seen": 1788387904.211076,
     "ast_hash": "a4fe056a2441fc9058cba6e79e664865",
     "semantic_hash": ""
-  },
-  "app-mobile/src/main/java/com/example/opengluco/mobile/ui/reports/ReportsHubScreen.kt": {
-    "mtime": 1788387758.7708342,
-    "seen": 1788387955.8313065,
-    "ast_hash": "3e8af7773e7ac1a6a5936f4ff3a2fa01",
-    "semantic_hash": ""
   }
 }

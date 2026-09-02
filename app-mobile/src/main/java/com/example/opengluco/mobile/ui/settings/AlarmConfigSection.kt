@@ -15,6 +15,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.heightIn
+import com.example.opengluco.mobile.ui.theme.ClinicalTheme
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -689,6 +692,8 @@ fun AlarmCreationDialog(
 
     val cooldownLabel = cooldownOptions.find { it.first == cooldownMinutes }?.second ?: "15 minutos"
 
+    val responsive = ClinicalTheme.responsive
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -697,12 +702,17 @@ fun AlarmCreationDialog(
             modifier = Modifier.fillMaxSize(),
             color = Color(0xFF0A0C10)
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(20.dp)
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.TopCenter
             ) {
+                Column(
+                    modifier = Modifier
+                        .widthIn(max = responsive.settingsMaxWidth)
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(if (responsive.isNarrowPhone) 16.dp else 20.dp)
+                ) {
                 // Header
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -1214,53 +1224,105 @@ fun AlarmCreationDialog(
                 Spacer(modifier = Modifier.height(30.dp))
 
                 // 7. Botones de Accion
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Button(
-                        onClick = onDismiss,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = BgCardInner,
-                            contentColor = TextSecondary
-                        )
+                if (responsive.isExtraLargeFont) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text("Cancelar", fontWeight = FontWeight.SemiBold)
-                    }
-
-                    Button(
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            val finalThresholdMgDl = thresholdMgDl.roundToInt().coerceIn(40, 400)
-                            val alarmToSave = GlucoseAlarm(
-                                id = existingAlarm?.id ?: UUID.randomUUID().toString(),
-                                type = alarmType,
-                                thresholdMgDl = finalThresholdMgDl,
-                                severity = severity,
-                                cooldownMinutes = cooldownMinutes,
-                                enabled = existingAlarm?.enabled ?: true,
-                                activeStartHour = startHour,
-                                activeStartMinute = startMinute,
-                                activeEndHour = endHour,
-                                activeEndMinute = endMinute,
-                                isAllDay = isAllDay
+                        Button(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                val finalThresholdMgDl = thresholdMgDl.roundToInt().coerceIn(40, 400)
+                                val alarmToSave = GlucoseAlarm(
+                                    id = existingAlarm?.id ?: UUID.randomUUID().toString(),
+                                    type = alarmType,
+                                    thresholdMgDl = finalThresholdMgDl,
+                                    severity = severity,
+                                    cooldownMinutes = cooldownMinutes,
+                                    enabled = existingAlarm?.enabled ?: true,
+                                    activeStartHour = startHour,
+                                    activeStartMinute = startMinute,
+                                    activeEndHour = endHour,
+                                    activeEndMinute = endMinute,
+                                    isAllDay = isAllDay
+                                )
+                                onSave(alarmToSave)
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 48.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = dynamicColor,
+                                contentColor = Color.White
                             )
-                            onSave(alarmToSave)
-                        },
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = dynamicColor,
-                            contentColor = Color.White
-                        )
+                        ) {
+                            Text("Guardar Alarma", fontWeight = FontWeight.Bold)
+                        }
+
+                        Button(
+                            onClick = onDismiss,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 48.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = BgCardInner,
+                                contentColor = TextSecondary
+                            )
+                        ) {
+                            Text("Cancelar", fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Text("Guardar Alarma", fontWeight = FontWeight.Bold)
+                        Button(
+                            onClick = onDismiss,
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = 48.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = BgCardInner,
+                                contentColor = TextSecondary
+                            )
+                        ) {
+                            Text("Cancelar", fontWeight = FontWeight.SemiBold)
+                        }
+
+                        Button(
+                            onClick = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                val finalThresholdMgDl = thresholdMgDl.roundToInt().coerceIn(40, 400)
+                                val alarmToSave = GlucoseAlarm(
+                                    id = existingAlarm?.id ?: UUID.randomUUID().toString(),
+                                    type = alarmType,
+                                    thresholdMgDl = finalThresholdMgDl,
+                                    severity = severity,
+                                    cooldownMinutes = cooldownMinutes,
+                                    enabled = existingAlarm?.enabled ?: true,
+                                    activeStartHour = startHour,
+                                    activeStartMinute = startMinute,
+                                    activeEndHour = endHour,
+                                    activeEndMinute = endMinute,
+                                    isAllDay = isAllDay
+                                )
+                                onSave(alarmToSave)
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .heightIn(min = 48.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = dynamicColor,
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Text("Guardar Alarma", fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
 
@@ -1268,4 +1330,5 @@ fun AlarmCreationDialog(
             }
         }
     }
+}
 }
