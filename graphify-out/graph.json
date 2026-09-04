@@ -316,6 +316,19 @@
       "source_location": "L6"
     },
     {
+      "id": "core_model_src_main_java_com_example_opengluco_core_model_openglucomodels_authexpired",
+      "label": "AuthExpired",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 108,
+      "community_name": "OpenGlucoRepository",
+      "file_type": "code",
+      "norm_label": "authexpired",
+      "source_file": "core/model/src/main/java/com/example/opengluco/core/model/OpenGlucoModels.kt",
+      "source_location": "L214"
+    },
+    {
       "id": "core_model_src_main_java_com_example_opengluco_core_model_openglucomodels_authticket",
       "label": "AuthTicket",
       "_callable": true,
@@ -340,6 +353,32 @@
       "norm_label": "baseresponse",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/OpenGlucoModels.kt",
       "source_location": "L14"
+    },
+    {
+      "id": "core_model_src_main_java_com_example_opengluco_core_model_openglucomodels_clinicalerrortype",
+      "label": "ClinicalErrorType",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 108,
+      "community_name": "OpenGlucoRepository",
+      "file_type": "code",
+      "norm_label": "clinicalerrortype",
+      "source_file": "core/model/src/main/java/com/example/opengluco/core/model/OpenGlucoModels.kt",
+      "source_location": "L211"
+    },
+    {
+      "id": "core_model_src_main_java_com_example_opengluco_core_model_openglucomodels_generic",
+      "label": "Generic",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 108,
+      "community_name": "OpenGlucoRepository",
+      "file_type": "code",
+      "norm_label": "generic",
+      "source_file": "core/model/src/main/java/com/example/opengluco/core/model/OpenGlucoModels.kt",
+      "source_location": "L217"
     },
     {
       "id": "core_model_src_main_java_com_example_opengluco_core_model_openglucomodels_graphdata",
@@ -379,6 +418,58 @@
       "norm_label": "loginrequest",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/OpenGlucoModels.kt",
       "source_location": "L8"
+    },
+    {
+      "id": "core_model_src_main_java_com_example_opengluco_core_model_openglucomodels_networkerror",
+      "label": "NetworkError",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 108,
+      "community_name": "OpenGlucoRepository",
+      "file_type": "code",
+      "norm_label": "networkerror",
+      "source_file": "core/model/src/main/java/com/example/opengluco/core/model/OpenGlucoModels.kt",
+      "source_location": "L213"
+    },
+    {
+      "id": "core_model_src_main_java_com_example_opengluco_core_model_openglucomodels_none",
+      "label": "None",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 108,
+      "community_name": "OpenGlucoRepository",
+      "file_type": "code",
+      "norm_label": "none",
+      "source_file": "core/model/src/main/java/com/example/opengluco/core/model/OpenGlucoModels.kt",
+      "source_location": "L212"
+    },
+    {
+      "id": "core_model_src_main_java_com_example_opengluco_core_model_openglucomodels_nopatients",
+      "label": "NoPatients",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 108,
+      "community_name": "OpenGlucoRepository",
+      "file_type": "code",
+      "norm_label": "nopatients",
+      "source_file": "core/model/src/main/java/com/example/opengluco/core/model/OpenGlucoModels.kt",
+      "source_location": "L216"
+    },
+    {
+      "id": "core_model_src_main_java_com_example_opengluco_core_model_openglucomodels_nosensor",
+      "label": "NoSensor",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 108,
+      "community_name": "OpenGlucoRepository",
+      "file_type": "code",
+      "norm_label": "nosensor",
+      "source_file": "core/model/src/main/java/com/example/opengluco/core/model/OpenGlucoModels.kt",
+      "source_location": "L215"
     },
     {
       "id": "core_model_src_main_java_com_example_opengluco_core_model_openglucomodels_responseerror",
@@ -433,17 +524,30 @@
       "source_location": "L17"
     },
     {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice",
-      "label": "WearBluetoothRfcommService",
+      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_mainactivity_mainactivity",
+      "label": "MainActivity",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "WearBluetoothRfcommService",
+      "community_name": "UserSettings",
       "file_type": "code",
-      "norm_label": "wearbluetoothrfcommservice",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L35"
+      "norm_label": "mainactivity",
+      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/MainActivity.kt",
+      "source_location": "L36"
+    },
+    {
+      "id": "core_data_src_main_java_com_example_opengluco_core_data_userpreferencesrepository_usersettings",
+      "label": "UserSettings",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 11,
+      "community_name": "UserSettings",
+      "file_type": "code",
+      "norm_label": "usersettings",
+      "source_file": "core/data/src/main/java/com/example/opengluco/core/data/UserPreferencesRepository.kt",
+      "source_location": "L33"
     },
     {
       "id": "landing_app_interactivemedical3dscene",
@@ -797,95 +901,82 @@
       "source_location": "L7"
     },
     {
-      "id": "core_model_src_main_java_com_example_opengluco_core_model_openglucomodels_authexpired",
-      "label": "AuthExpired",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_auth_wearloginviewmodel_error",
+      "label": "Error",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 25,
-      "community_name": "ClinicalErrorType",
+      "community_name": "WearLoginViewModel",
       "file_type": "code",
-      "norm_label": "authexpired",
-      "source_file": "core/model/src/main/java/com/example/opengluco/core/model/OpenGlucoModels.kt",
-      "source_location": "L214"
+      "norm_label": "error",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/auth/WearLoginViewModel.kt",
+      "source_location": "L16"
     },
     {
-      "id": "core_model_src_main_java_com_example_opengluco_core_model_openglucomodels_clinicalerrortype",
-      "label": "ClinicalErrorType",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_auth_wearloginviewmodel_idle",
+      "label": "Idle",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 25,
-      "community_name": "ClinicalErrorType",
+      "community_name": "WearLoginViewModel",
       "file_type": "code",
-      "norm_label": "clinicalerrortype",
-      "source_file": "core/model/src/main/java/com/example/opengluco/core/model/OpenGlucoModels.kt",
-      "source_location": "L211"
+      "norm_label": "idle",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/auth/WearLoginViewModel.kt",
+      "source_location": "L13"
     },
     {
-      "id": "core_model_src_main_java_com_example_opengluco_core_model_openglucomodels_generic",
-      "label": "Generic",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_auth_wearloginviewmodel_loading",
+      "label": "Loading",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 25,
-      "community_name": "ClinicalErrorType",
+      "community_name": "WearLoginViewModel",
       "file_type": "code",
-      "norm_label": "generic",
-      "source_file": "core/model/src/main/java/com/example/opengluco/core/model/OpenGlucoModels.kt",
-      "source_location": "L217"
+      "norm_label": "loading",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/auth/WearLoginViewModel.kt",
+      "source_location": "L14"
     },
     {
-      "id": "core_model_src_main_java_com_example_opengluco_core_model_openglucomodels_networkerror",
-      "label": "NetworkError",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_auth_wearloginviewmodel_success",
+      "label": "Success",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 25,
-      "community_name": "ClinicalErrorType",
+      "community_name": "WearLoginViewModel",
       "file_type": "code",
-      "norm_label": "networkerror",
-      "source_file": "core/model/src/main/java/com/example/opengluco/core/model/OpenGlucoModels.kt",
-      "source_location": "L213"
+      "norm_label": "success",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/auth/WearLoginViewModel.kt",
+      "source_location": "L15"
     },
     {
-      "id": "core_model_src_main_java_com_example_opengluco_core_model_openglucomodels_none",
-      "label": "None",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_auth_wearloginviewmodel_wearloginuistate",
+      "label": "WearLoginUiState",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 25,
-      "community_name": "ClinicalErrorType",
+      "community_name": "WearLoginViewModel",
       "file_type": "code",
-      "norm_label": "none",
-      "source_file": "core/model/src/main/java/com/example/opengluco/core/model/OpenGlucoModels.kt",
-      "source_location": "L212"
+      "norm_label": "wearloginuistate",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/auth/WearLoginViewModel.kt",
+      "source_location": "L12"
     },
     {
-      "id": "core_model_src_main_java_com_example_opengluco_core_model_openglucomodels_nopatients",
-      "label": "NoPatients",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_auth_wearloginviewmodel_wearloginviewmodel",
+      "label": "WearLoginViewModel",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 25,
-      "community_name": "ClinicalErrorType",
+      "community_name": "WearLoginViewModel",
       "file_type": "code",
-      "norm_label": "nopatients",
-      "source_file": "core/model/src/main/java/com/example/opengluco/core/model/OpenGlucoModels.kt",
-      "source_location": "L216"
-    },
-    {
-      "id": "core_model_src_main_java_com_example_opengluco_core_model_openglucomodels_nosensor",
-      "label": "NoSensor",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 25,
-      "community_name": "ClinicalErrorType",
-      "file_type": "code",
-      "norm_label": "nosensor",
-      "source_file": "core/model/src/main/java/com/example/opengluco/core/model/OpenGlucoModels.kt",
-      "source_location": "L215"
+      "norm_label": "wearloginviewmodel",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/auth/WearLoginViewModel.kt",
+      "source_location": "L19"
     },
     {
       "id": "app_wear_src_test_java_com_example_opengluco_wear_ui_settings_wearlegaltextstest_wearlegaltextstest",
@@ -901,17 +992,17 @@
       "source_location": "L8"
     },
     {
-      "id": "core_data_src_test_java_com_example_opengluco_core_data_clinicalreportscalculatortest_clinicalreportscalculatortest",
-      "label": "ClinicalReportsCalculatorTest",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_complication_glucosecomplicationservice_glucosecomplicationservice",
+      "label": "GlucoseComplicationService",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 27,
-      "community_name": "ClinicalReportsCalculatorTest",
+      "community_name": "GlucoseComplicationService.kt",
       "file_type": "code",
-      "norm_label": "clinicalreportscalculatortest",
-      "source_file": "core/data/src/test/java/com/example/opengluco/core/data/ClinicalReportsCalculatorTest.kt",
-      "source_location": "L13"
+      "norm_label": "glucosecomplicationservice",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/complication/GlucoseComplicationService.kt",
+      "source_location": "L20"
     },
     {
       "id": "core_model_src_main_java_com_example_opengluco_core_model_glucosealarmmodels_alarmevaluationresult",
@@ -920,24 +1011,11 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 28,
-      "community_name": "AlarmSeverity",
+      "community_name": "AlarmType",
       "file_type": "code",
       "norm_label": "alarmevaluationresult",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/GlucoseAlarmModels.kt",
       "source_location": "L111"
-    },
-    {
-      "id": "core_model_src_main_java_com_example_opengluco_core_model_glucosealarmmodels_alarmseverity",
-      "label": "AlarmSeverity",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "AlarmSeverity",
-      "file_type": "code",
-      "norm_label": "alarmseverity",
-      "source_file": "core/model/src/main/java/com/example/opengluco/core/model/GlucoseAlarmModels.kt",
-      "source_location": "L22"
     },
     {
       "id": "core_model_src_main_java_com_example_opengluco_core_model_glucosealarmmodels_alarmtype",
@@ -946,7 +1024,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 28,
-      "community_name": "AlarmSeverity",
+      "community_name": "AlarmType",
       "file_type": "code",
       "norm_label": "alarmtype",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/GlucoseAlarmModels.kt",
@@ -1109,6 +1187,19 @@
       "source_location": "L14"
     },
     {
+      "id": "core_model_src_main_java_com_example_opengluco_core_model_qrauthmodels_qrsessionexchange",
+      "label": "QrSessionExchange",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "QrPairingPayload",
+      "file_type": "code",
+      "norm_label": "qrsessionexchange",
+      "source_file": "core/model/src/main/java/com/example/opengluco/core/model/QrAuthModels.kt",
+      "source_location": "L37"
+    },
+    {
       "id": "core_model_src_test_java_com_example_opengluco_core_model_qrauthmodelstest_qrauthmodelstest",
       "label": "QrAuthModelsTest",
       "_callable": true,
@@ -1159,6 +1250,19 @@
       "norm_label": "appupdaterepositorytest",
       "source_file": "core/data/src/test/java/com/example/opengluco/core/data/AppUpdateRepositoryTest.kt",
       "source_location": "L7"
+    },
+    {
+      "id": "core_model_src_main_java_com_example_opengluco_core_model_appupdatemodels_appreleaseinfo",
+      "label": "AppReleaseInfo",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 44,
+      "community_name": "AppUpdateRepository",
+      "file_type": "code",
+      "norm_label": "appreleaseinfo",
+      "source_file": "core/model/src/main/java/com/example/opengluco/core/model/AppUpdateModels.kt",
+      "source_location": "L8"
     },
     {
       "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_components_legalcompliancecomponents_legalnoticetype",
@@ -1252,6 +1356,19 @@
       "source_location": "L15"
     },
     {
+      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_widget_glucosewidgetupdater_glucosewidgetupdater",
+      "label": "GlucoseWidgetUpdater",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 52,
+      "community_name": "GlucoseWidgetUpdater.kt",
+      "file_type": "code",
+      "norm_label": "glucosewidgetupdater",
+      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/widget/GlucoseWidgetUpdater.kt",
+      "source_location": "L23"
+    },
+    {
       "id": "core_model_src_test_java_com_example_opengluco_core_model_cgmcurvesmoothertest_cgmcurvesmoothertest",
       "label": "CgmCurveSmootherTest",
       "_callable": true,
@@ -1284,11 +1401,24 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "clinicalreportscalculator",
       "source_file": "core/data/src/main/java/com/example/opengluco/core/data/ClinicalReportsCalculator.kt",
       "source_location": "L29"
+    },
+    {
+      "id": "core_data_src_test_java_com_example_opengluco_core_data_clinicalreportscalculatortest_clinicalreportscalculatortest",
+      "label": "ClinicalReportsCalculatorTest",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "ClinicalReportsCalculator",
+      "file_type": "code",
+      "norm_label": "clinicalreportscalculatortest",
+      "source_file": "core/data/src/test/java/com/example/opengluco/core/data/ClinicalReportsCalculatorTest.kt",
+      "source_location": "L13"
     },
     {
       "id": "core_model_src_main_java_com_example_opengluco_core_model_clinicalreportmodels_averageglucosereport",
@@ -1297,7 +1427,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "averageglucosereport",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/ClinicalReportModels.kt",
@@ -1310,7 +1440,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "dailygraphdaysummary",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/ClinicalReportModels.kt",
@@ -1323,7 +1453,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "dailygraphreport",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/ClinicalReportModels.kt",
@@ -1336,7 +1466,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "dailypatternsreport",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/ClinicalReportModels.kt",
@@ -1349,7 +1479,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "estimateda1creport",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/ClinicalReportModels.kt",
@@ -1362,7 +1492,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "hourlypercentile",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/ClinicalReportModels.kt",
@@ -1375,7 +1505,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "lowglucoseevent",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/ClinicalReportModels.kt",
@@ -1388,7 +1518,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "lowglucoseeventsreport",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/ClinicalReportModels.kt",
@@ -1401,7 +1531,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "reporttimeblock",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/ClinicalReportModels.kt",
@@ -1414,7 +1544,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "sensorexpirationalert",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/ClinicalReportModels.kt",
@@ -1427,7 +1557,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "sensorusagereport",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/ClinicalReportModels.kt",
@@ -1440,7 +1570,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "timeinrangereport",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/ClinicalReportModels.kt",
@@ -1453,7 +1583,7 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "tirbucket",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/ClinicalReportModels.kt",
@@ -1466,24 +1596,24 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "tircategory",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/ClinicalReportModels.kt",
       "source_location": "L6"
     },
     {
-      "id": "core_model_src_main_java_com_example_opengluco_core_model_qrauthmodels_qrsessionexchange",
-      "label": "QrSessionExchange",
+      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_service_bootreceiver_bootreceiver",
+      "label": "BootReceiver",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
-      "community": 61,
-      "community_name": "WearQrLoginScreen.kt",
+      "community": 65,
+      "community_name": "BootReceiver.kt",
       "file_type": "code",
-      "norm_label": "qrsessionexchange",
-      "source_file": "core/model/src/main/java/com/example/opengluco/core/model/QrAuthModels.kt",
-      "source_location": "L37"
+      "norm_label": "bootreceiver",
+      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/service/BootReceiver.kt",
+      "source_location": "L16"
     },
     {
       "id": "core_model_src_test_java_com_example_opengluco_core_model_modelsanitytest_modelsanitytest",
@@ -1564,32 +1694,6 @@
       "source_location": "L31"
     },
     {
-      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_mainactivity_mainactivity",
-      "label": "MainActivity",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 77,
-      "community_name": "UserSettings",
-      "file_type": "code",
-      "norm_label": "mainactivity",
-      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/MainActivity.kt",
-      "source_location": "L36"
-    },
-    {
-      "id": "core_data_src_main_java_com_example_opengluco_core_data_userpreferencesrepository_usersettings",
-      "label": "UserSettings",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 77,
-      "community_name": "UserSettings",
-      "file_type": "code",
-      "norm_label": "usersettings",
-      "source_file": "core/data/src/main/java/com/example/opengluco/core/data/UserPreferencesRepository.kt",
-      "source_location": "L33"
-    },
-    {
       "id": "core_data_src_test_java_com_example_opengluco_core_data_alarmevaluatortest_alarmevaluatortest",
       "label": "AlarmEvaluatorTest",
       "_callable": true,
@@ -1642,95 +1746,17 @@
       "source_location": "L10"
     },
     {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_auth_wearloginviewmodel_error",
-      "label": "Error",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearauthmessagelistenerservice_wearauthmessagelistenerservice",
+      "label": "WearAuthMessageListenerService",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 80,
-      "community_name": "WearLoginViewModel",
+      "community_name": "WearAuthMessageListenerService.kt",
       "file_type": "code",
-      "norm_label": "error",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/auth/WearLoginViewModel.kt",
-      "source_location": "L16"
-    },
-    {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_auth_wearloginviewmodel_idle",
-      "label": "Idle",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 80,
-      "community_name": "WearLoginViewModel",
-      "file_type": "code",
-      "norm_label": "idle",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/auth/WearLoginViewModel.kt",
-      "source_location": "L13"
-    },
-    {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_auth_wearloginviewmodel_loading",
-      "label": "Loading",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 80,
-      "community_name": "WearLoginViewModel",
-      "file_type": "code",
-      "norm_label": "loading",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/auth/WearLoginViewModel.kt",
-      "source_location": "L14"
-    },
-    {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_auth_wearloginviewmodel_success",
-      "label": "Success",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 80,
-      "community_name": "WearLoginViewModel",
-      "file_type": "code",
-      "norm_label": "success",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/auth/WearLoginViewModel.kt",
-      "source_location": "L15"
-    },
-    {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_auth_wearloginviewmodel_wearloginuistate",
-      "label": "WearLoginUiState",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 80,
-      "community_name": "WearLoginViewModel",
-      "file_type": "code",
-      "norm_label": "wearloginuistate",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/auth/WearLoginViewModel.kt",
+      "norm_label": "wearauthmessagelistenerservice",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearAuthMessageListenerService.kt",
       "source_location": "L12"
-    },
-    {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_auth_wearloginviewmodel_wearloginviewmodel",
-      "label": "WearLoginViewModel",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 80,
-      "community_name": "WearLoginViewModel",
-      "file_type": "code",
-      "norm_label": "wearloginviewmodel",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/auth/WearLoginViewModel.kt",
-      "source_location": "L19"
-    },
-    {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_complication_glucosecomplicationservice_glucosecomplicationservice",
-      "label": "GlucoseComplicationService",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 81,
-      "community_name": "GlucoseComplicationService.kt",
-      "file_type": "code",
-      "norm_label": "glucosecomplicationservice",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/complication/GlucoseComplicationService.kt",
-      "source_location": "L20"
     },
     {
       "id": "app_wear_src_main_java_com_example_opengluco_wear_notification_wearalarmnotificationhelper_wearalarmnotificationhelper",
@@ -1739,11 +1765,24 @@
       "_callable_class": true,
       "_origin": "ast",
       "community": 86,
-      "community_name": "WearAlarmNotificationHelper",
+      "community_name": "AlarmSeverity",
       "file_type": "code",
       "norm_label": "wearalarmnotificationhelper",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/notification/WearAlarmNotificationHelper.kt",
       "source_location": "L23"
+    },
+    {
+      "id": "core_model_src_main_java_com_example_opengluco_core_model_glucosealarmmodels_alarmseverity",
+      "label": "AlarmSeverity",
+      "_callable": true,
+      "_callable_class": true,
+      "_origin": "ast",
+      "community": 86,
+      "community_name": "AlarmSeverity",
+      "file_type": "code",
+      "norm_label": "alarmseverity",
+      "source_file": "core/model/src/main/java/com/example/opengluco/core/model/GlucoseAlarmModels.kt",
+      "source_location": "L22"
     },
     {
       "id": "core_data_src_main_java_com_example_opengluco_core_data_alarmevaluator_alarmevaluator",
@@ -1759,30 +1798,17 @@
       "source_location": "L21"
     },
     {
-      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_widget_glucosewidgetupdater_glucosewidgetupdater",
-      "label": "GlucoseWidgetUpdater",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice",
+      "label": "WearBluetoothRfcommService",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 9,
-      "community_name": "GlucoseWidgetUpdater.kt",
+      "community_name": "WearBluetoothRfcommService",
       "file_type": "code",
-      "norm_label": "glucosewidgetupdater",
-      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/widget/GlucoseWidgetUpdater.kt",
-      "source_location": "L23"
-    },
-    {
-      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_service_bootreceiver_bootreceiver",
-      "label": "BootReceiver",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 90,
-      "community_name": "BootReceiver.kt",
-      "file_type": "code",
-      "norm_label": "bootreceiver",
-      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/service/BootReceiver.kt",
-      "source_location": "L16"
+      "norm_label": "wearbluetoothrfcommservice",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
+      "source_location": "L39"
     },
     {
       "id": "app_mobile_src_main_java_com_example_opengluco_mobile_service_mobilewearablemessagelistenerservice_mobilewearablemessagelistenerservice",
@@ -1811,19 +1837,6 @@
       "source_location": "L168"
     },
     {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearauthmessagelistenerservice_wearauthmessagelistenerservice",
-      "label": "WearAuthMessageListenerService",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 96,
-      "community_name": "WearAuthMessageListenerService.kt",
-      "file_type": "code",
-      "norm_label": "wearauthmessagelistenerservice",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearAuthMessageListenerService.kt",
-      "source_location": "L12"
-    },
-    {
       "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearglucosesyncworker_wearglucosesyncworker",
       "label": "WearGlucoseSyncWorker",
       "_callable": true,
@@ -1847,19 +1860,6 @@
       "file_type": "code",
       "norm_label": "mobilealarmsynchelper",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/service/MobileAlarmSyncHelper.kt",
-      "source_location": "L8"
-    },
-    {
-      "id": "core_model_src_main_java_com_example_opengluco_core_model_appupdatemodels_appreleaseinfo",
-      "label": "AppReleaseInfo",
-      "_callable": true,
-      "_callable_class": true,
-      "_origin": "ast",
-      "community": 99,
-      "community_name": "AppReleaseInfo",
-      "file_type": "code",
-      "norm_label": "appreleaseinfo",
-      "source_file": "core/model/src/main/java/com/example/opengluco/core/model/AppUpdateModels.kt",
       "source_location": "L8"
     },
     {
@@ -2751,136 +2751,40 @@
       "source_location": "L172"
     },
     {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice_buildforegroundnotification",
-      "label": ".buildForegroundNotification()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 11,
-      "community_name": "WearBluetoothRfcommService",
-      "file_type": "code",
-      "norm_label": ".buildforegroundnotification()",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L88"
-    },
-    {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice_createnotificationchannel",
-      "label": ".createNotificationChannel()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 11,
-      "community_name": "WearBluetoothRfcommService",
-      "file_type": "code",
-      "norm_label": ".createnotificationchannel()",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L72"
-    },
-    {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice_handleincomingconnection",
-      "label": ".handleIncomingConnection()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 11,
-      "community_name": "WearBluetoothRfcommService",
-      "file_type": "code",
-      "norm_label": ".handleincomingconnection()",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L134"
-    },
-    {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice_onbind",
-      "label": ".onBind()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 11,
-      "community_name": "WearBluetoothRfcommService",
-      "file_type": "code",
-      "norm_label": ".onbind()",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L203"
-    },
-    {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice_oncreate",
+      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_mainactivity_mainactivity_oncreate",
       "label": ".onCreate()",
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "WearBluetoothRfcommService",
+      "community_name": "UserSettings",
       "file_type": "code",
       "norm_label": ".oncreate()",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L50"
+      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/MainActivity.kt",
+      "source_location": "L38"
     },
     {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice_ondestroy",
-      "label": ".onDestroy()",
+      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_mainactivity_mobileappnavigation",
+      "label": "MobileAppNavigation()",
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "WearBluetoothRfcommService",
+      "community_name": "UserSettings",
       "file_type": "code",
-      "norm_label": ".ondestroy()",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L193"
+      "norm_label": "mobileappnavigation()",
+      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/MainActivity.kt",
+      "source_location": "L96"
     },
     {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice_onstartcommand",
-      "label": ".onStartCommand()",
+      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_auth_mobileloginscreen_mobileloginscreen",
+      "label": "MobileLoginScreen()",
       "_callable": true,
       "_origin": "ast",
       "community": 11,
-      "community_name": "WearBluetoothRfcommService",
+      "community_name": "UserSettings",
       "file_type": "code",
-      "norm_label": ".onstartcommand()",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L56"
-    },
-    {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice_processstreampayload",
-      "label": ".processStreamPayload()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 11,
-      "community_name": "WearBluetoothRfcommService",
-      "file_type": "code",
-      "norm_label": ".processstreampayload()",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L166"
-    },
-    {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice_start",
-      "label": ".start()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 11,
-      "community_name": "WearBluetoothRfcommService",
-      "file_type": "code",
-      "norm_label": ".start()",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L217"
-    },
-    {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice_startrfcommlistener",
-      "label": ".startRfcommListener()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 11,
-      "community_name": "WearBluetoothRfcommService",
-      "file_type": "code",
-      "norm_label": ".startrfcommlistener()",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L98"
-    },
-    {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice_stop",
-      "label": ".stop()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 11,
-      "community_name": "WearBluetoothRfcommService",
-      "file_type": "code",
-      "norm_label": ".stop()",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L226"
+      "norm_label": "mobileloginscreen()",
+      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/auth/MobileLoginScreen.kt",
+      "source_location": "L60"
     },
     {
       "id": "landing_app_create24hseries",
@@ -3289,6 +3193,18 @@
       "norm_label": "patientselectormodal()",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/components/PatientSelectorComponents.kt",
       "source_location": "L138"
+    },
+    {
+      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_components_targetrangedialog_targetrangedialog",
+      "label": "TargetRangeDialog()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 13,
+      "community_name": "GlucoseUnit",
+      "file_type": "code",
+      "norm_label": "targetrangedialog()",
+      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/components/TargetRangeDialog.kt",
+      "source_location": "L57"
     },
     {
       "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_dashboardherosection",
@@ -4731,6 +4647,18 @@
       "source_location": "L73"
     },
     {
+      "id": "core_data_src_main_java_com_example_opengluco_core_data_qrauthhelper_qrauthhelper_generateqrbitmap",
+      "label": ".generateQrBitmap()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "QrAuthHelper",
+      "file_type": "code",
+      "norm_label": ".generateqrbitmap()",
+      "source_file": "core/data/src/main/java/com/example/opengluco/core/data/QrAuthHelper.kt",
+      "source_location": "L268"
+    },
+    {
       "id": "core_data_src_main_java_com_example_opengluco_core_data_qrauthhelper_qrauthhelper_generaterandomhex",
       "label": ".generateRandomHex()",
       "_callable": true,
@@ -4789,18 +4717,6 @@
       "norm_label": ".parsesessionexchange()",
       "source_file": "core/data/src/main/java/com/example/opengluco/core/data/QrAuthHelper.kt",
       "source_location": "L159"
-    },
-    {
-      "id": "core_data_src_main_java_com_example_opengluco_core_data_qrauthhelper_qrauthhelper_sendsessionovernetwork",
-      "label": ".sendSessionOverNetwork()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 21,
-      "community_name": "QrAuthHelper",
-      "file_type": "code",
-      "norm_label": ".sendsessionovernetwork()",
-      "source_file": "core/data/src/main/java/com/example/opengluco/core/data/QrAuthHelper.kt",
-      "source_location": "L167"
     },
     {
       "id": "core_data_src_main_java_com_example_opengluco_core_data_qrauthhelper_qrauthhelper_startpairingserver",
@@ -4899,6 +4815,18 @@
       "source_location": "L9"
     },
     {
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_auth_wearloginviewmodel_wearloginviewmodel_login",
+      "label": ".login()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "WearLoginViewModel",
+      "file_type": "code",
+      "norm_label": ".login()",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/auth/WearLoginViewModel.kt",
+      "source_location": "L27"
+    },
+    {
       "id": "app_wear_src_test_java_com_example_opengluco_wear_ui_settings_wearlegaltextstest_wearlegaltextstest_testdeleteconfirmationcoversgdprart17righttoerasure",
       "label": ".testDeleteConfirmationCoversGdprArt17RightToErasure()",
       "_callable": true,
@@ -4971,136 +4899,28 @@
       "source_location": "L65"
     },
     {
-      "id": "core_data_src_test_java_com_example_opengluco_core_data_clinicalreportscalculatortest_clinicalreportscalculatortest_createreading",
-      "label": ".createReading()",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_complication_glucosecomplicationservice_glucosecomplicationservice_getpreviewdata",
+      "label": ".getPreviewData()",
       "_callable": true,
       "_origin": "ast",
       "community": 27,
-      "community_name": "ClinicalReportsCalculatorTest",
+      "community_name": "GlucoseComplicationService.kt",
       "file_type": "code",
-      "norm_label": ".createreading()",
-      "source_file": "core/data/src/test/java/com/example/opengluco/core/data/ClinicalReportsCalculatorTest.kt",
-      "source_location": "L15"
+      "norm_label": ".getpreviewdata()",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/complication/GlucoseComplicationService.kt",
+      "source_location": "L22"
     },
     {
-      "id": "core_data_src_test_java_com_example_opengluco_core_data_clinicalreportscalculatortest_clinicalreportscalculatortest_testaverageglucoseoverallandbytimeblocks",
-      "label": ".testAverageGlucoseOverallAndByTimeBlocks()",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_complication_glucosecomplicationservice_glucosecomplicationservice_oncomplicationrequest",
+      "label": ".onComplicationRequest()",
       "_callable": true,
       "_origin": "ast",
       "community": 27,
-      "community_name": "ClinicalReportsCalculatorTest",
+      "community_name": "GlucoseComplicationService.kt",
       "file_type": "code",
-      "norm_label": ".testaverageglucoseoverallandbytimeblocks()",
-      "source_file": "core/data/src/test/java/com/example/opengluco/core/data/ClinicalReportsCalculatorTest.kt",
-      "source_location": "L119"
-    },
-    {
-      "id": "core_data_src_test_java_com_example_opengluco_core_data_clinicalreportscalculatortest_clinicalreportscalculatortest_testcalculateavailabledays",
-      "label": ".testCalculateAvailableDays()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "ClinicalReportsCalculatorTest",
-      "file_type": "code",
-      "norm_label": ".testcalculateavailabledays()",
-      "source_file": "core/data/src/test/java/com/example/opengluco/core/data/ClinicalReportsCalculatorTest.kt",
-      "source_location": "L177"
-    },
-    {
-      "id": "core_data_src_test_java_com_example_opengluco_core_data_clinicalreportscalculatortest_clinicalreportscalculatortest_testdailygraphgroupedbydate",
-      "label": ".testDailyGraphGroupedByDate()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "ClinicalReportsCalculatorTest",
-      "file_type": "code",
-      "norm_label": ".testdailygraphgroupedbydate()",
-      "source_file": "core/data/src/test/java/com/example/opengluco/core/data/ClinicalReportsCalculatorTest.kt",
-      "source_location": "L136"
-    },
-    {
-      "id": "core_data_src_test_java_com_example_opengluco_core_data_clinicalreportscalculatortest_clinicalreportscalculatortest_testdailypatternspercentilesandvariability",
-      "label": ".testDailyPatternsPercentilesAndVariability()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "ClinicalReportsCalculatorTest",
-      "file_type": "code",
-      "norm_label": ".testdailypatternspercentilesandvariability()",
-      "source_file": "core/data/src/test/java/com/example/opengluco/core/data/ClinicalReportsCalculatorTest.kt",
-      "source_location": "L79"
-    },
-    {
-      "id": "core_data_src_test_java_com_example_opengluco_core_data_clinicalreportscalculatortest_clinicalreportscalculatortest_testestimateda1cbergenstalformulaandlegaldisclaimer",
-      "label": ".testEstimatedA1cBergenstalFormulaAndLegalDisclaimer()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "ClinicalReportsCalculatorTest",
-      "file_type": "code",
-      "norm_label": ".testestimateda1cbergenstalformulaandlegaldisclaimer()",
-      "source_file": "core/data/src/test/java/com/example/opengluco/core/data/ClinicalReportsCalculatorTest.kt",
-      "source_location": "L66"
-    },
-    {
-      "id": "core_data_src_test_java_com_example_opengluco_core_data_clinicalreportscalculatortest_clinicalreportscalculatortest_testlowglucoseeventsgroupingbytimeblocks",
-      "label": ".testLowGlucoseEventsGroupingByTimeBlocks()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "ClinicalReportsCalculatorTest",
-      "file_type": "code",
-      "norm_label": ".testlowglucoseeventsgroupingbytimeblocks()",
-      "source_file": "core/data/src/test/java/com/example/opengluco/core/data/ClinicalReportsCalculatorTest.kt",
-      "source_location": "L98"
-    },
-    {
-      "id": "core_data_src_test_java_com_example_opengluco_core_data_clinicalreportscalculatortest_clinicalreportscalculatortest_testmagecalculation",
-      "label": ".testMageCalculation()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "ClinicalReportsCalculatorTest",
-      "file_type": "code",
-      "norm_label": ".testmagecalculation()",
-      "source_file": "core/data/src/test/java/com/example/opengluco/core/data/ClinicalReportsCalculatorTest.kt",
-      "source_location": "L228"
-    },
-    {
-      "id": "core_data_src_test_java_com_example_opengluco_core_data_clinicalreportscalculatortest_clinicalreportscalculatortest_testsensorusagecalculation",
-      "label": ".testSensorUsageCalculation()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "ClinicalReportsCalculatorTest",
-      "file_type": "code",
-      "norm_label": ".testsensorusagecalculation()",
-      "source_file": "core/data/src/test/java/com/example/opengluco/core/data/ClinicalReportsCalculatorTest.kt",
-      "source_location": "L153"
-    },
-    {
-      "id": "core_data_src_test_java_com_example_opengluco_core_data_clinicalreportscalculatortest_clinicalreportscalculatortest_testtimeinrangefivetierscalculation",
-      "label": ".testTimeInRangeFiveTiersCalculation()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "ClinicalReportsCalculatorTest",
-      "file_type": "code",
-      "norm_label": ".testtimeinrangefivetierscalculation()",
-      "source_file": "core/data/src/test/java/com/example/opengluco/core/data/ClinicalReportsCalculatorTest.kt",
-      "source_location": "L33"
-    },
-    {
-      "id": "core_data_src_test_java_com_example_opengluco_core_data_clinicalreportscalculatortest_clinicalreportscalculatortest_testtimeintightrangeandgricalculation",
-      "label": ".testTimeInTightRangeAndGriCalculation()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 27,
-      "community_name": "ClinicalReportsCalculatorTest",
-      "file_type": "code",
-      "norm_label": ".testtimeintightrangeandgricalculation()",
-      "source_file": "core/data/src/test/java/com/example/opengluco/core/data/ClinicalReportsCalculatorTest.kt",
-      "source_location": "L206"
+      "norm_label": ".oncomplicationrequest()",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/complication/GlucoseComplicationService.kt",
+      "source_location": "L42"
     },
     {
       "id": "core_data_src_main_java_com_example_opengluco_core_data_alarmrepository_alarmrepository_getalarmsbytype",
@@ -5108,7 +4928,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 28,
-      "community_name": "AlarmSeverity",
+      "community_name": "AlarmType",
       "file_type": "code",
       "norm_label": ".getalarmsbytype()",
       "source_file": "core/data/src/main/java/com/example/opengluco/core/data/AlarmRepository.kt",
@@ -5583,6 +5403,18 @@
       "source_location": "L16"
     },
     {
+      "id": "core_data_src_main_java_com_example_opengluco_core_data_qrauthhelper_qrauthhelper_createsessionexchange",
+      "label": ".createSessionExchange()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "QrPairingPayload",
+      "file_type": "code",
+      "norm_label": ".createsessionexchange()",
+      "source_file": "core/data/src/main/java/com/example/opengluco/core/data/QrAuthHelper.kt",
+      "source_location": "L142"
+    },
+    {
       "id": "core_data_src_main_java_com_example_opengluco_core_data_qrauthhelper_qrauthhelper_parsepairingpayload",
       "label": ".parsePairingPayload()",
       "_callable": true,
@@ -5593,6 +5425,18 @@
       "norm_label": ".parsepairingpayload()",
       "source_file": "core/data/src/main/java/com/example/opengluco/core/data/QrAuthHelper.kt",
       "source_location": "L134"
+    },
+    {
+      "id": "core_data_src_main_java_com_example_opengluco_core_data_qrauthhelper_qrauthhelper_sendsessionovernetwork",
+      "label": ".sendSessionOverNetwork()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "QrPairingPayload",
+      "file_type": "code",
+      "norm_label": ".sendsessionovernetwork()",
+      "source_file": "core/data/src/main/java/com/example/opengluco/core/data/QrAuthHelper.kt",
+      "source_location": "L167"
     },
     {
       "id": "core_data_src_main_java_com_example_opengluco_core_data_qrauthhelper_qrauthhelper_serializepairingpayload",
@@ -5641,6 +5485,30 @@
       "norm_label": ".testqrpairingpayload_serializationroundtrip()",
       "source_file": "core/model/src/test/java/com/example/opengluco/core/model/QrAuthModelsTest.kt",
       "source_location": "L28"
+    },
+    {
+      "id": "core_model_src_test_java_com_example_opengluco_core_model_qrauthmodelstest_qrauthmodelstest_testqrsessionexchange_serializationroundtrip",
+      "label": ".testQrSessionExchange_serializationRoundtrip()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 4,
+      "community_name": "QrPairingPayload",
+      "file_type": "code",
+      "norm_label": ".testqrsessionexchange_serializationroundtrip()",
+      "source_file": "core/model/src/test/java/com/example/opengluco/core/model/QrAuthModelsTest.kt",
+      "source_location": "L53"
+    },
+    {
+      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_components_updateavailabledialog_updateavailabledialog",
+      "label": "UpdateAvailableDialog()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 44,
+      "community_name": "AppUpdateRepository",
+      "file_type": "code",
+      "norm_label": "updateavailabledialog()",
+      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/components/UpdateAvailableDialog.kt",
+      "source_location": "L53"
     },
     {
       "id": "app_mobile_src_main_java_com_example_opengluco_mobile_updater_appupdateinstaller_appupdateinstaller_downloadapk",
@@ -5991,40 +5859,52 @@
       "source_location": "L44"
     },
     {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_settings_wearsettingsscreen_compactactionrow",
-      "label": "CompactActionRow()",
+      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_widget_glucosewidgetupdater_glucosewidgetupdater_buildchartremoteviews",
+      "label": ".buildChartRemoteViews()",
       "_callable": true,
       "_origin": "ast",
       "community": 52,
-      "community_name": "WearSettingsScreen",
+      "community_name": "GlucoseWidgetUpdater.kt",
       "file_type": "code",
-      "norm_label": "compactactionrow()",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/settings/WearSettingsScreen.kt",
-      "source_location": "L309"
+      "norm_label": ".buildchartremoteviews()",
+      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/widget/GlucoseWidgetUpdater.kt",
+      "source_location": "L160"
     },
     {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_settings_wearsettingsscreen_compactsettingsrow",
-      "label": "CompactSettingsRow()",
+      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_widget_glucosewidgetupdater_glucosewidgetupdater_buildcompactremoteviews",
+      "label": ".buildCompactRemoteViews()",
       "_callable": true,
       "_origin": "ast",
       "community": 52,
-      "community_name": "WearSettingsScreen",
+      "community_name": "GlucoseWidgetUpdater.kt",
       "file_type": "code",
-      "norm_label": "compactsettingsrow()",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/settings/WearSettingsScreen.kt",
-      "source_location": "L269"
+      "norm_label": ".buildcompactremoteviews()",
+      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/widget/GlucoseWidgetUpdater.kt",
+      "source_location": "L89"
     },
     {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_settings_wearsettingsscreen_wearsettingsscreen",
-      "label": "WearSettingsScreen()",
+      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_widget_glucosewidgetupdater_glucosewidgetupdater_formattime24h",
+      "label": ".formatTime24h()",
       "_callable": true,
       "_origin": "ast",
       "community": 52,
-      "community_name": "WearSettingsScreen",
+      "community_name": "GlucoseWidgetUpdater.kt",
       "file_type": "code",
-      "norm_label": "wearsettingsscreen()",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/settings/WearSettingsScreen.kt",
-      "source_location": "L53"
+      "norm_label": ".formattime24h()",
+      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/widget/GlucoseWidgetUpdater.kt",
+      "source_location": "L251"
+    },
+    {
+      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_widget_glucosewidgetupdater_glucosewidgetupdater_updateallwidgets",
+      "label": ".updateAllWidgets()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 52,
+      "community_name": "GlucoseWidgetUpdater.kt",
+      "file_type": "code",
+      "norm_label": ".updateallwidgets()",
+      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/widget/GlucoseWidgetUpdater.kt",
+      "source_location": "L32"
     },
     {
       "id": "core_model_src_test_java_com_example_opengluco_core_model_cgmcurvesmoothertest_cgmcurvesmoothertest_testcatmullromspline_generatesvalidcurvesegments",
@@ -6176,7 +6056,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": ".calculateavailabledays()",
       "source_file": "core/data/src/main/java/com/example/opengluco/core/data/ClinicalReportsCalculator.kt",
@@ -6188,7 +6068,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": ".calculateaverageglucose()",
       "source_file": "core/data/src/main/java/com/example/opengluco/core/data/ClinicalReportsCalculator.kt",
@@ -6200,7 +6080,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": ".calculatedailygraph()",
       "source_file": "core/data/src/main/java/com/example/opengluco/core/data/ClinicalReportsCalculator.kt",
@@ -6212,7 +6092,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": ".calculatedailypatterns()",
       "source_file": "core/data/src/main/java/com/example/opengluco/core/data/ClinicalReportsCalculator.kt",
@@ -6224,7 +6104,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": ".calculateestimateda1c()",
       "source_file": "core/data/src/main/java/com/example/opengluco/core/data/ClinicalReportsCalculator.kt",
@@ -6236,7 +6116,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": ".calculatelowglucoseevents()",
       "source_file": "core/data/src/main/java/com/example/opengluco/core/data/ClinicalReportsCalculator.kt",
@@ -6248,7 +6128,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": ".calculatemage()",
       "source_file": "core/data/src/main/java/com/example/opengluco/core/data/ClinicalReportsCalculator.kt",
@@ -6260,7 +6140,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": ".calculatepercentile()",
       "source_file": "core/data/src/main/java/com/example/opengluco/core/data/ClinicalReportsCalculator.kt",
@@ -6272,7 +6152,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": ".calculatesensorusage()",
       "source_file": "core/data/src/main/java/com/example/opengluco/core/data/ClinicalReportsCalculator.kt",
@@ -6284,7 +6164,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": ".calculatetimeinrange()",
       "source_file": "core/data/src/main/java/com/example/opengluco/core/data/ClinicalReportsCalculator.kt",
@@ -6296,7 +6176,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": ".checksensorexpirationalert()",
       "source_file": "core/data/src/main/java/com/example/opengluco/core/data/ClinicalReportsCalculator.kt",
@@ -6308,7 +6188,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": ".extracthour()",
       "source_file": "core/data/src/main/java/com/example/opengluco/core/data/ClinicalReportsCalculator.kt",
@@ -6320,7 +6200,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": ".filterreadingsbyperiod()",
       "source_file": "core/data/src/main/java/com/example/opengluco/core/data/ClinicalReportsCalculator.kt",
@@ -6332,11 +6212,143 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": ".rounddec()",
       "source_file": "core/data/src/main/java/com/example/opengluco/core/data/ClinicalReportsCalculator.kt",
       "source_location": "L624"
+    },
+    {
+      "id": "core_data_src_test_java_com_example_opengluco_core_data_clinicalreportscalculatortest_clinicalreportscalculatortest_createreading",
+      "label": ".createReading()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "ClinicalReportsCalculator",
+      "file_type": "code",
+      "norm_label": ".createreading()",
+      "source_file": "core/data/src/test/java/com/example/opengluco/core/data/ClinicalReportsCalculatorTest.kt",
+      "source_location": "L15"
+    },
+    {
+      "id": "core_data_src_test_java_com_example_opengluco_core_data_clinicalreportscalculatortest_clinicalreportscalculatortest_testaverageglucoseoverallandbytimeblocks",
+      "label": ".testAverageGlucoseOverallAndByTimeBlocks()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "ClinicalReportsCalculator",
+      "file_type": "code",
+      "norm_label": ".testaverageglucoseoverallandbytimeblocks()",
+      "source_file": "core/data/src/test/java/com/example/opengluco/core/data/ClinicalReportsCalculatorTest.kt",
+      "source_location": "L119"
+    },
+    {
+      "id": "core_data_src_test_java_com_example_opengluco_core_data_clinicalreportscalculatortest_clinicalreportscalculatortest_testcalculateavailabledays",
+      "label": ".testCalculateAvailableDays()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "ClinicalReportsCalculator",
+      "file_type": "code",
+      "norm_label": ".testcalculateavailabledays()",
+      "source_file": "core/data/src/test/java/com/example/opengluco/core/data/ClinicalReportsCalculatorTest.kt",
+      "source_location": "L177"
+    },
+    {
+      "id": "core_data_src_test_java_com_example_opengluco_core_data_clinicalreportscalculatortest_clinicalreportscalculatortest_testdailygraphgroupedbydate",
+      "label": ".testDailyGraphGroupedByDate()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "ClinicalReportsCalculator",
+      "file_type": "code",
+      "norm_label": ".testdailygraphgroupedbydate()",
+      "source_file": "core/data/src/test/java/com/example/opengluco/core/data/ClinicalReportsCalculatorTest.kt",
+      "source_location": "L136"
+    },
+    {
+      "id": "core_data_src_test_java_com_example_opengluco_core_data_clinicalreportscalculatortest_clinicalreportscalculatortest_testdailypatternspercentilesandvariability",
+      "label": ".testDailyPatternsPercentilesAndVariability()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "ClinicalReportsCalculator",
+      "file_type": "code",
+      "norm_label": ".testdailypatternspercentilesandvariability()",
+      "source_file": "core/data/src/test/java/com/example/opengluco/core/data/ClinicalReportsCalculatorTest.kt",
+      "source_location": "L79"
+    },
+    {
+      "id": "core_data_src_test_java_com_example_opengluco_core_data_clinicalreportscalculatortest_clinicalreportscalculatortest_testestimateda1cbergenstalformulaandlegaldisclaimer",
+      "label": ".testEstimatedA1cBergenstalFormulaAndLegalDisclaimer()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "ClinicalReportsCalculator",
+      "file_type": "code",
+      "norm_label": ".testestimateda1cbergenstalformulaandlegaldisclaimer()",
+      "source_file": "core/data/src/test/java/com/example/opengluco/core/data/ClinicalReportsCalculatorTest.kt",
+      "source_location": "L66"
+    },
+    {
+      "id": "core_data_src_test_java_com_example_opengluco_core_data_clinicalreportscalculatortest_clinicalreportscalculatortest_testlowglucoseeventsgroupingbytimeblocks",
+      "label": ".testLowGlucoseEventsGroupingByTimeBlocks()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "ClinicalReportsCalculator",
+      "file_type": "code",
+      "norm_label": ".testlowglucoseeventsgroupingbytimeblocks()",
+      "source_file": "core/data/src/test/java/com/example/opengluco/core/data/ClinicalReportsCalculatorTest.kt",
+      "source_location": "L98"
+    },
+    {
+      "id": "core_data_src_test_java_com_example_opengluco_core_data_clinicalreportscalculatortest_clinicalreportscalculatortest_testmagecalculation",
+      "label": ".testMageCalculation()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "ClinicalReportsCalculator",
+      "file_type": "code",
+      "norm_label": ".testmagecalculation()",
+      "source_file": "core/data/src/test/java/com/example/opengluco/core/data/ClinicalReportsCalculatorTest.kt",
+      "source_location": "L228"
+    },
+    {
+      "id": "core_data_src_test_java_com_example_opengluco_core_data_clinicalreportscalculatortest_clinicalreportscalculatortest_testsensorusagecalculation",
+      "label": ".testSensorUsageCalculation()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "ClinicalReportsCalculator",
+      "file_type": "code",
+      "norm_label": ".testsensorusagecalculation()",
+      "source_file": "core/data/src/test/java/com/example/opengluco/core/data/ClinicalReportsCalculatorTest.kt",
+      "source_location": "L153"
+    },
+    {
+      "id": "core_data_src_test_java_com_example_opengluco_core_data_clinicalreportscalculatortest_clinicalreportscalculatortest_testtimeinrangefivetierscalculation",
+      "label": ".testTimeInRangeFiveTiersCalculation()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "ClinicalReportsCalculator",
+      "file_type": "code",
+      "norm_label": ".testtimeinrangefivetierscalculation()",
+      "source_file": "core/data/src/test/java/com/example/opengluco/core/data/ClinicalReportsCalculatorTest.kt",
+      "source_location": "L33"
+    },
+    {
+      "id": "core_data_src_test_java_com_example_opengluco_core_data_clinicalreportscalculatortest_clinicalreportscalculatortest_testtimeintightrangeandgricalculation",
+      "label": ".testTimeInTightRangeAndGriCalculation()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 6,
+      "community_name": "ClinicalReportsCalculator",
+      "file_type": "code",
+      "norm_label": ".testtimeintightrangeandgricalculation()",
+      "source_file": "core/data/src/test/java/com/example/opengluco/core/data/ClinicalReportsCalculatorTest.kt",
+      "source_location": "L206"
     },
     {
       "id": "core_model_src_main_java_com_example_opengluco_core_model_clinicalreportmodels_reporttimeblock_fromhour",
@@ -6344,7 +6356,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": ".fromhour()",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/ClinicalReportModels.kt",
@@ -6356,7 +6368,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": ".getformattedduration()",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/ClinicalReportModels.kt",
@@ -6387,40 +6399,16 @@
       "source_location": "L77"
     },
     {
-      "id": "core_data_src_main_java_com_example_opengluco_core_data_qrauthhelper_qrauthhelper_createsessionexchange",
-      "label": ".createSessionExchange()",
+      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_service_bootreceiver_bootreceiver_onreceive",
+      "label": ".onReceive()",
       "_callable": true,
       "_origin": "ast",
-      "community": 61,
-      "community_name": "WearQrLoginScreen.kt",
+      "community": 65,
+      "community_name": "BootReceiver.kt",
       "file_type": "code",
-      "norm_label": ".createsessionexchange()",
-      "source_file": "core/data/src/main/java/com/example/opengluco/core/data/QrAuthHelper.kt",
-      "source_location": "L142"
-    },
-    {
-      "id": "core_data_src_main_java_com_example_opengluco_core_data_qrauthhelper_qrauthhelper_generateqrbitmap",
-      "label": ".generateQrBitmap()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 61,
-      "community_name": "WearQrLoginScreen.kt",
-      "file_type": "code",
-      "norm_label": ".generateqrbitmap()",
-      "source_file": "core/data/src/main/java/com/example/opengluco/core/data/QrAuthHelper.kt",
-      "source_location": "L268"
-    },
-    {
-      "id": "core_model_src_test_java_com_example_opengluco_core_model_qrauthmodelstest_qrauthmodelstest_testqrsessionexchange_serializationroundtrip",
-      "label": ".testQrSessionExchange_serializationRoundtrip()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 61,
-      "community_name": "WearQrLoginScreen.kt",
-      "file_type": "code",
-      "norm_label": ".testqrsessionexchange_serializationroundtrip()",
-      "source_file": "core/model/src/test/java/com/example/opengluco/core/model/QrAuthModelsTest.kt",
-      "source_location": "L53"
+      "norm_label": ".onreceive()",
+      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/service/BootReceiver.kt",
+      "source_location": "L18"
     },
     {
       "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_dashboard_components_wearsparklinechart_wearsparklinechart",
@@ -6651,6 +6639,18 @@
       "source_location": "L203"
     },
     {
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_mainactivity_checkandrequestpermissions",
+      "label": ".checkAndRequestPermissions()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 76,
+      "community_name": "wear/MainActivity.kt",
+      "file_type": "code",
+      "norm_label": ".checkandrequestpermissions()",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
+      "source_location": "L61"
+    },
+    {
       "id": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_mainactivity_checkandstartrfcommservice",
       "label": ".checkAndStartRfcommService()",
       "_callable": true,
@@ -6660,7 +6660,7 @@
       "file_type": "code",
       "norm_label": ".checkandstartrfcommservice()",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
-      "source_location": "L75"
+      "source_location": "L97"
     },
     {
       "id": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_mainactivity_oncreate",
@@ -6672,19 +6672,19 @@
       "file_type": "code",
       "norm_label": ".oncreate()",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
-      "source_location": "L42"
+      "source_location": "L40"
     },
     {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_mainactivity_requestbluetoothpermissions",
-      "label": ".requestBluetoothPermissions()",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_mainactivity_requestalarmssyncfrommobile",
+      "label": ".requestAlarmsSyncFromMobile()",
       "_callable": true,
       "_origin": "ast",
       "community": 76,
       "community_name": "wear/MainActivity.kt",
       "file_type": "code",
-      "norm_label": ".requestbluetoothpermissions()",
+      "norm_label": ".requestalarmssyncfrommobile()",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
-      "source_location": "L62"
+      "source_location": "L83"
     },
     {
       "id": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_wearappnavigation",
@@ -6696,7 +6696,7 @@
       "file_type": "code",
       "norm_label": "wearappnavigation()",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
-      "source_location": "L86"
+      "source_location": "L108"
     },
     {
       "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_auth_wearloginscreen_wearloginscreen",
@@ -6723,40 +6723,40 @@
       "source_location": "L18"
     },
     {
-      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_mainactivity_mainactivity_oncreate",
-      "label": ".onCreate()",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_settings_wearsettingsscreen_compactactionrow",
+      "label": "CompactActionRow()",
       "_callable": true,
       "_origin": "ast",
       "community": 77,
-      "community_name": "UserSettings",
+      "community_name": "WearSettingsScreen.kt",
       "file_type": "code",
-      "norm_label": ".oncreate()",
-      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/MainActivity.kt",
-      "source_location": "L38"
+      "norm_label": "compactactionrow()",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/settings/WearSettingsScreen.kt",
+      "source_location": "L323"
     },
     {
-      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_mainactivity_mobileappnavigation",
-      "label": "MobileAppNavigation()",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_settings_wearsettingsscreen_compactsettingsrow",
+      "label": "CompactSettingsRow()",
       "_callable": true,
       "_origin": "ast",
       "community": 77,
-      "community_name": "UserSettings",
+      "community_name": "WearSettingsScreen.kt",
       "file_type": "code",
-      "norm_label": "mobileappnavigation()",
-      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/MainActivity.kt",
-      "source_location": "L96"
+      "norm_label": "compactsettingsrow()",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/settings/WearSettingsScreen.kt",
+      "source_location": "L283"
     },
     {
-      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_auth_mobileloginscreen_mobileloginscreen",
-      "label": "MobileLoginScreen()",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_settings_wearsettingsscreen_wearsettingsscreen",
+      "label": "WearSettingsScreen()",
       "_callable": true,
       "_origin": "ast",
       "community": 77,
-      "community_name": "UserSettings",
+      "community_name": "WearSettingsScreen.kt",
       "file_type": "code",
-      "norm_label": "mobileloginscreen()",
-      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/auth/MobileLoginScreen.kt",
-      "source_location": "L60"
+      "norm_label": "wearsettingsscreen()",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/settings/WearSettingsScreen.kt",
+      "source_location": "L55"
     },
     {
       "id": "core_data_src_test_java_com_example_opengluco_core_data_alarmevaluatortest_alarmevaluatortest_testcooldownexpiredallowsretrigger",
@@ -7047,18 +7047,6 @@
       "source_location": "L135"
     },
     {
-      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_components_targetrangedialog_targetrangedialog",
-      "label": "TargetRangeDialog()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 8,
-      "community_name": "MobileDashboardScreen.kt",
-      "file_type": "code",
-      "norm_label": "targetrangedialog()",
-      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/components/TargetRangeDialog.kt",
-      "source_location": "L57"
-    },
-    {
       "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_dailystatitem",
       "label": "DailyStatItem()",
       "_callable": true,
@@ -7227,40 +7215,16 @@
       "source_location": "L1560"
     },
     {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_auth_wearloginviewmodel_wearloginviewmodel_login",
-      "label": ".login()",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearauthmessagelistenerservice_wearauthmessagelistenerservice_onmessagereceived",
+      "label": ".onMessageReceived()",
       "_callable": true,
       "_origin": "ast",
       "community": 80,
-      "community_name": "WearLoginViewModel",
+      "community_name": "WearAuthMessageListenerService.kt",
       "file_type": "code",
-      "norm_label": ".login()",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/auth/WearLoginViewModel.kt",
-      "source_location": "L27"
-    },
-    {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_complication_glucosecomplicationservice_glucosecomplicationservice_getpreviewdata",
-      "label": ".getPreviewData()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 81,
-      "community_name": "GlucoseComplicationService.kt",
-      "file_type": "code",
-      "norm_label": ".getpreviewdata()",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/complication/GlucoseComplicationService.kt",
-      "source_location": "L22"
-    },
-    {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_complication_glucosecomplicationservice_glucosecomplicationservice_oncomplicationrequest",
-      "label": ".onComplicationRequest()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 81,
-      "community_name": "GlucoseComplicationService.kt",
-      "file_type": "code",
-      "norm_label": ".oncomplicationrequest()",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/complication/GlucoseComplicationService.kt",
-      "source_location": "L42"
+      "norm_label": ".onmessagereceived()",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearAuthMessageListenerService.kt",
+      "source_location": "L14"
     },
     {
       "id": "app_wear_src_main_java_com_example_opengluco_wear_notification_wearalarmnotificationhelper_wearalarmnotificationhelper_createchannels",
@@ -7268,7 +7232,7 @@
       "_callable": true,
       "_origin": "ast",
       "community": 86,
-      "community_name": "WearAlarmNotificationHelper",
+      "community_name": "AlarmSeverity",
       "file_type": "code",
       "norm_label": ".createchannels()",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/notification/WearAlarmNotificationHelper.kt",
@@ -7280,11 +7244,23 @@
       "_callable": true,
       "_origin": "ast",
       "community": 86,
-      "community_name": "WearAlarmNotificationHelper",
+      "community_name": "AlarmSeverity",
       "file_type": "code",
       "norm_label": ".dismissalarm()",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/notification/WearAlarmNotificationHelper.kt",
-      "source_location": "L167"
+      "source_location": "L175"
+    },
+    {
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_notification_wearalarmnotificationhelper_wearalarmnotificationhelper_testhapticvibration",
+      "label": ".testHapticVibration()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 86,
+      "community_name": "AlarmSeverity",
+      "file_type": "code",
+      "norm_label": ".testhapticvibration()",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/notification/WearAlarmNotificationHelper.kt",
+      "source_location": "L184"
     },
     {
       "id": "app_wear_src_main_java_com_example_opengluco_wear_notification_wearalarmnotificationhelper_wearalarmnotificationhelper_triggeralarmbyseverity",
@@ -7292,11 +7268,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 86,
-      "community_name": "WearAlarmNotificationHelper",
+      "community_name": "AlarmSeverity",
       "file_type": "code",
       "norm_label": ".triggeralarmbyseverity()",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/notification/WearAlarmNotificationHelper.kt",
-      "source_location": "L74"
+      "source_location": "L81"
     },
     {
       "id": "app_wear_src_main_java_com_example_opengluco_wear_notification_wearalarmnotificationhelper_wearalarmnotificationhelper_triggerhapticalarm",
@@ -7304,11 +7280,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 86,
-      "community_name": "WearAlarmNotificationHelper",
+      "community_name": "AlarmSeverity",
       "file_type": "code",
       "norm_label": ".triggerhapticalarm()",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/notification/WearAlarmNotificationHelper.kt",
-      "source_location": "L173"
+      "source_location": "L188"
     },
     {
       "id": "app_wear_src_main_java_com_example_opengluco_wear_notification_wearalarmnotificationhelper_wearalarmnotificationhelper_triggerurgentlowalarm",
@@ -7316,11 +7292,11 @@
       "_callable": true,
       "_origin": "ast",
       "community": 86,
-      "community_name": "WearAlarmNotificationHelper",
+      "community_name": "AlarmSeverity",
       "file_type": "code",
       "norm_label": ".triggerurgentlowalarm()",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/notification/WearAlarmNotificationHelper.kt",
-      "source_location": "L142"
+      "source_location": "L150"
     },
     {
       "id": "core_data_src_main_java_com_example_opengluco_core_data_alarmevaluator_alarmevaluator_evaluate",
@@ -7455,64 +7431,136 @@
       "source_location": "L696"
     },
     {
-      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_widget_glucosewidgetupdater_glucosewidgetupdater_buildchartremoteviews",
-      "label": ".buildChartRemoteViews()",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice_buildforegroundnotification",
+      "label": ".buildForegroundNotification()",
       "_callable": true,
       "_origin": "ast",
       "community": 9,
-      "community_name": "GlucoseWidgetUpdater.kt",
+      "community_name": "WearBluetoothRfcommService",
       "file_type": "code",
-      "norm_label": ".buildchartremoteviews()",
-      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/widget/GlucoseWidgetUpdater.kt",
-      "source_location": "L160"
+      "norm_label": ".buildforegroundnotification()",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
+      "source_location": "L92"
     },
     {
-      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_widget_glucosewidgetupdater_glucosewidgetupdater_buildcompactremoteviews",
-      "label": ".buildCompactRemoteViews()",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice_createnotificationchannel",
+      "label": ".createNotificationChannel()",
       "_callable": true,
       "_origin": "ast",
       "community": 9,
-      "community_name": "GlucoseWidgetUpdater.kt",
+      "community_name": "WearBluetoothRfcommService",
       "file_type": "code",
-      "norm_label": ".buildcompactremoteviews()",
-      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/widget/GlucoseWidgetUpdater.kt",
-      "source_location": "L89"
+      "norm_label": ".createnotificationchannel()",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
+      "source_location": "L76"
     },
     {
-      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_widget_glucosewidgetupdater_glucosewidgetupdater_formattime24h",
-      "label": ".formatTime24h()",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice_handleincomingconnection",
+      "label": ".handleIncomingConnection()",
       "_callable": true,
       "_origin": "ast",
       "community": 9,
-      "community_name": "GlucoseWidgetUpdater.kt",
+      "community_name": "WearBluetoothRfcommService",
       "file_type": "code",
-      "norm_label": ".formattime24h()",
-      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/widget/GlucoseWidgetUpdater.kt",
-      "source_location": "L251"
+      "norm_label": ".handleincomingconnection()",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
+      "source_location": "L138"
     },
     {
-      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_widget_glucosewidgetupdater_glucosewidgetupdater_updateallwidgets",
-      "label": ".updateAllWidgets()",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice_onbind",
+      "label": ".onBind()",
       "_callable": true,
       "_origin": "ast",
       "community": 9,
-      "community_name": "GlucoseWidgetUpdater.kt",
+      "community_name": "WearBluetoothRfcommService",
       "file_type": "code",
-      "norm_label": ".updateallwidgets()",
-      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/widget/GlucoseWidgetUpdater.kt",
-      "source_location": "L32"
+      "norm_label": ".onbind()",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
+      "source_location": "L230"
     },
     {
-      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_service_bootreceiver_bootreceiver_onreceive",
-      "label": ".onReceive()",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice_oncreate",
+      "label": ".onCreate()",
       "_callable": true,
       "_origin": "ast",
-      "community": 90,
-      "community_name": "BootReceiver.kt",
+      "community": 9,
+      "community_name": "WearBluetoothRfcommService",
       "file_type": "code",
-      "norm_label": ".onreceive()",
-      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/service/BootReceiver.kt",
-      "source_location": "L18"
+      "norm_label": ".oncreate()",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
+      "source_location": "L54"
+    },
+    {
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice_ondestroy",
+      "label": ".onDestroy()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "WearBluetoothRfcommService",
+      "file_type": "code",
+      "norm_label": ".ondestroy()",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
+      "source_location": "L220"
+    },
+    {
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice_onstartcommand",
+      "label": ".onStartCommand()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "WearBluetoothRfcommService",
+      "file_type": "code",
+      "norm_label": ".onstartcommand()",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
+      "source_location": "L60"
+    },
+    {
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice_processstreampayload",
+      "label": ".processStreamPayload()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "WearBluetoothRfcommService",
+      "file_type": "code",
+      "norm_label": ".processstreampayload()",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
+      "source_location": "L170"
+    },
+    {
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice_start",
+      "label": ".start()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "WearBluetoothRfcommService",
+      "file_type": "code",
+      "norm_label": ".start()",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
+      "source_location": "L244"
+    },
+    {
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice_startrfcommlistener",
+      "label": ".startRfcommListener()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "WearBluetoothRfcommService",
+      "file_type": "code",
+      "norm_label": ".startrfcommlistener()",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
+      "source_location": "L102"
+    },
+    {
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice_stop",
+      "label": ".stop()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "WearBluetoothRfcommService",
+      "file_type": "code",
+      "norm_label": ".stop()",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
+      "source_location": "L253"
     },
     {
       "id": "app_mobile_src_main_java_com_example_opengluco_mobile_service_mobilewearablemessagelistenerservice_mobilewearablemessagelistenerservice_onmessagereceived",
@@ -7525,18 +7573,6 @@
       "norm_label": ".onmessagereceived()",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/service/MobileWearableMessageListenerService.kt",
       "source_location": "L19"
-    },
-    {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearauthmessagelistenerservice_wearauthmessagelistenerservice_onmessagereceived",
-      "label": ".onMessageReceived()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 96,
-      "community_name": "WearAuthMessageListenerService.kt",
-      "file_type": "code",
-      "norm_label": ".onmessagereceived()",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearAuthMessageListenerService.kt",
-      "source_location": "L14"
     },
     {
       "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearglucosesyncworker_wearglucosesyncworker_dowork",
@@ -7561,18 +7597,6 @@
       "norm_label": ".syncalarmstowear()",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/service/MobileAlarmSyncHelper.kt",
       "source_location": "L13"
-    },
-    {
-      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_components_updateavailabledialog_updateavailabledialog",
-      "label": "UpdateAvailableDialog()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 99,
-      "community_name": "AppReleaseInfo",
-      "file_type": "code",
-      "norm_label": "updateavailabledialog()",
-      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/components/UpdateAvailableDialog.kt",
-      "source_location": "L53"
     },
     {
       "id": "app_auto_src_main_java_com_example_opengluco_auto_autottsalertmanager",
@@ -8136,90 +8160,57 @@
       "source_location": ""
     },
     {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice",
-      "label": "WearBluetoothRfcommService.kt",
+      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_mainactivity",
+      "label": "mobile/MainActivity.kt",
       "_origin": "ast",
       "community": 11,
-      "community_name": "WearBluetoothRfcommService",
+      "community_name": "UserSettings",
       "file_type": "code",
-      "norm_label": "wearbluetoothrfcommservice.kt",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
+      "norm_label": "mobile/mainactivity.kt",
+      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/MainActivity.kt",
       "source_location": "L1"
     },
     {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_kt_context",
-      "label": "Context",
+      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_mainactivity_kt_bundle",
+      "label": "Bundle",
       "_origin": "ast",
       "community": 11,
-      "community_name": "WearBluetoothRfcommService",
+      "community_name": "UserSettings",
       "file_type": "code",
-      "norm_label": "context",
+      "norm_label": "bundle",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_kt_ibinder",
-      "label": "IBinder",
+      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_mainactivity_kt_componentactivity",
+      "label": "ComponentActivity",
       "_origin": "ast",
       "community": 11,
-      "community_name": "WearBluetoothRfcommService",
+      "community_name": "UserSettings",
       "file_type": "code",
-      "norm_label": "ibinder",
+      "norm_label": "componentactivity",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_kt_intent",
-      "label": "Intent",
+      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_auth_mobileloginscreen",
+      "label": "MobileLoginScreen.kt",
       "_origin": "ast",
       "community": 11,
-      "community_name": "WearBluetoothRfcommService",
+      "community_name": "UserSettings",
       "file_type": "code",
-      "norm_label": "intent",
-      "source_file": "",
-      "source_location": ""
+      "norm_label": "mobileloginscreen.kt",
+      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/auth/MobileLoginScreen.kt",
+      "source_location": "L1"
     },
     {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_kt_service",
-      "label": "Service",
+      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_auth_mobileloginscreen_kt_modifier",
+      "label": "Modifier",
       "_origin": "ast",
       "community": 11,
-      "community_name": "WearBluetoothRfcommService",
+      "community_name": "UserSettings",
       "file_type": "code",
-      "norm_label": "service",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "bluetoothserversocket",
-      "label": "BluetoothServerSocket",
-      "_origin": "ast",
-      "community": 11,
-      "community_name": "WearBluetoothRfcommService",
-      "file_type": "code",
-      "norm_label": "bluetoothserversocket",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "bluetoothsocket",
-      "label": "BluetoothSocket",
-      "_origin": "ast",
-      "community": 11,
-      "community_name": "WearBluetoothRfcommService",
-      "file_type": "code",
-      "norm_label": "bluetoothsocket",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "notification",
-      "label": "Notification",
-      "_origin": "ast",
-      "community": 11,
-      "community_name": "WearBluetoothRfcommService",
-      "file_type": "code",
-      "norm_label": "notification",
+      "norm_label": "modifier",
       "source_file": "",
       "source_location": ""
     },
@@ -9702,6 +9693,28 @@
       "source_location": "L1"
     },
     {
+      "id": "core_data_src_main_java_com_example_opengluco_core_data_qrauthhelper",
+      "label": "QrAuthHelper.kt",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "QrAuthHelper",
+      "file_type": "code",
+      "norm_label": "qrauthhelper.kt",
+      "source_file": "core/data/src/main/java/com/example/opengluco/core/data/QrAuthHelper.kt",
+      "source_location": "L1"
+    },
+    {
+      "id": "core_data_src_main_java_com_example_opengluco_core_data_qrauthhelper_kt_bitmap",
+      "label": "Bitmap",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "QrAuthHelper",
+      "file_type": "code",
+      "norm_label": "bitmap",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
       "id": "core_data_src_main_java_com_example_opengluco_core_data_qrauthhelper_kt_bytearray",
       "label": "ByteArray",
       "_origin": "ast",
@@ -9709,6 +9722,17 @@
       "community_name": "QrAuthHelper",
       "file_type": "code",
       "norm_label": "bytearray",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "serversocket",
+      "label": "ServerSocket",
+      "_origin": "ast",
+      "community": 21,
+      "community_name": "QrAuthHelper",
+      "file_type": "code",
+      "norm_label": "serversocket",
       "source_file": "",
       "source_location": ""
     },
@@ -9922,6 +9946,39 @@
       "source_location": ""
     },
     {
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_auth_wearloginviewmodel",
+      "label": "WearLoginViewModel.kt",
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "WearLoginViewModel",
+      "file_type": "code",
+      "norm_label": "wearloginviewmodel.kt",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/auth/WearLoginViewModel.kt",
+      "source_location": "L1"
+    },
+    {
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_auth_wearloginviewmodel_kt_stateflow",
+      "label": "StateFlow",
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "WearLoginViewModel",
+      "file_type": "code",
+      "norm_label": "stateflow",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_auth_wearloginviewmodel_kt_viewmodel",
+      "label": "ViewModel",
+      "_origin": "ast",
+      "community": 25,
+      "community_name": "WearLoginViewModel",
+      "file_type": "code",
+      "norm_label": "viewmodel",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
       "id": "app_wear_src_test_java_com_example_opengluco_wear_ui_settings_wearlegaltextstest",
       "label": "WearLegalTextsTest.kt",
       "_origin": "ast",
@@ -9933,11 +9990,77 @@
       "source_location": "L1"
     },
     {
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_complication_glucosecomplicationservice",
+      "label": "GlucoseComplicationService.kt",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "GlucoseComplicationService.kt",
+      "file_type": "code",
+      "norm_label": "glucosecomplicationservice.kt",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/complication/GlucoseComplicationService.kt",
+      "source_location": "L1"
+    },
+    {
+      "id": "complicationdata",
+      "label": "ComplicationData",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "GlucoseComplicationService.kt",
+      "file_type": "code",
+      "norm_label": "complicationdata",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "complicationdatasourceservice",
+      "label": "ComplicationDataSourceService",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "GlucoseComplicationService.kt",
+      "file_type": "code",
+      "norm_label": "complicationdatasourceservice",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "complicationrequest",
+      "label": "ComplicationRequest",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "GlucoseComplicationService.kt",
+      "file_type": "code",
+      "norm_label": "complicationrequest",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "complicationrequestlistener",
+      "label": "ComplicationRequestListener",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "GlucoseComplicationService.kt",
+      "file_type": "code",
+      "norm_label": "complicationrequestlistener",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "complicationtype",
+      "label": "ComplicationType",
+      "_origin": "ast",
+      "community": 27,
+      "community_name": "GlucoseComplicationService.kt",
+      "file_type": "code",
+      "norm_label": "complicationtype",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
       "id": "core_data_src_main_java_com_example_opengluco_core_data_alarmevaluator",
       "label": "AlarmEvaluator.kt",
       "_origin": "ast",
       "community": 28,
-      "community_name": "AlarmSeverity",
+      "community_name": "AlarmType",
       "file_type": "code",
       "norm_label": "alarmevaluator.kt",
       "source_file": "core/data/src/main/java/com/example/opengluco/core/data/AlarmEvaluator.kt",
@@ -9948,51 +10071,18 @@
       "label": "GlucoseAlarmModels.kt",
       "_origin": "ast",
       "community": 28,
-      "community_name": "AlarmSeverity",
+      "community_name": "AlarmType",
       "file_type": "code",
       "norm_label": "glucosealarmmodels.kt",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/GlucoseAlarmModels.kt",
       "source_location": "L1"
     },
     {
-      "id": "core_model_src_main_java_com_example_opengluco_core_model_glucosealarmmodels_alarmseverity_alert",
-      "label": "ALERT",
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "AlarmSeverity",
-      "file_type": "code",
-      "norm_label": "alert",
-      "source_file": "core/model/src/main/java/com/example/opengluco/core/model/GlucoseAlarmModels.kt",
-      "source_location": "L25"
-    },
-    {
-      "id": "core_model_src_main_java_com_example_opengluco_core_model_glucosealarmmodels_alarmseverity_informative",
-      "label": "INFORMATIVE",
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "AlarmSeverity",
-      "file_type": "code",
-      "norm_label": "informative",
-      "source_file": "core/model/src/main/java/com/example/opengluco/core/model/GlucoseAlarmModels.kt",
-      "source_location": "L26"
-    },
-    {
-      "id": "core_model_src_main_java_com_example_opengluco_core_model_glucosealarmmodels_alarmseverity_urgent",
-      "label": "URGENT",
-      "_origin": "ast",
-      "community": 28,
-      "community_name": "AlarmSeverity",
-      "file_type": "code",
-      "norm_label": "urgent",
-      "source_file": "core/model/src/main/java/com/example/opengluco/core/model/GlucoseAlarmModels.kt",
-      "source_location": "L24"
-    },
-    {
       "id": "core_model_src_main_java_com_example_opengluco_core_model_glucosealarmmodels_alarmtype_high",
       "label": "HIGH",
       "_origin": "ast",
       "community": 28,
-      "community_name": "AlarmSeverity",
+      "community_name": "AlarmType",
       "file_type": "code",
       "norm_label": "high",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/GlucoseAlarmModels.kt",
@@ -10003,7 +10093,7 @@
       "label": "LOW",
       "_origin": "ast",
       "community": 28,
-      "community_name": "AlarmSeverity",
+      "community_name": "AlarmType",
       "file_type": "code",
       "norm_label": "low",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/GlucoseAlarmModels.kt",
@@ -10497,6 +10587,17 @@
       "source_location": "L1"
     },
     {
+      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_components_updateavailabledialog",
+      "label": "UpdateAvailableDialog.kt",
+      "_origin": "ast",
+      "community": 44,
+      "community_name": "AppUpdateRepository",
+      "file_type": "code",
+      "norm_label": "updateavailabledialog.kt",
+      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/components/UpdateAvailableDialog.kt",
+      "source_location": "L1"
+    },
+    {
       "id": "app_mobile_src_main_java_com_example_opengluco_mobile_updater_appupdateinstaller",
       "label": "AppUpdateInstaller.kt",
       "_origin": "ast",
@@ -10571,6 +10672,17 @@
       "file_type": "code",
       "norm_label": "appupdaterepositorytest.kt",
       "source_file": "core/data/src/test/java/com/example/opengluco/core/data/AppUpdateRepositoryTest.kt",
+      "source_location": "L1"
+    },
+    {
+      "id": "core_model_src_main_java_com_example_opengluco_core_model_appupdatemodels",
+      "label": "AppUpdateModels.kt",
+      "_origin": "ast",
+      "community": 44,
+      "community_name": "AppUpdateRepository",
+      "file_type": "code",
+      "norm_label": "appupdatemodels.kt",
+      "source_file": "core/model/src/main/java/com/example/opengluco/core/model/AppUpdateModels.kt",
       "source_location": "L1"
     },
     {
@@ -11518,35 +11630,35 @@
       "source_location": "L45"
     },
     {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_settings_wearsettingsscreen",
-      "label": "WearSettingsScreen.kt",
+      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_widget_glucosewidgetupdater",
+      "label": "GlucoseWidgetUpdater.kt",
       "_origin": "ast",
       "community": 52,
-      "community_name": "WearSettingsScreen",
+      "community_name": "GlucoseWidgetUpdater.kt",
       "file_type": "code",
-      "norm_label": "wearsettingsscreen.kt",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/settings/WearSettingsScreen.kt",
+      "norm_label": "glucosewidgetupdater.kt",
+      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/widget/GlucoseWidgetUpdater.kt",
       "source_location": "L1"
     },
     {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_settings_wearsettingsscreen_kt_color",
-      "label": "Color",
+      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_widget_glucosewidgetupdater_kt_context",
+      "label": "Context",
       "_origin": "ast",
       "community": 52,
-      "community_name": "WearSettingsScreen",
+      "community_name": "GlucoseWidgetUpdater.kt",
       "file_type": "code",
-      "norm_label": "color",
+      "norm_label": "context",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_settings_wearsettingsscreen_kt_modifier",
-      "label": "Modifier",
+      "id": "remoteviews",
+      "label": "RemoteViews",
       "_origin": "ast",
       "community": 52,
-      "community_name": "WearSettingsScreen",
+      "community_name": "GlucoseWidgetUpdater.kt",
       "file_type": "code",
-      "norm_label": "modifier",
+      "norm_label": "remoteviews",
       "source_file": "",
       "source_location": ""
     },
@@ -12187,7 +12299,7 @@
       "label": "ClinicalReportsCalculator.kt",
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "clinicalreportscalculator.kt",
       "source_file": "core/data/src/main/java/com/example/opengluco/core/data/ClinicalReportsCalculator.kt",
@@ -12198,7 +12310,7 @@
       "label": "com",
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "com",
       "source_file": "",
@@ -12209,7 +12321,7 @@
       "label": "ClinicalReportsCalculatorTest.kt",
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "clinicalreportscalculatortest.kt",
       "source_file": "core/data/src/test/java/com/example/opengluco/core/data/ClinicalReportsCalculatorTest.kt",
@@ -12220,7 +12332,7 @@
       "label": "ClinicalReportModels.kt",
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "clinicalreportmodels.kt",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/ClinicalReportModels.kt",
@@ -12231,7 +12343,7 @@
       "label": "AFTERNOON",
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "afternoon",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/ClinicalReportModels.kt",
@@ -12242,7 +12354,7 @@
       "label": "EVENING",
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "evening",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/ClinicalReportModels.kt",
@@ -12253,7 +12365,7 @@
       "label": "MORNING",
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "morning",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/ClinicalReportModels.kt",
@@ -12264,7 +12376,7 @@
       "label": "NIGHT",
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "night",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/ClinicalReportModels.kt",
@@ -12275,7 +12387,7 @@
       "label": "HIGH",
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "high",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/ClinicalReportModels.kt",
@@ -12286,7 +12398,7 @@
       "label": "IN_RANGE",
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "in_range",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/ClinicalReportModels.kt",
@@ -12297,7 +12409,7 @@
       "label": "LOW",
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "low",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/ClinicalReportModels.kt",
@@ -12308,7 +12420,7 @@
       "label": "VERY_HIGH",
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "very_high",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/ClinicalReportModels.kt",
@@ -12319,7 +12431,7 @@
       "label": "VERY_LOW",
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "very_low",
       "source_file": "core/model/src/main/java/com/example/opengluco/core/model/ClinicalReportModels.kt",
@@ -12330,7 +12442,7 @@
       "label": "SimpleDateFormat",
       "_origin": "ast",
       "community": 6,
-      "community_name": "ClinicalReportsCalculator.kt",
+      "community_name": "ClinicalReportsCalculator",
       "file_type": "code",
       "norm_label": "simpledateformat",
       "source_file": "",
@@ -12450,39 +12562,6 @@
       "community_name": "WearQrLoginScreen.kt",
       "file_type": "code",
       "norm_label": "modifier",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "core_data_src_main_java_com_example_opengluco_core_data_qrauthhelper",
-      "label": "QrAuthHelper.kt",
-      "_origin": "ast",
-      "community": 61,
-      "community_name": "WearQrLoginScreen.kt",
-      "file_type": "code",
-      "norm_label": "qrauthhelper.kt",
-      "source_file": "core/data/src/main/java/com/example/opengluco/core/data/QrAuthHelper.kt",
-      "source_location": "L1"
-    },
-    {
-      "id": "core_data_src_main_java_com_example_opengluco_core_data_qrauthhelper_kt_bitmap",
-      "label": "Bitmap",
-      "_origin": "ast",
-      "community": 61,
-      "community_name": "WearQrLoginScreen.kt",
-      "file_type": "code",
-      "norm_label": "bitmap",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "serversocket",
-      "label": "ServerSocket",
-      "_origin": "ast",
-      "community": 61,
-      "community_name": "WearQrLoginScreen.kt",
-      "file_type": "code",
-      "norm_label": "serversocket",
       "source_file": "",
       "source_location": ""
     },
@@ -12743,6 +12822,50 @@
       "norm_label": "responsabilidades de aplicacion",
       "source_file": "CODE_OF_CONDUCT.md",
       "source_location": "L28"
+    },
+    {
+      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_service_bootreceiver",
+      "label": "BootReceiver.kt",
+      "_origin": "ast",
+      "community": 65,
+      "community_name": "BootReceiver.kt",
+      "file_type": "code",
+      "norm_label": "bootreceiver.kt",
+      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/service/BootReceiver.kt",
+      "source_location": "L1"
+    },
+    {
+      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_service_bootreceiver_kt_broadcastreceiver",
+      "label": "BroadcastReceiver",
+      "_origin": "ast",
+      "community": 65,
+      "community_name": "BootReceiver.kt",
+      "file_type": "code",
+      "norm_label": "broadcastreceiver",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_service_bootreceiver_kt_context",
+      "label": "Context",
+      "_origin": "ast",
+      "community": 65,
+      "community_name": "BootReceiver.kt",
+      "file_type": "code",
+      "norm_label": "context",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_service_bootreceiver_kt_intent",
+      "label": "Intent",
+      "_origin": "ast",
+      "community": 65,
+      "community_name": "BootReceiver.kt",
+      "file_type": "code",
+      "norm_label": "intent",
+      "source_file": "",
+      "source_location": ""
     },
     {
       "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_dashboard_components_wearsparklinechart",
@@ -13294,55 +13417,33 @@
       "source_location": "L1"
     },
     {
-      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_mainactivity",
-      "label": "mobile/MainActivity.kt",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_settings_wearsettingsscreen",
+      "label": "WearSettingsScreen.kt",
       "_origin": "ast",
       "community": 77,
-      "community_name": "UserSettings",
+      "community_name": "WearSettingsScreen.kt",
       "file_type": "code",
-      "norm_label": "mobile/mainactivity.kt",
-      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/MainActivity.kt",
+      "norm_label": "wearsettingsscreen.kt",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/settings/WearSettingsScreen.kt",
       "source_location": "L1"
     },
     {
-      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_mainactivity_kt_bundle",
-      "label": "Bundle",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_settings_wearsettingsscreen_kt_color",
+      "label": "Color",
       "_origin": "ast",
       "community": 77,
-      "community_name": "UserSettings",
+      "community_name": "WearSettingsScreen.kt",
       "file_type": "code",
-      "norm_label": "bundle",
+      "norm_label": "color",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_mainactivity_kt_componentactivity",
-      "label": "ComponentActivity",
-      "_origin": "ast",
-      "community": 77,
-      "community_name": "UserSettings",
-      "file_type": "code",
-      "norm_label": "componentactivity",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_auth_mobileloginscreen",
-      "label": "MobileLoginScreen.kt",
-      "_origin": "ast",
-      "community": 77,
-      "community_name": "UserSettings",
-      "file_type": "code",
-      "norm_label": "mobileloginscreen.kt",
-      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/auth/MobileLoginScreen.kt",
-      "source_location": "L1"
-    },
-    {
-      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_auth_mobileloginscreen_kt_modifier",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_settings_wearsettingsscreen_kt_modifier",
       "label": "Modifier",
       "_origin": "ast",
       "community": 77,
-      "community_name": "UserSettings",
+      "community_name": "WearSettingsScreen.kt",
       "file_type": "code",
       "norm_label": "modifier",
       "source_file": "",
@@ -13437,101 +13538,35 @@
       "source_location": ""
     },
     {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_auth_wearloginviewmodel",
-      "label": "WearLoginViewModel.kt",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearauthmessagelistenerservice",
+      "label": "WearAuthMessageListenerService.kt",
       "_origin": "ast",
       "community": 80,
-      "community_name": "WearLoginViewModel",
+      "community_name": "WearAuthMessageListenerService.kt",
       "file_type": "code",
-      "norm_label": "wearloginviewmodel.kt",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/auth/WearLoginViewModel.kt",
+      "norm_label": "wearauthmessagelistenerservice.kt",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearAuthMessageListenerService.kt",
       "source_location": "L1"
     },
     {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_auth_wearloginviewmodel_kt_stateflow",
-      "label": "StateFlow",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearauthmessagelistenerservice_kt_messageevent",
+      "label": "MessageEvent",
       "_origin": "ast",
       "community": 80,
-      "community_name": "WearLoginViewModel",
+      "community_name": "WearAuthMessageListenerService.kt",
       "file_type": "code",
-      "norm_label": "stateflow",
+      "norm_label": "messageevent",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_ui_auth_wearloginviewmodel_kt_viewmodel",
-      "label": "ViewModel",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearauthmessagelistenerservice_kt_wearablelistenerservice",
+      "label": "WearableListenerService",
       "_origin": "ast",
       "community": 80,
-      "community_name": "WearLoginViewModel",
+      "community_name": "WearAuthMessageListenerService.kt",
       "file_type": "code",
-      "norm_label": "viewmodel",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_complication_glucosecomplicationservice",
-      "label": "GlucoseComplicationService.kt",
-      "_origin": "ast",
-      "community": 81,
-      "community_name": "GlucoseComplicationService.kt",
-      "file_type": "code",
-      "norm_label": "glucosecomplicationservice.kt",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/complication/GlucoseComplicationService.kt",
-      "source_location": "L1"
-    },
-    {
-      "id": "complicationdata",
-      "label": "ComplicationData",
-      "_origin": "ast",
-      "community": 81,
-      "community_name": "GlucoseComplicationService.kt",
-      "file_type": "code",
-      "norm_label": "complicationdata",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "complicationdatasourceservice",
-      "label": "ComplicationDataSourceService",
-      "_origin": "ast",
-      "community": 81,
-      "community_name": "GlucoseComplicationService.kt",
-      "file_type": "code",
-      "norm_label": "complicationdatasourceservice",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "complicationrequest",
-      "label": "ComplicationRequest",
-      "_origin": "ast",
-      "community": 81,
-      "community_name": "GlucoseComplicationService.kt",
-      "file_type": "code",
-      "norm_label": "complicationrequest",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "complicationrequestlistener",
-      "label": "ComplicationRequestListener",
-      "_origin": "ast",
-      "community": 81,
-      "community_name": "GlucoseComplicationService.kt",
-      "file_type": "code",
-      "norm_label": "complicationrequestlistener",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "complicationtype",
-      "label": "ComplicationType",
-      "_origin": "ast",
-      "community": 81,
-      "community_name": "GlucoseComplicationService.kt",
-      "file_type": "code",
-      "norm_label": "complicationtype",
+      "norm_label": "wearablelistenerservice",
       "source_file": "",
       "source_location": ""
     },
@@ -13573,7 +13608,7 @@
       "label": "WearAlarmNotificationHelper.kt",
       "_origin": "ast",
       "community": 86,
-      "community_name": "WearAlarmNotificationHelper",
+      "community_name": "AlarmSeverity",
       "file_type": "code",
       "norm_label": "wearalarmnotificationhelper.kt",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/notification/WearAlarmNotificationHelper.kt",
@@ -13584,11 +13619,44 @@
       "label": "Context",
       "_origin": "ast",
       "community": 86,
-      "community_name": "WearAlarmNotificationHelper",
+      "community_name": "AlarmSeverity",
       "file_type": "code",
       "norm_label": "context",
       "source_file": "",
       "source_location": ""
+    },
+    {
+      "id": "core_model_src_main_java_com_example_opengluco_core_model_glucosealarmmodels_alarmseverity_alert",
+      "label": "ALERT",
+      "_origin": "ast",
+      "community": 86,
+      "community_name": "AlarmSeverity",
+      "file_type": "code",
+      "norm_label": "alert",
+      "source_file": "core/model/src/main/java/com/example/opengluco/core/model/GlucoseAlarmModels.kt",
+      "source_location": "L25"
+    },
+    {
+      "id": "core_model_src_main_java_com_example_opengluco_core_model_glucosealarmmodels_alarmseverity_informative",
+      "label": "INFORMATIVE",
+      "_origin": "ast",
+      "community": 86,
+      "community_name": "AlarmSeverity",
+      "file_type": "code",
+      "norm_label": "informative",
+      "source_file": "core/model/src/main/java/com/example/opengluco/core/model/GlucoseAlarmModels.kt",
+      "source_location": "L26"
+    },
+    {
+      "id": "core_model_src_main_java_com_example_opengluco_core_model_glucosealarmmodels_alarmseverity_urgent",
+      "label": "URGENT",
+      "_origin": "ast",
+      "community": 86,
+      "community_name": "AlarmSeverity",
+      "file_type": "code",
+      "norm_label": "urgent",
+      "source_file": "core/model/src/main/java/com/example/opengluco/core/model/GlucoseAlarmModels.kt",
+      "source_location": "L24"
     },
     {
       "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_reports_reportshubscreen",
@@ -13624,79 +13692,90 @@
       "source_location": ""
     },
     {
-      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_widget_glucosewidgetupdater",
-      "label": "GlucoseWidgetUpdater.kt",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice",
+      "label": "WearBluetoothRfcommService.kt",
       "_origin": "ast",
       "community": 9,
-      "community_name": "GlucoseWidgetUpdater.kt",
+      "community_name": "WearBluetoothRfcommService",
       "file_type": "code",
-      "norm_label": "glucosewidgetupdater.kt",
-      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/widget/GlucoseWidgetUpdater.kt",
+      "norm_label": "wearbluetoothrfcommservice.kt",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
       "source_location": "L1"
     },
     {
-      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_widget_glucosewidgetupdater_kt_context",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_kt_context",
       "label": "Context",
       "_origin": "ast",
       "community": 9,
-      "community_name": "GlucoseWidgetUpdater.kt",
+      "community_name": "WearBluetoothRfcommService",
       "file_type": "code",
       "norm_label": "context",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "remoteviews",
-      "label": "RemoteViews",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_kt_ibinder",
+      "label": "IBinder",
       "_origin": "ast",
       "community": 9,
-      "community_name": "GlucoseWidgetUpdater.kt",
+      "community_name": "WearBluetoothRfcommService",
       "file_type": "code",
-      "norm_label": "remoteviews",
+      "norm_label": "ibinder",
       "source_file": "",
       "source_location": ""
     },
     {
-      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_service_bootreceiver",
-      "label": "BootReceiver.kt",
-      "_origin": "ast",
-      "community": 90,
-      "community_name": "BootReceiver.kt",
-      "file_type": "code",
-      "norm_label": "bootreceiver.kt",
-      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/service/BootReceiver.kt",
-      "source_location": "L1"
-    },
-    {
-      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_service_bootreceiver_kt_broadcastreceiver",
-      "label": "BroadcastReceiver",
-      "_origin": "ast",
-      "community": 90,
-      "community_name": "BootReceiver.kt",
-      "file_type": "code",
-      "norm_label": "broadcastreceiver",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_service_bootreceiver_kt_context",
-      "label": "Context",
-      "_origin": "ast",
-      "community": 90,
-      "community_name": "BootReceiver.kt",
-      "file_type": "code",
-      "norm_label": "context",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_service_bootreceiver_kt_intent",
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_kt_intent",
       "label": "Intent",
       "_origin": "ast",
-      "community": 90,
-      "community_name": "BootReceiver.kt",
+      "community": 9,
+      "community_name": "WearBluetoothRfcommService",
       "file_type": "code",
       "norm_label": "intent",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_kt_service",
+      "label": "Service",
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "WearBluetoothRfcommService",
+      "file_type": "code",
+      "norm_label": "service",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "bluetoothserversocket",
+      "label": "BluetoothServerSocket",
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "WearBluetoothRfcommService",
+      "file_type": "code",
+      "norm_label": "bluetoothserversocket",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "bluetoothsocket",
+      "label": "BluetoothSocket",
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "WearBluetoothRfcommService",
+      "file_type": "code",
+      "norm_label": "bluetoothsocket",
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "id": "notification",
+      "label": "Notification",
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "WearBluetoothRfcommService",
+      "file_type": "code",
+      "norm_label": "notification",
       "source_file": "",
       "source_location": ""
     },
@@ -13778,39 +13857,6 @@
       "source_location": "L170"
     },
     {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearauthmessagelistenerservice",
-      "label": "WearAuthMessageListenerService.kt",
-      "_origin": "ast",
-      "community": 96,
-      "community_name": "WearAuthMessageListenerService.kt",
-      "file_type": "code",
-      "norm_label": "wearauthmessagelistenerservice.kt",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearAuthMessageListenerService.kt",
-      "source_location": "L1"
-    },
-    {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearauthmessagelistenerservice_kt_messageevent",
-      "label": "MessageEvent",
-      "_origin": "ast",
-      "community": 96,
-      "community_name": "WearAuthMessageListenerService.kt",
-      "file_type": "code",
-      "norm_label": "messageevent",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearauthmessagelistenerservice_kt_wearablelistenerservice",
-      "label": "WearableListenerService",
-      "_origin": "ast",
-      "community": 96,
-      "community_name": "WearAuthMessageListenerService.kt",
-      "file_type": "code",
-      "norm_label": "wearablelistenerservice",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
       "id": "app_wear_src_main_java_com_example_opengluco_wear_service_wearglucosesyncworker",
       "label": "WearGlucoseSyncWorker.kt",
       "_origin": "ast",
@@ -13864,28 +13910,6 @@
       "norm_label": "context",
       "source_file": "",
       "source_location": ""
-    },
-    {
-      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_components_updateavailabledialog",
-      "label": "UpdateAvailableDialog.kt",
-      "_origin": "ast",
-      "community": 99,
-      "community_name": "AppReleaseInfo",
-      "file_type": "code",
-      "norm_label": "updateavailabledialog.kt",
-      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/components/UpdateAvailableDialog.kt",
-      "source_location": "L1"
-    },
-    {
-      "id": "core_model_src_main_java_com_example_opengluco_core_model_appupdatemodels",
-      "label": "AppUpdateModels.kt",
-      "_origin": "ast",
-      "community": 99,
-      "community_name": "AppReleaseInfo",
-      "file_type": "code",
-      "norm_label": "appupdatemodels.kt",
-      "source_file": "core/model/src/main/java/com/example/opengluco/core/model/AppUpdateModels.kt",
-      "source_location": "L1"
     }
   ],
   "links": [
@@ -15534,6 +15558,18 @@
       "weight": 1.0
     },
     {
+      "source": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_mainactivity_checkandrequestpermissions",
+      "target": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_mainactivity_checkandstartrfcommservice",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
+      "source_location": "L79",
+      "weight": 1.0
+    },
+    {
       "source": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_mainactivity_checkandstartrfcommservice",
       "target": "core_data_src_main_java_com_example_opengluco_core_data_userpreferencesrepository_userpreferencesrepository",
       "relation": "calls",
@@ -15542,7 +15578,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
-      "source_location": "L77",
+      "source_location": "L99",
       "weight": 1.0
     },
     {
@@ -15554,7 +15590,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
-      "source_location": "L47",
+      "source_location": "L45",
       "weight": 1.0
     },
     {
@@ -15566,19 +15602,31 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
-      "source_location": "L48",
+      "source_location": "L46",
       "weight": 1.0
     },
     {
       "source": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_mainactivity_oncreate",
-      "target": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_mainactivity_requestbluetoothpermissions",
+      "target": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_mainactivity_checkandrequestpermissions",
       "relation": "calls",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
-      "source_location": "L50",
+      "source_location": "L48",
+      "weight": 1.0
+    },
+    {
+      "source": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_mainactivity_oncreate",
+      "target": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_mainactivity_requestalarmssyncfrommobile",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
+      "source_location": "L49",
       "weight": 1.0
     },
     {
@@ -15590,7 +15638,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
-      "source_location": "L53",
+      "source_location": "L52",
       "weight": 1.0
     },
     {
@@ -15602,79 +15650,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
-      "source_location": "L54",
-      "weight": 1.0
-    },
-    {
-      "source": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_mainactivity_requestbluetoothpermissions",
-      "target": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_mainactivity_checkandstartrfcommservice",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
-      "source_location": "L72",
-      "weight": 1.0
-    },
-    {
-      "source": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_wearappnavigation",
-      "target": "app_wear_src_main_java_com_example_opengluco_wear_ui_dashboard_weardashboardscreen_weardashboardscreen",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
-      "source_location": "L101",
-      "weight": 1.0
-    },
-    {
-      "source": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_wearappnavigation",
-      "target": "app_wear_src_main_java_com_example_opengluco_wear_ui_auth_wearqrloginscreen_wearqrloginscreen",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
-      "source_location": "L109",
-      "weight": 1.0
-    },
-    {
-      "source": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_wearappnavigation",
-      "target": "app_wear_src_main_java_com_example_opengluco_wear_ui_auth_wearloginviewmodel_wearloginviewmodel",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
-      "source_location": "L124",
-      "weight": 1.0
-    },
-    {
-      "source": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_wearappnavigation",
-      "target": "app_wear_src_main_java_com_example_opengluco_wear_ui_auth_wearloginscreen_wearloginscreen",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
-      "source_location": "L126",
-      "weight": 1.0
-    },
-    {
-      "source": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_wearappnavigation",
-      "target": "app_wear_src_main_java_com_example_opengluco_wear_ui_settings_wearsettingsscreen_wearsettingsscreen",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
-      "source_location": "L137",
+      "source_location": "L53",
       "weight": 1.0
     },
     {
@@ -15686,7 +15662,79 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
-      "source_location": "L99",
+      "source_location": "L121",
+      "weight": 1.0
+    },
+    {
+      "source": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_wearappnavigation",
+      "target": "app_wear_src_main_java_com_example_opengluco_wear_ui_dashboard_weardashboardscreen_weardashboardscreen",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
+      "source_location": "L123",
+      "weight": 1.0
+    },
+    {
+      "source": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_wearappnavigation",
+      "target": "app_wear_src_main_java_com_example_opengluco_wear_ui_auth_wearqrloginscreen_wearqrloginscreen",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
+      "source_location": "L131",
+      "weight": 1.0
+    },
+    {
+      "source": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_wearappnavigation",
+      "target": "app_wear_src_main_java_com_example_opengluco_wear_ui_auth_wearloginviewmodel_wearloginviewmodel",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
+      "source_location": "L146",
+      "weight": 1.0
+    },
+    {
+      "source": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_wearappnavigation",
+      "target": "app_wear_src_main_java_com_example_opengluco_wear_ui_auth_wearloginscreen_wearloginscreen",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
+      "source_location": "L148",
+      "weight": 1.0
+    },
+    {
+      "source": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_wearappnavigation",
+      "target": "app_wear_src_main_java_com_example_opengluco_wear_ui_settings_wearsettingsscreen_wearsettingsscreen",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
+      "source_location": "L159",
+      "weight": 1.0
+    },
+    {
+      "source": "app_wear_src_main_java_com_example_opengluco_wear_notification_wearalarmnotificationhelper_wearalarmnotificationhelper_testhapticvibration",
+      "target": "app_wear_src_main_java_com_example_opengluco_wear_notification_wearalarmnotificationhelper_wearalarmnotificationhelper_triggerhapticalarm",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/notification/WearAlarmNotificationHelper.kt",
+      "source_location": "L185",
       "weight": 1.0
     },
     {
@@ -15698,7 +15746,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/notification/WearAlarmNotificationHelper.kt",
-      "source_location": "L97",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
@@ -15710,7 +15758,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/notification/WearAlarmNotificationHelper.kt",
-      "source_location": "L143",
+      "source_location": "L151",
       "weight": 1.0
     },
     {
@@ -15746,7 +15794,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L158",
+      "source_location": "L162",
       "weight": 1.0
     },
     {
@@ -15758,7 +15806,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L52",
+      "source_location": "L56",
       "weight": 1.0
     },
     {
@@ -15770,7 +15818,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L53",
+      "source_location": "L57",
       "weight": 1.0
     },
     {
@@ -15782,7 +15830,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L62",
+      "source_location": "L66",
       "weight": 1.0
     },
     {
@@ -15794,7 +15842,19 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L66",
+      "source_location": "L70",
+      "weight": 1.0
+    },
+    {
+      "source": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice_processstreampayload",
+      "target": "core_data_src_main_java_com_example_opengluco_core_data_alarmrepository_alarmrepository",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
+      "source_location": "L193",
       "weight": 1.0
     },
     {
@@ -15806,7 +15866,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L218",
+      "source_location": "L245",
       "weight": 1.0
     },
     {
@@ -15818,7 +15878,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L120",
+      "source_location": "L124",
       "weight": 1.0
     },
     {
@@ -15830,7 +15890,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L227",
+      "source_location": "L254",
       "weight": 1.0
     },
     {
@@ -16142,7 +16202,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/settings/WearSettingsScreen.kt",
-      "source_location": "L129",
+      "source_location": "L131",
       "weight": 1.0
     },
     {
@@ -16154,7 +16214,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/settings/WearSettingsScreen.kt",
-      "source_location": "L187",
+      "source_location": "L201",
       "weight": 1.0
     },
     {
@@ -16166,7 +16226,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/settings/WearSettingsScreen.kt",
-      "source_location": "L59",
+      "source_location": "L61",
       "weight": 1.0
     },
     {
@@ -16178,7 +16238,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/settings/WearSettingsScreen.kt",
-      "source_location": "L65",
+      "source_location": "L67",
       "weight": 1.0
     },
     {
@@ -18523,6 +18583,18 @@
     },
     {
       "source": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_mainactivity",
+      "target": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_mainactivity_requestalarmssyncfrommobile",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
+      "source_location": "L83",
+      "weight": 1.0
+    },
+    {
+      "source": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_mainactivity",
       "target": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_mainactivity_checkandstartrfcommservice",
       "relation": "method",
       "_origin": "ast",
@@ -18530,7 +18602,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
-      "source_location": "L75",
+      "source_location": "L97",
       "weight": 1.0
     },
     {
@@ -18686,7 +18758,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L40",
+      "source_location": "L44",
       "weight": 1.0
     },
     {
@@ -18698,7 +18770,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L43",
+      "source_location": "L47",
       "weight": 1.0
     },
     {
@@ -21102,6 +21174,21 @@
       "weight": 1.0
     },
     {
+      "source": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice",
+      "target": "core_data_src_main_java_com_example_opengluco_core_data_alarmevaluator_alarmevaluator",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "metadata": {
+        "target_fqn": "com.example.opengluco.core.data.AlarmEvaluator"
+      },
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
       "source": "app_wear_src_main_java_com_example_opengluco_wear_service_wearglucosesyncworker",
       "target": "core_data_src_main_java_com_example_opengluco_core_data_alarmevaluator_alarmevaluator",
       "relation": "imports",
@@ -21219,6 +21306,21 @@
       },
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearAuthMessageListenerService.kt",
       "source_location": "L3",
+      "weight": 1.0
+    },
+    {
+      "source": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice",
+      "target": "core_data_src_main_java_com_example_opengluco_core_data_alarmrepository_alarmrepository",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "metadata": {
+        "target_fqn": "com.example.opengluco.core.data.AlarmRepository"
+      },
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
+      "source_location": "L18",
       "weight": 1.0
     },
     {
@@ -21728,7 +21830,7 @@
         "target_fqn": "com.example.opengluco.core.data.KeystoreCryptoHelper"
       },
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L17",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -22313,7 +22415,7 @@
         "target_fqn": "com.example.opengluco.core.data.UserPreferencesRepository"
       },
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L18",
+      "source_location": "L20",
       "weight": 1.0
     },
     {
@@ -22584,6 +22686,21 @@
       },
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/notification/WearAlarmNotificationHelper.kt",
       "source_location": "L13",
+      "weight": 1.0
+    },
+    {
+      "source": "app_wear_src_main_java_com_example_opengluco_wear_ui_settings_wearsettingsscreen",
+      "target": "core_model_src_main_java_com_example_opengluco_core_model_glucosealarmmodels_alarmseverity",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "metadata": {
+        "target_fqn": "com.example.opengluco.core.model.AlarmSeverity"
+      },
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/settings/WearSettingsScreen.kt",
+      "source_location": "L41",
       "weight": 1.0
     },
     {
@@ -23408,7 +23525,7 @@
         "target_fqn": "com.example.opengluco.core.model.GlucoseMeasurement"
       },
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L19",
+      "source_location": "L21",
       "weight": 1.0
     },
     {
@@ -25077,6 +25194,21 @@
       "weight": 1.0
     },
     {
+      "source": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice",
+      "target": "app_wear_src_main_java_com_example_opengluco_wear_notification_wearalarmnotificationhelper_wearalarmnotificationhelper",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "metadata": {
+        "target_fqn": "com.example.opengluco.wear.notification.WearAlarmNotificationHelper"
+      },
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
+      "source_location": "L22",
+      "weight": 1.0
+    },
+    {
       "source": "app_wear_src_main_java_com_example_opengluco_wear_service_wearglucosesyncworker",
       "target": "app_wear_src_main_java_com_example_opengluco_wear_notification_wearalarmnotificationhelper_wearalarmnotificationhelper",
       "relation": "imports",
@@ -25089,6 +25221,21 @@
       },
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearGlucoseSyncWorker.kt",
       "source_location": "L10",
+      "weight": 1.0
+    },
+    {
+      "source": "app_wear_src_main_java_com_example_opengluco_wear_ui_settings_wearsettingsscreen",
+      "target": "app_wear_src_main_java_com_example_opengluco_wear_notification_wearalarmnotificationhelper_wearalarmnotificationhelper",
+      "relation": "imports",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "import",
+      "metadata": {
+        "target_fqn": "com.example.opengluco.wear.notification.WearAlarmNotificationHelper"
+      },
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/settings/WearSettingsScreen.kt",
+      "source_location": "L42",
       "weight": 1.0
     },
     {
@@ -27377,7 +27524,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
-      "source_location": "L42",
+      "source_location": "L40",
       "weight": 1.0
     },
     {
@@ -27389,7 +27536,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
-      "source_location": "L86",
+      "source_location": "L108",
       "weight": 1.0
     },
     {
@@ -27401,7 +27548,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
-      "source_location": "L86",
+      "source_location": "L108",
       "weight": 1.0
     },
     {
@@ -27425,7 +27572,31 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/notification/WearAlarmNotificationHelper.kt",
-      "source_location": "L167",
+      "source_location": "L175",
+      "weight": 1.0
+    },
+    {
+      "source": "app_wear_src_main_java_com_example_opengluco_wear_notification_wearalarmnotificationhelper_wearalarmnotificationhelper_testhapticvibration",
+      "target": "app_wear_src_main_java_com_example_opengluco_wear_notification_wearalarmnotificationhelper_kt_context",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/notification/WearAlarmNotificationHelper.kt",
+      "source_location": "L184",
+      "weight": 1.0
+    },
+    {
+      "source": "app_wear_src_main_java_com_example_opengluco_wear_notification_wearalarmnotificationhelper_wearalarmnotificationhelper_testhapticvibration",
+      "target": "core_model_src_main_java_com_example_opengluco_core_model_glucosealarmmodels_alarmseverity",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/notification/WearAlarmNotificationHelper.kt",
+      "source_location": "L184",
       "weight": 1.0
     },
     {
@@ -27437,7 +27608,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/notification/WearAlarmNotificationHelper.kt",
-      "source_location": "L74",
+      "source_location": "L81",
       "weight": 1.0
     },
     {
@@ -27449,7 +27620,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/notification/WearAlarmNotificationHelper.kt",
-      "source_location": "L74",
+      "source_location": "L81",
       "weight": 1.0
     },
     {
@@ -27461,7 +27632,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/notification/WearAlarmNotificationHelper.kt",
-      "source_location": "L173",
+      "source_location": "L188",
       "weight": 1.0
     },
     {
@@ -27473,7 +27644,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/notification/WearAlarmNotificationHelper.kt",
-      "source_location": "L173",
+      "source_location": "L188",
       "weight": 1.0
     },
     {
@@ -27485,7 +27656,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/notification/WearAlarmNotificationHelper.kt",
-      "source_location": "L142",
+      "source_location": "L150",
       "weight": 1.0
     },
     {
@@ -27509,7 +27680,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L134",
+      "source_location": "L138",
       "weight": 1.0
     },
     {
@@ -27521,7 +27692,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L203",
+      "source_location": "L230",
       "weight": 1.0
     },
     {
@@ -27533,7 +27704,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L56",
+      "source_location": "L60",
       "weight": 1.0
     },
     {
@@ -27545,7 +27716,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L217",
+      "source_location": "L244",
       "weight": 1.0
     },
     {
@@ -27557,7 +27728,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L226",
+      "source_location": "L253",
       "weight": 1.0
     },
     {
@@ -27941,7 +28112,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/settings/WearSettingsScreen.kt",
-      "source_location": "L309",
+      "source_location": "L323",
       "weight": 1.0
     },
     {
@@ -27953,7 +28124,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/settings/WearSettingsScreen.kt",
-      "source_location": "L309",
+      "source_location": "L323",
       "weight": 1.0
     },
     {
@@ -27965,7 +28136,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/settings/WearSettingsScreen.kt",
-      "source_location": "L269",
+      "source_location": "L283",
       "weight": 1.0
     },
     {
@@ -27977,7 +28148,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/settings/WearSettingsScreen.kt",
-      "source_location": "L269",
+      "source_location": "L283",
       "weight": 1.0
     },
     {
@@ -27989,7 +28160,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/settings/WearSettingsScreen.kt",
-      "source_location": "L53",
+      "source_location": "L55",
       "weight": 1.0
     },
     {
@@ -28001,7 +28172,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/settings/WearSettingsScreen.kt",
-      "source_location": "L53",
+      "source_location": "L55",
       "weight": 1.0
     },
     {
@@ -28493,7 +28664,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L88",
+      "source_location": "L92",
       "weight": 1.0
     },
     {
@@ -28505,7 +28676,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L203",
+      "source_location": "L230",
       "weight": 1.0
     },
     {
@@ -31126,6 +31297,17 @@
     },
     {
       "source": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity",
+      "target": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_wearappnavigation",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
+      "source_location": "L108",
+      "weight": 1.0
+    },
+    {
+      "source": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity",
       "target": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_mainactivity",
       "relation": "contains",
       "_origin": "ast",
@@ -31133,17 +31315,6 @@
       "confidence_score": 1.0,
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
       "source_location": "L31",
-      "weight": 1.0
-    },
-    {
-      "source": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity",
-      "target": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_wearappnavigation",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
-      "source_location": "L86",
       "weight": 1.0
     },
     {
@@ -31176,7 +31347,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L35",
+      "source_location": "L39",
       "weight": 1.0
     },
     {
@@ -31539,7 +31710,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/settings/WearSettingsScreen.kt",
-      "source_location": "L269",
+      "source_location": "L283",
       "weight": 1.0
     },
     {
@@ -31550,7 +31721,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/settings/WearSettingsScreen.kt",
-      "source_location": "L309",
+      "source_location": "L323",
       "weight": 1.0
     },
     {
@@ -31561,7 +31732,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/settings/WearSettingsScreen.kt",
-      "source_location": "L53",
+      "source_location": "L55",
       "weight": 1.0
     },
     {
@@ -34443,7 +34614,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L35",
+      "source_location": "L39",
       "weight": 1.0
     },
     {
@@ -35466,18 +35637,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
-      "source_location": "L42",
+      "source_location": "L40",
       "weight": 1.0
     },
     {
       "source": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_mainactivity",
-      "target": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_mainactivity_requestbluetoothpermissions",
+      "target": "app_wear_src_main_java_com_example_opengluco_wear_mainactivity_mainactivity_checkandrequestpermissions",
       "relation": "method",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt",
-      "source_location": "L62",
+      "source_location": "L61",
       "weight": 1.0
     },
     {
@@ -35488,7 +35659,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/notification/WearAlarmNotificationHelper.kt",
-      "source_location": "L142",
+      "source_location": "L150",
       "weight": 1.0
     },
     {
@@ -35499,7 +35670,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/notification/WearAlarmNotificationHelper.kt",
-      "source_location": "L167",
+      "source_location": "L175",
+      "weight": 1.0
+    },
+    {
+      "source": "app_wear_src_main_java_com_example_opengluco_wear_notification_wearalarmnotificationhelper_wearalarmnotificationhelper",
+      "target": "app_wear_src_main_java_com_example_opengluco_wear_notification_wearalarmnotificationhelper_wearalarmnotificationhelper_testhapticvibration",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/notification/WearAlarmNotificationHelper.kt",
+      "source_location": "L184",
       "weight": 1.0
     },
     {
@@ -35510,7 +35692,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/notification/WearAlarmNotificationHelper.kt",
-      "source_location": "L173",
+      "source_location": "L188",
       "weight": 1.0
     },
     {
@@ -35532,7 +35714,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/notification/WearAlarmNotificationHelper.kt",
-      "source_location": "L74",
+      "source_location": "L81",
       "weight": 1.0
     },
     {
@@ -35548,13 +35730,24 @@
     },
     {
       "source": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice",
+      "target": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice_startrfcommlistener",
+      "relation": "method",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
+      "source_location": "L102",
+      "weight": 1.0
+    },
+    {
+      "source": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice",
       "target": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice_handleincomingconnection",
       "relation": "method",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L134",
+      "source_location": "L138",
       "weight": 1.0
     },
     {
@@ -35565,7 +35758,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L166",
+      "source_location": "L170",
       "weight": 1.0
     },
     {
@@ -35576,7 +35769,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L193",
+      "source_location": "L220",
       "weight": 1.0
     },
     {
@@ -35587,7 +35780,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L203",
+      "source_location": "L230",
       "weight": 1.0
     },
     {
@@ -35598,7 +35791,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L217",
+      "source_location": "L244",
       "weight": 1.0
     },
     {
@@ -35609,7 +35802,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L226",
+      "source_location": "L253",
       "weight": 1.0
     },
     {
@@ -35620,7 +35813,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L50",
+      "source_location": "L54",
       "weight": 1.0
     },
     {
@@ -35631,7 +35824,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L56",
+      "source_location": "L60",
       "weight": 1.0
     },
     {
@@ -35642,7 +35835,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L72",
+      "source_location": "L76",
       "weight": 1.0
     },
     {
@@ -35653,18 +35846,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L88",
-      "weight": 1.0
-    },
-    {
-      "source": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice",
-      "target": "app_wear_src_main_java_com_example_opengluco_wear_service_wearbluetoothrfcommservice_wearbluetoothrfcommservice_startrfcommlistener",
-      "relation": "method",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt",
-      "source_location": "L98",
+      "source_location": "L92",
       "weight": 1.0
     },
     {
@@ -38938,7 +39120,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/settings/WearSettingsScreen.kt",
-      "source_location": "L247",
+      "source_location": "L261",
       "weight": 1.0
     },
     {
@@ -38950,7 +39132,7 @@
       "confidence_score": 0.85,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/settings/WearSettingsScreen.kt",
-      "source_location": "L256",
+      "source_location": "L270",
       "weight": 1.0
     },
     {
@@ -39471,5 +39653,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "833aa60c7a54d7a5e0f5ea2d9ba8c31e7ded2291"
+  "built_at_commit": "aaec74d0fcddf3bc19a6c42709c09dbb02db15aa"
 }

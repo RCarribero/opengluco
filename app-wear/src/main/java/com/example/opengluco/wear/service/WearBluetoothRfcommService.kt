@@ -14,12 +14,16 @@ import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.example.opengluco.core.data.AlarmEvaluator
+import com.example.opengluco.core.data.AlarmRepository
 import com.example.opengluco.core.data.KeystoreCryptoHelper
 import com.example.opengluco.core.data.UserPreferencesRepository
 import com.example.opengluco.core.model.GlucoseMeasurement
+import com.example.opengluco.wear.notification.WearAlarmNotificationHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -183,6 +187,29 @@ class WearBluetoothRfcommService : Service() {
 
             if (numVal > 0) {
                 userPrefs.saveLastMeasurement(numVal, trend, ts)
+
+                val settings = userPrefs.userSettingsFlow.first()
+                if (settings.hapticAlertsEnabled) {
+                    val alarmRepo = AlarmRepository(applicationContext)
+                    val alarms = alarmRepo.getAllAlarms()
+                    val timestamps = alarmRepo.getLastFiredTimestamps()
+
+                    val result = AlarmEvaluator.evaluate(
+                        currentValueMgDl = numVal.toDouble(),
+                        alarms = alarms,
+                        lastFiredTimestamps = timestamps
+                    )
+
+                    val triggered = result.triggeredAlarm
+                    if (triggered != null) {
+                        WearAlarmNotificationHelper.triggerAlarmBySeverity(
+                            context = applicationContext,
+                            alarm = triggered,
+                            glucoseValueMgDl = numVal.toDouble()
+                        )
+                        alarmRepo.recordAlarmFired(triggered.id)
+                    }
+                }
             }
             Log.d(TAG, "Medición de stream procesada y deduplicada: $numVal mg/dL")
         } catch (e: Exception) {

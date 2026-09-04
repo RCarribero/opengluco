@@ -210,10 +210,10 @@
     "semantic_hash": ""
   },
   "app-wear/src/main/java/com/example/opengluco/wear/MainActivity.kt": {
-    "mtime": 1787864824.5784242,
-    "seen": 1788010502.8743913,
-    "ast_hash": "1cfde71bb1ea2997f116e0d28500b29d",
-    "semantic_hash": "1cfde71bb1ea2997f116e0d28500b29d"
+    "mtime": 1788524249.6102395,
+    "seen": 1788524329.7295637,
+    "ast_hash": "5c3df4b9b9f72a67a3515fa9b3639161",
+    "semantic_hash": ""
   },
   "app-wear/src/main/java/com/example/opengluco/wear/complication/GlucoseComplicationService.kt": {
     "mtime": 1788009904.1462362,
@@ -222,9 +222,9 @@
     "semantic_hash": "ed179b936b4e440b0a9d9dee119e6cb2"
   },
   "app-wear/src/main/java/com/example/opengluco/wear/notification/WearAlarmNotificationHelper.kt": {
-    "mtime": 1788515848.292629,
-    "seen": 1788515998.060189,
-    "ast_hash": "b220711a9d71850357ee3e96b24b50b3",
+    "mtime": 1788524239.9197044,
+    "seen": 1788524329.7295637,
+    "ast_hash": "cb87c78579e734014392afa24a51baff",
     "semantic_hash": ""
   },
   "app-wear/src/main/java/com/example/opengluco/wear/service/WearAuthMessageListenerService.kt": {
@@ -234,10 +234,10 @@
     "semantic_hash": ""
   },
   "app-wear/src/main/java/com/example/opengluco/wear/service/WearBluetoothRfcommService.kt": {
-    "mtime": 1787864809.4740033,
-    "seen": 1788010502.8743913,
-    "ast_hash": "8703d26db0b2a16710ec703f2b5d995c",
-    "semantic_hash": "8703d26db0b2a16710ec703f2b5d995c"
+    "mtime": 1788524032.662982,
+    "seen": 1788524103.70705,
+    "ast_hash": "3b1d2077314c5b8f5beaa01dc56cfb61",
+    "semantic_hash": ""
   },
   "app-wear/src/main/java/com/example/opengluco/wear/service/WearGlucoseSyncWorker.kt": {
     "mtime": 1787863799.7177212,
@@ -330,9 +330,9 @@
     "semantic_hash": "48c07aacd8cd332db7c9f28cfd0392fa"
   },
   "app-wear/src/main/java/com/example/opengluco/wear/ui/settings/WearSettingsScreen.kt": {
-    "mtime": 1788011207.8304935,
-    "seen": 1788011350.3758285,
-    "ast_hash": "884ecf967b99750763764adbe092c906",
+    "mtime": 1788524285.9117115,
+    "seen": 1788524329.7295637,
+    "ast_hash": "93c072908d76bef5d73d4e3fc9b17dd6",
     "semantic_hash": ""
   },
   "app-wear/src/main/java/com/example/opengluco/wear/ui/theme/Color.kt": {

@@ -30,13 +30,11 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
-    private val bluetoothPermissionLauncher = registerForActivityResult(
+    private val appPermissionsLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        val granted = permissions.values.all { it }
-        if (granted) {
-            checkAndStartRfcommService()
-        }
+    ) { _ ->
+        checkAndStartRfcommService()
+        requestAlarmsSyncFromMobile()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,7 +45,8 @@ class MainActivity : ComponentActivity() {
         val preferencesRepository = UserPreferencesRepository(applicationContext)
         val repository = OpenGlucoRepository()
 
-        requestBluetoothPermissions()
+        checkAndRequestPermissions()
+        requestAlarmsSyncFromMobile()
 
         setContent {
             LibreWearTheme {
@@ -59,17 +58,40 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun requestBluetoothPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val connectPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT)
-            if (connectPermission != PackageManager.PERMISSION_GRANTED) {
-                bluetoothPermissionLauncher.launch(
-                    arrayOf(Manifest.permission.BLUETOOTH_CONNECT)
-                )
-                return
+    private fun checkAndRequestPermissions() {
+        val needed = mutableListOf<String>()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                needed.add(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
-        checkAndStartRfcommService()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                needed.add(Manifest.permission.BLUETOOTH_CONNECT)
+            }
+        }
+
+        if (needed.isNotEmpty()) {
+            appPermissionsLauncher.launch(needed.toTypedArray())
+        } else {
+            checkAndStartRfcommService()
+        }
+    }
+
+    private fun requestAlarmsSyncFromMobile() {
+        lifecycleScope.launch {
+            try {
+                val nodeClient = com.google.android.gms.wearable.Wearable.getNodeClient(applicationContext)
+                val messageClient = com.google.android.gms.wearable.Wearable.getMessageClient(applicationContext)
+                nodeClient.connectedNodes.addOnSuccessListener { nodes ->
+                    for (node in nodes) {
+                        messageClient.sendMessage(node.id, "/opengluco_request_alarms_sync", byteArrayOf())
+                    }
+                }
+            } catch (_: Exception) {}
+        }
     }
 
     private fun checkAndStartRfcommService() {

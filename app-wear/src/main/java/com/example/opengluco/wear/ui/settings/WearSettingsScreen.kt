@@ -38,6 +38,8 @@ import com.example.opengluco.core.data.AlarmRepository
 import com.example.opengluco.core.data.GlucoseUnit
 import com.example.opengluco.core.data.UserPreferencesRepository
 import com.example.opengluco.core.data.UserSettings
+import com.example.opengluco.core.model.AlarmSeverity
+import com.example.opengluco.wear.notification.WearAlarmNotificationHelper
 import com.example.opengluco.wear.ui.theme.ClinicalArcticCyan
 import com.example.opengluco.wear.ui.theme.ClinicalBackground
 import com.example.opengluco.wear.ui.theme.ClinicalLowCoral
@@ -145,6 +147,18 @@ fun WearSettingsScreen(
                     valueColor = if (settings.hapticAlertsEnabled) ClinicalMint else ClinicalTextMuted,
                     onClick = {
                         scope.launch { preferencesRepository.setHapticAlerts(!settings.hapticAlertsEnabled) }
+                    }
+                )
+            }
+
+            // Test de Vibración Háptica Fuerte
+            item {
+                CompactSettingsRow(
+                    title = "Probar Háptica",
+                    value = "Pulsar (255)",
+                    valueColor = ClinicalArcticCyan,
+                    onClick = {
+                        WearAlarmNotificationHelper.testHapticVibration(context, AlarmSeverity.URGENT)
                     }
                 )
             }

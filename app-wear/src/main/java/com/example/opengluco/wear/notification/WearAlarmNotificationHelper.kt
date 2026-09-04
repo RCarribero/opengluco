@@ -22,34 +22,41 @@ import com.example.opengluco.wear.R
  */
 object WearAlarmNotificationHelper {
 
-    private const val CHANNEL_URGENT = "cgm_urgent_alarms_v5"
-    private const val CHANNEL_ALERT = "cgm_alert_alarms_v5"
-    private const val CHANNEL_INFO = "cgm_info_alarms_v5"
+    private const val CHANNEL_URGENT = "cgm_urgent_alarms_v6"
+    private const val CHANNEL_ALERT = "cgm_alert_alarms_v6"
+    private const val CHANNEL_INFO = "cgm_info_alarms_v6"
     private const val NOTIFICATION_ID_ALARM = 1001
 
     fun createChannels(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
+            val alarmAudioAttributes = android.media.AudioAttributes.Builder()
+                .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .setUsage(android.media.AudioAttributes.USAGE_ALARM)
+                .build()
+
             val urgentChannel = NotificationChannel(
                 CHANNEL_URGENT,
                 "Alarmas Urgentes de Glucosa",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Alertas criticas de hipoglucemia e hiperglucemia urgente"
+                description = "Alertas criticas de hipoglucemia e hiperglucemia urgente con vibracion maxima"
                 enableVibration(true)
                 vibrationPattern = longArrayOf(0, 800, 150, 800, 150, 800)
                 setBypassDnd(true)
+                setSound(null, alarmAudioAttributes)
             }
 
             val alertChannel = NotificationChannel(
                 CHANNEL_ALERT,
                 "Alertas de Glucosa",
-                NotificationManager.IMPORTANCE_DEFAULT
+                NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Alertas sonoras y tactiles de niveles fuera de rango"
+                description = "Alertas clinicas fuera de rango con vibracion firme"
                 enableVibration(true)
                 vibrationPattern = longArrayOf(0, 400, 200, 400)
+                setSound(null, alarmAudioAttributes)
             }
 
             val infoChannel = NotificationChannel(
@@ -93,7 +100,7 @@ object WearAlarmNotificationHelper {
 
         val contentText = "Glucosa: ${glucoseValueMgDl.toInt()} mg/dL. Umbral: ${alarm.thresholdMgDl} mg/dL."
 
-        // Haptica segun severidad
+        // Haptica reforzada segun severidad
         triggerHapticAlarm(context, alarm.severity)
 
         val intent = Intent(context, MainActivity::class.java)
@@ -106,12 +113,13 @@ object WearAlarmNotificationHelper {
 
         val priority = when (alarm.severity) {
             AlarmSeverity.URGENT -> NotificationCompat.PRIORITY_MAX
-            AlarmSeverity.ALERT -> NotificationCompat.PRIORITY_DEFAULT
-            AlarmSeverity.INFORMATIVE -> NotificationCompat.PRIORITY_LOW
+            AlarmSeverity.ALERT -> NotificationCompat.PRIORITY_HIGH
+            AlarmSeverity.INFORMATIVE -> NotificationCompat.PRIORITY_DEFAULT
         }
 
         val category = when (alarm.severity) {
             AlarmSeverity.URGENT -> NotificationCompat.CATEGORY_ALARM
+            AlarmSeverity.ALERT -> NotificationCompat.CATEGORY_ALARM
             else -> NotificationCompat.CATEGORY_STATUS
         }
 
@@ -170,23 +178,77 @@ object WearAlarmNotificationHelper {
         manager.cancel(notificationId)
     }
 
+    /**
+     * Permite probar la vibracion háptica directamente desde la interfaz de Ajustes del reloj.
+     */
+    fun testHapticVibration(context: Context, severity: AlarmSeverity = AlarmSeverity.URGENT) {
+        triggerHapticAlarm(context, severity)
+    }
+
     private fun triggerHapticAlarm(context: Context, severity: AlarmSeverity) {
         try {
+            val powerManager = context.getSystemService(Context.POWER_SERVICE) as? android.os.PowerManager
+            val wakeLock = powerManager?.newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "OpenGluco:WearHapticWakeLock")
+            wakeLock?.acquire(3500)
             val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val manager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-                manager.defaultVibrator
+                val manager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager
+                manager?.defaultVibrator ?: (context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator)
             } else {
                 @Suppress("DEPRECATION")
                 context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
             }
 
+            if (!vibrator.hasVibrator()) return
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val timings: LongArray
+                val amplitudes: IntArray
+
+                when (severity) {
+                    AlarmSeverity.URGENT -> {
+                        // Patron triple maximo: 800ms activo, 150ms pausa, 800ms activo, 150ms pausa, 800ms activo
+                        timings = longArrayOf(0, 800, 150, 800, 150, 800)
+                        amplitudes = intArrayOf(0, 255, 0, 255, 0, 255)
+                    }
+                    AlarmSeverity.ALERT -> {
+                        // Patron doble firme: 400ms activo, 200ms pausa, 400ms activo
+                        timings = longArrayOf(0, 400, 200, 400)
+                        amplitudes = intArrayOf(0, 215, 0, 215)
+                    }
+                    AlarmSeverity.INFORMATIVE -> {
+                        // Pulso suave: 250ms activo
+                        timings = longArrayOf(0, 250)
+                        amplitudes = intArrayOf(0, 120)
+                    }
+                }
+
+                val effect = if (vibrator.hasAmplitudeControl()) {
+                    VibrationEffect.createWaveform(timings, amplitudes, -1)
+                } else {
+                    VibrationEffect.createWaveform(timings, -1)
+                }
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    val attrs = android.os.VibrationAttributes.Builder()
+                        .setUsage(android.os.VibrationAttributes.USAGE_ALARM)
+                        .build()
+                    vibrator.vibrate(effect, attrs)
+                } else {
+                    val attrs = android.media.AudioAttributes.Builder()
+                        .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .setUsage(android.media.AudioAttributes.USAGE_ALARM)
+                        .build()
+                    vibrator.vibrate(effect, attrs)
+                }
+            } else {
+                @Suppress("DEPRECATION")
                 val timings = when (severity) {
                     AlarmSeverity.URGENT -> longArrayOf(0, 800, 150, 800, 150, 800)
                     AlarmSeverity.ALERT -> longArrayOf(0, 400, 200, 400)
                     AlarmSeverity.INFORMATIVE -> longArrayOf(0, 250)
                 }
-                vibrator.vibrate(VibrationEffect.createWaveform(timings, -1))
+                @Suppress("DEPRECATION")
+                vibrator.vibrate(timings, -1)
             }
         } catch (_: Exception) {}
     }
