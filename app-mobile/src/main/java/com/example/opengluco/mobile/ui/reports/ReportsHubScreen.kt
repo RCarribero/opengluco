@@ -78,19 +78,14 @@ fun ReportsHubScreen(
         ClinicalReportsCalculator.calculateAvailableDays(historicalReadings).coerceAtLeast(1)
     }
 
-    // Opciones de periodos dinámicas: solo periodos con datos reales
-    val daysOptions = remember(availableDays) {
-        val standard = listOf(1, 7, 14, 30, 90)
-        val filtered = standard.filter { it <= availableDays }.toMutableList()
-        if (filtered.isEmpty() || (!filtered.contains(availableDays) && availableDays > (filtered.lastOrNull() ?: 0))) {
-            filtered.add(availableDays)
-        }
-        filtered.distinct().sorted()
+    // Opciones de periodos estándar
+    val daysOptions = remember { listOf(1, 7, 14, 30, 90) }
+
+    var selectedDays by remember {
+        mutableIntStateOf(1)
     }
 
-    var selectedDays by remember(daysOptions) {
-        mutableIntStateOf(daysOptions.lastOrNull() ?: 1)
-    }
+    val isPeriodSufficient = availableDays >= selectedDays
 
     val tirReport = remember(historicalReadings, selectedDays) {
         ClinicalReportsCalculator.calculateTimeInRange(historicalReadings, selectedDays)
@@ -213,7 +208,47 @@ fun ReportsHubScreen(
                 }
             }
 
-            // 2. Tarjeta Tiempo en Rango (TIR) con explicación pedagógica y solo categorías con datos > 0%
+            if (!isPeriodSufficient) {
+                item {
+                    val daysPlural = if (availableDays == 1) "1 día" else "$availableDays días"
+                    Card(
+                        shape = RoundedCornerShape(14.dp),
+                        colors = CardDefaults.cardColors(containerColor = colors.surfaceOrb),
+                        border = BorderStroke(1.dp, colors.highAmber.copy(alpha = 0.5f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(14.dp),
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Info,
+                                contentDescription = "Aviso clínico",
+                                tint = colors.highAmber,
+                                modifier = Modifier.size(20.dp).padding(top = 2.dp)
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = "Datos insuficientes para este período",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = colors.textPrimary
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "No tienes todavía datos suficientes para leer las métricas completas de un período de $selectedDays días. Se requieren al menos $selectedDays días de lecturas acumuladas (disponibles actualmente: $daysPlural).",
+                                    fontSize = 12.sp,
+                                    color = colors.textSecondary,
+                                    lineHeight = 16.sp
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 2. Tarjeta Tiempo en Rango (TIR)
             item {
                 val veryHighPct = veryHighBucket?.percentage?.toInt() ?: 0
                 val highPct = highBucket?.percentage?.toInt() ?: 0
@@ -307,10 +342,9 @@ fun ReportsHubScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // Explicación pedagógica para el paciente
                         ClinicalExplanationBox(
-                            title = "¿Qué es el Tiempo en Rango?",
-                            description = "Indica el porcentaje de tiempo que tu glucosa estuvo dentro del rango saludable (70 - 180 mg/dL). Mantener un TIR superior al 70% y menos del 4% en valores bajos reduce drásticamente el riesgo de complicaciones a largo plazo."
+                            title = "Criterio Clínico: Tiempo en Rango (TIR)",
+                            description = "Porcentaje de lecturas dentro del intervalo de glucosa saludable (70 - 180 mg/dL). El consenso internacional ATTD recomienda un TIR superior al 70% y menos del 4% en rango bajo (<70 mg/dL) para minimizar el riesgo de complicaciones a largo plazo."
                         )
                     }
                 }
@@ -361,10 +395,9 @@ fun ReportsHubScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // Explicación pedagógica para el paciente
                         ClinicalExplanationBox(
-                            title = "¿Qué es el GRI y qué significa mi puntuación?",
-                            description = "El GRI (Glycemic Risk Index) es una escala de 0 a 100 avalada por consenso internacional (ATTD). Resume en una sola puntuación el equilibrio entre hiperglucemias (altas) e hipoglucemias (bajas), dando prioridad a evitar bajadas peligrosas.\n\n• Zona A (0 - 20): Control excelente / Riesgo muy bajo.\n• Zona B (21 - 40): Buen control / Riesgo bajo.\n• Zona C (41 - 60): Riesgo moderado.\n• Zona D (61 - 80): Riesgo alto.\n• Zona E (> 80): Riesgo muy alto."
+                            title = "Criterio Clínico: Índice de Riesgo Glucémico (GRI)",
+                            description = "Puntuación de 0 a 100 avalada por consenso internacional (Klonoff et al., 2022) que pondera la exposición acumulada a hipoglucemias e hiperglucemias dando prioridad a la prevención de eventos bajos:\n\n• Zona A (0 - 20): Riesgo muy bajo / Control óptimo\n• Zona B (21 - 40): Riesgo bajo\n• Zona C (41 - 60): Riesgo moderado\n• Zona D (61 - 80): Riesgo alto\n• Zona E (> 80): Riesgo muy alto"
                         )
                     }
                 }
@@ -394,8 +427,8 @@ fun ReportsHubScreen(
                         Spacer(modifier = Modifier.height(12.dp))
 
                         ClinicalExplanationBox(
-                            title = "¿Qué es la Curva Anidada o Patrón Diario?",
-                            description = "La curva anidada (Perfil Ambulatorio de Glucosa) toma todas las lecturas de los días analizados y las superpone en un único reloj de 24 horas (desde las 00:00 hasta las 23:59). Esto permite descubrir a qué horas del día se repiten picos (después de las comidas) o bajadas recurrentes (durante la noche o el ejercicio), facilitando ajustar hábitos de forma preventiva."
+                            title = "Criterio Clínico: Perfil Ambulatorio de Glucosa (AGP)",
+                            description = "La curva modal anidada (AGP) superpone todas las lecturas del período en un ciclo diario estándar de 24 horas (00:00 a 23:59). Permite evaluar la recurrencia horaria de fluctuaciones, excursiones postprandiales y descensos nocturnos."
                         )
                     }
                 }
@@ -497,10 +530,9 @@ fun ReportsHubScreen(
 
                         Spacer(modifier = Modifier.height(14.dp))
 
-                        // Explicación de cada métrica para el paciente
                         ClinicalExplanationBox(
-                            title = "¿Qué mide cada uno de estos valores?",
-                            description = "• Glucosa Media: Es el promedio de todas las lecturas registradas en el periodo.\n\n• Desviación Estándar (SD): Mide cuánto se alejan tus lecturas de la media. Un número bajo indica que tus niveles se mantienen estables.\n\n• Coeficiente de Variación (CV%): Mide la variabilidad porcentual. La meta médica recomendada es un CV menor o igual a 36%. Si es mayor a 36%, la glucosa es inestable y propensa a picos y bajadas bruscas.\n\n• MAGE: Amplitud media de las fluctuaciones más pronunciadas del día (las que superan 1 desviación estándar). Refleja la severidad de los picos."
+                            title = "Criterio Clínico: Variabilidad y Estabilidad Glucémica",
+                            description = "• Glucosa Media: Nivel representativo central del período analizado.\n\n• Desviación Estándar (SD): Dispersión de las lecturas respecto a la media. Valores reducidos evidencian mayor estabilidad.\n\n• Coeficiente de Variación (CV%): Medida porcentual estandarizada. El consenso médico fija el objetivo clínico en CV <= 36%. Cifras mayores indican labilidad glucémica marcada.\n\n• MAGE: Amplitud media de las oscilaciones glucémicas relevantes (> 1 SD)."
                         )
                     }
                 }
@@ -558,8 +590,8 @@ fun ReportsHubScreen(
                         Spacer(modifier = Modifier.height(12.dp))
 
                         ClinicalExplanationBox(
-                            title = "¿Qué es el GMI?",
-                            description = "El GMI (Indicador de Gestión de Glucosa) estima el valor que obtendrías en una analítica de sangre de laboratorio para la Hemoglobina Glicosilada (HbA1c), calculada a partir de los datos continuos del sensor."
+                            title = "Criterio Clínico: Indicador de Gestión de Glucosa (GMI)",
+                            description = "Aproximación matemática a la hemoglobina glicosilada de laboratorio calculada sobre la glucosa media del sensor continuo (Bergenstal et al., 2018). Requiere un período de monitorización representativo para asegurar consistencia."
                         )
 
                         Spacer(modifier = Modifier.height(10.dp))
@@ -637,8 +669,8 @@ private fun ClinicalExplanationBox(title: String, description: String) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.HelpOutline,
-                    contentDescription = "Ayuda",
+                    imageVector = Icons.Default.Info,
+                    contentDescription = "Información clínica",
                     tint = colors.mint,
                     modifier = Modifier.size(15.dp)
                 )

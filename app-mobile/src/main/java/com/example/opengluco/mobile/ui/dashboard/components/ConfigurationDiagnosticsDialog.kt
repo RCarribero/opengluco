@@ -217,7 +217,7 @@ fun ConfigurationDiagnosticsDialog(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "Ajustes de Telemetría Requeridos",
+                                text = "Diagnóstico de Permisos del Sistema",
                                 fontSize = responsive.clampedSp(15f, maxScale = 1.20f),
                                 fontWeight = FontWeight.Bold,
                                 color = colors.textPrimary
@@ -235,7 +235,7 @@ fun ConfigurationDiagnosticsDialog(
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Text(
-                        text = "Para que OpenGluco no se cierre en segundo plano y las alarmas de glucosa suenen con la pantalla apagada, configura los siguientes permisos:",
+                        text = "Para garantizar la captura continua de lecturas del sensor y la activación de alertas de glucosa con la pantalla apagada, verifica los siguientes permisos de Android:",
                         fontSize = responsive.clampedSp(12.5f, maxScale = 1.25f),
                         color = colors.textSecondary,
                         lineHeight = 17.sp
@@ -247,8 +247,8 @@ fun ConfigurationDiagnosticsDialog(
                     DiagnosticItemCard(
                         isCorrect = diagnostics.isBatteryIgnored,
                         icon = Icons.Default.Power,
-                        title = "Ahorro de Batería (Sin Restricciones)",
-                        description = if (diagnostics.isBatteryIgnored) "Configurado correctamente. No se suspenderá." else "Samsung suspenderá la app con pantalla apagada.",
+                        title = "Optimización de Batería",
+                        description = if (diagnostics.isBatteryIgnored) "Exclusión activa. El servicio continuará operando en reposo." else "El sistema operativo podría suspender la recepción de lecturas con pantalla apagada.",
                         actionButtonText = "Desactivar Ahorro",
                         onActionClick = {
                             SystemDiagnosticsHelper.requestIgnoreBatteryOptimization(context)
@@ -261,8 +261,8 @@ fun ConfigurationDiagnosticsDialog(
                     DiagnosticItemCard(
                         isCorrect = diagnostics.hasNotificationPermission,
                         icon = Icons.Default.Notifications,
-                        title = "Permiso de Notificaciones",
-                        description = if (diagnostics.hasNotificationPermission) "Activadas para glucosa en vivo y alertas." else "Las alertas de glucosa no podrán mostrarse.",
+                        title = "Notificaciones del Sistema",
+                        description = if (diagnostics.hasNotificationPermission) "Autorizadas para telemetría en tiempo real y alertas clínicas." else "Necesario para mostrar la glucosa actual y emitir alertas acústicas.",
                         actionButtonText = "Permitir",
                         onActionClick = {
                             SystemDiagnosticsHelper.openNotificationSettings(context)
@@ -275,8 +275,8 @@ fun ConfigurationDiagnosticsDialog(
                     DiagnosticItemCard(
                         isCorrect = diagnostics.canScheduleExactAlarms,
                         icon = Icons.Default.Tune,
-                        title = "Alarmas Clínicas Exactas",
-                        description = if (diagnostics.canScheduleExactAlarms) "Disparo exacto en milisegundos activo." else "Permite disparar alarmas críticas al instante.",
+                        title = "Alarmas de Alta Precisión",
+                        description = if (diagnostics.canScheduleExactAlarms) "Programación exacta habilitada. Comprobaciones continuas sin retardo." else "Necesario para evaluar eventos clínicos de hipo e hiperglucemia de forma inmediata.",
                         actionButtonText = "Habilitar",
                         onActionClick = {
                             SystemDiagnosticsHelper.openExactAlarmSettings(context)
@@ -305,7 +305,7 @@ fun ConfigurationDiagnosticsDialog(
                                     .fillMaxWidth()
                                     .heightIn(min = 46.dp)
                             ) {
-                                Text("Continuar", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Text("Finalizar", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
 
                             Button(
@@ -319,7 +319,7 @@ fun ConfigurationDiagnosticsDialog(
                                     .fillMaxWidth()
                                     .heightIn(min = 46.dp)
                             ) {
-                                Text("Ajustes App", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                Text("Ajustes del Sistema", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                             }
                         }
                     } else {
@@ -338,7 +338,7 @@ fun ConfigurationDiagnosticsDialog(
                                     .weight(1f)
                                     .heightIn(min = 46.dp)
                             ) {
-                                Text("Ajustes App", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                                Text("Ajustes del Sistema", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                             }
 
                             Button(
@@ -355,7 +355,7 @@ fun ConfigurationDiagnosticsDialog(
                                     .weight(1.3f)
                                     .heightIn(min = 46.dp)
                             ) {
-                                Text("Continuar", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Text("Finalizar", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }

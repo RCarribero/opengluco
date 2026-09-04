@@ -56,7 +56,7 @@ fun PatientHeaderChip(
     val responsive = ClinicalTheme.responsive
     val displayName = selectedPatient?.fullName ?: "Paciente"
     val measurement = selectedPatient?.effectiveMeasurement
-    val statusColor = if (measurement != null) getClinicalStatusColor(measurement.numericValue) else colors.mint
+    val statusColor = if (measurement != null) getClinicalStatusColor(measurement.numericValue, isDark = colors.isDark) else colors.mint
 
     val chipMaxWidth = when {
         responsive.isNarrowPhone -> 150.dp
@@ -213,7 +213,7 @@ fun PatientSelectorModal(
                     patients.forEach { patient ->
                         val isSelected = patient.patientId == selectedPatient?.patientId
                         val measurement = patient.effectiveMeasurement
-                        val statusColor = if (measurement != null) getClinicalStatusColor(measurement.numericValue) else colors.mint
+                        val statusColor = if (measurement != null) getClinicalStatusColor(measurement.numericValue, isDark = colors.isDark) else colors.mint
                         val glucoseStr = measurement?.getFormattedValue(unit == GlucoseUnit.MMOL) ?: "--"
                         val trendStr = measurement?.trendSymbol ?: ""
 

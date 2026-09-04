@@ -90,7 +90,8 @@ object WidgetChartRenderer {
         }
 
         // 3. Trazar la Curva Continua de Glucosa con Filtro Fisiológico y Catmull-Rom
-        val consolidated = com.example.opengluco.core.model.CgmCurveSmoother.consolidateTemporalBuckets(readings)
+        val subsampled = com.example.opengluco.core.model.CgmCurveSmoother.subsampleOneOfThree(readings)
+        val consolidated = com.example.opengluco.core.model.CgmCurveSmoother.consolidateTemporalBuckets(subsampled)
         val smoothed = com.example.opengluco.core.model.CgmCurveSmoother.smoothMeasurements(consolidated)
         val sortedReadings = smoothed.takeLast(36) // Últimas 3-6 horas
 

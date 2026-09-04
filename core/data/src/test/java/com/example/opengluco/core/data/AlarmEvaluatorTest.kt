@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.core.data
+package com.example.opengluco.core.data
 
 import com.example.opengluco.core.model.AlarmSeverity
 import com.example.opengluco.core.model.AlarmType
@@ -157,6 +157,103 @@ class AlarmEvaluatorTest {
         assertNotNull(result.triggeredAlarm)
         assertEquals("alarm-cooldown-expired", result.triggeredAlarm?.id)
         assertFalse(result.isInCooldown)
+    }
+
+    @Test
+    fun testOneMinuteCooldownBehavior() {
+        val alarm = GlucoseAlarm(
+            id = "alarm-1min",
+            type = AlarmType.LOW,
+            thresholdMgDl = 60,
+            severity = AlarmSeverity.URGENT,
+            cooldownMinutes = 1,
+            isAllDay = true
+        )
+
+        val now = 1000000000L
+        // 45 seconds ago -> should be suppressed
+        val suppressedResult = AlarmEvaluator.evaluate(
+            currentValueMgDl = 55.0,
+            alarms = listOf(alarm),
+            lastFiredTimestamps = mapOf("alarm-1min" to now - 45_000L),
+            nowMillis = now
+        )
+        assertNull(suppressedResult.triggeredAlarm)
+        assertTrue(suppressedResult.isInCooldown)
+
+        // 65 seconds ago -> should trigger
+        val triggeredResult = AlarmEvaluator.evaluate(
+            currentValueMgDl = 55.0,
+            alarms = listOf(alarm),
+            lastFiredTimestamps = mapOf("alarm-1min" to now - 65_000L),
+            nowMillis = now
+        )
+        assertNotNull(triggeredResult.triggeredAlarm)
+        assertEquals("alarm-1min", triggeredResult.triggeredAlarm?.id)
+        assertFalse(triggeredResult.isInCooldown)
+    }
+
+    @Test
+    fun testTwoMinuteCooldownBehavior() {
+        val alarm = GlucoseAlarm(
+            id = "alarm-2min",
+            type = AlarmType.HIGH,
+            thresholdMgDl = 200,
+            severity = AlarmSeverity.ALERT,
+            cooldownMinutes = 2,
+            isAllDay = true
+        )
+
+        val now = 1000000000L
+        // 90 seconds ago (1.5 min) -> suppressed
+        val suppressed = AlarmEvaluator.evaluate(
+            currentValueMgDl = 220.0,
+            alarms = listOf(alarm),
+            lastFiredTimestamps = mapOf("alarm-2min" to now - 90_000L),
+            nowMillis = now
+        )
+        assertTrue(suppressed.isInCooldown)
+
+        // 121 seconds ago (2 min 1 sec) -> fires
+        val triggered = AlarmEvaluator.evaluate(
+            currentValueMgDl = 220.0,
+            alarms = listOf(alarm),
+            lastFiredTimestamps = mapOf("alarm-2min" to now - 121_000L),
+            nowMillis = now
+        )
+        assertNotNull(triggered.triggeredAlarm)
+        assertEquals("alarm-2min", triggered.triggeredAlarm?.id)
+    }
+
+    @Test
+    fun testThreeAndFourMinuteCooldownBehavior() {
+        val alarm3m = GlucoseAlarm(
+            id = "alarm-3m",
+            type = AlarmType.LOW,
+            thresholdMgDl = 70,
+            severity = AlarmSeverity.ALERT,
+            cooldownMinutes = 3,
+            isAllDay = true
+        )
+        val alarm4m = GlucoseAlarm(
+            id = "alarm-4m",
+            type = AlarmType.HIGH,
+            thresholdMgDl = 180,
+            severity = AlarmSeverity.ALERT,
+            cooldownMinutes = 4,
+            isAllDay = true
+        )
+
+        val now = 1000000000L
+        // 3m alarm: 170s ago (< 180s) -> suppressed
+        assertTrue(AlarmEvaluator.evaluate(65.0, listOf(alarm3m), mapOf("alarm-3m" to now - 170_000L), now).isInCooldown)
+        // 3m alarm: 190s ago (> 180s) -> fires
+        assertNotNull(AlarmEvaluator.evaluate(65.0, listOf(alarm3m), mapOf("alarm-3m" to now - 190_000L), now).triggeredAlarm)
+
+        // 4m alarm: 230s ago (< 240s) -> suppressed
+        assertTrue(AlarmEvaluator.evaluate(190.0, listOf(alarm4m), mapOf("alarm-4m" to now - 230_000L), now).isInCooldown)
+        // 4m alarm: 245s ago (> 240s) -> fires
+        assertNotNull(AlarmEvaluator.evaluate(190.0, listOf(alarm4m), mapOf("alarm-4m" to now - 245_000L), now).triggeredAlarm)
     }
 
     @Test

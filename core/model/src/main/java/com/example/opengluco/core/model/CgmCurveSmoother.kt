@@ -55,6 +55,57 @@ object CgmCurveSmoother {
     }
 
     /**
+     * Muestrea las lecturas reduciendo a 1 punto por cada 3 lecturas recibidas.
+     * Elimina el micro-ruido de muestreo y evita curvas con dientes de sierra ("muchos picos").
+     * Si [useWeightedAverage] es true, aplica ponderación fisiológica (0.25, 0.50, 0.25)
+     * a cada terna de 3 lecturas consecutivas para mayor estabilidad clínica.
+     * Preserva siempre intacta la última lectura en vivo para coincidir exactamente
+     * con la medición instantánea del sensor.
+     */
+    fun subsampleOneOfThree(
+        readings: List<GlucoseMeasurement>,
+        useWeightedAverage: Boolean = true
+    ): List<GlucoseMeasurement> {
+        val valid = readings.filter { it.numericValue > 0.0 }.sortedBy { it.getEpochMillis() }
+        if (valid.size <= 3) return valid
+
+        val result = mutableListOf<GlucoseMeasurement>()
+        val chunks = valid.chunked(3)
+
+        for (i in chunks.indices) {
+            val chunk = chunks[i]
+            val isLastChunk = (i == chunks.lastIndex)
+
+            if (chunk.size == 3) {
+                if (useWeightedAverage && !isLastChunk) {
+                    val wAvg = (0.25 * chunk[0].numericValue) + (0.50 * chunk[1].numericValue) + (0.25 * chunk[2].numericValue)
+                    val representative = chunk[2]
+                    result.add(
+                        representative.copy(
+                            valueInMgPerDl = wAvg,
+                            value = wAvg
+                        )
+                    )
+                } else {
+                    result.add(chunk.last())
+                }
+            } else {
+                result.add(chunk.last())
+            }
+        }
+
+        // Preservar exactamente la última medición real en vivo
+        val lastReal = valid.last()
+        if (result.isEmpty() || result.last().getEpochMillis() != lastReal.getEpochMillis()) {
+            result.add(lastReal)
+        } else {
+            result[result.lastIndex] = lastReal
+        }
+
+        return result
+    }
+
+    /**
      * Aplica un suavizado Gaussiano fisiológico de 3 puntos:
      * y_i = 0.20 * y_{i-1} + 0.60 * y_i + 0.20 * y_{i+1}
      * Preserva intacta la última medición en vivo para coincidir exactamente con el valor instantáneo.

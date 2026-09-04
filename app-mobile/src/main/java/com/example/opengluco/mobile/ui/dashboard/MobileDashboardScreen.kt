@@ -463,24 +463,30 @@ fun MobileDashboardScreen(
     val availableDataDays = remember(combinedHistory) {
         ClinicalReportsCalculator.calculateAvailableDays(combinedHistory)
     }
-    var insufficientDataNotice by remember { mutableStateOf<String?>(null) }
-
-    // Auto-ajuste de periodo si los dias disponibles son menores que el periodo solicitado
-    LaunchedEffect(availableDataDays) {
-        if (availableDataDays > 0 && selectedPeriod.days > availableDataDays) {
-            val valid = MetricPeriod.entries.filter { it.days <= availableDataDays }
-            selectedPeriod = valid.maxByOrNull { it.days } ?: MetricPeriod.DAY
-        }
+    val hasSufficientDataForPeriod = availableDataDays >= selectedPeriod.days
+    val periodFilteredReadings = remember(combinedHistory, selectedPeriod) {
+        ClinicalReportsCalculator.filterReadingsByPeriod(combinedHistory, selectedPeriod.days)
     }
+    val validHistory = periodFilteredReadings.map { it.numericValue }.filter { it > 0 }
 
-    val metricsSource = if (periodReadings.isNotEmpty()) periodReadings else history
-    val validHistory = metricsSource.map { it.numericValue }.filter { it > 0 }
+    val periodLabel = when (selectedPeriod) {
+        MetricPeriod.DAY -> "un día"
+        MetricPeriod.WEEK -> "una semana"
+        MetricPeriod.MONTH -> "un mes"
+        MetricPeriod.THREE_MONTHS -> "tres meses"
+    }
+    val daysPlural = if (availableDataDays == 1) "1 día" else "$availableDataDays días"
+    val requiredDaysStr = if (selectedPeriod.days == 1) "1 día" else "${selectedPeriod.days} días"
 
-    val avgVal = if (validHistory.isNotEmpty()) validHistory.average() else (currentMeasurement?.numericValue ?: 110.0)
-    val minVal = if (validHistory.isNotEmpty()) validHistory.minOrNull() ?: 70.0 else (currentMeasurement?.numericValue ?: 70.0)
-    val maxVal = if (validHistory.isNotEmpty()) validHistory.maxOrNull() ?: 180.0 else (currentMeasurement?.numericValue ?: 180.0)
-    val inRangeCount = validHistory.count { it in targetLow.toDouble()..targetHigh.toDouble() }
-    val tirPercent = if (validHistory.isNotEmpty()) ((inRangeCount.toDouble() / validHistory.size) * 100).toInt() else 100
+    val calculatedNotice = if (!hasSufficientDataForPeriod) {
+        "No tienes todavía datos suficientes para leer las métricas de $periodLabel. Se requieren al menos $requiredDaysStr de lecturas acumuladas (disponibles actualmente: $daysPlural)."
+    } else null
+
+    val avgVal = if (hasSufficientDataForPeriod && validHistory.isNotEmpty()) validHistory.average() else (currentMeasurement?.numericValue ?: 110.0)
+    val minVal = if (hasSufficientDataForPeriod && validHistory.isNotEmpty()) validHistory.minOrNull() ?: 70.0 else (currentMeasurement?.numericValue ?: 70.0)
+    val maxVal = if (hasSufficientDataForPeriod && validHistory.isNotEmpty()) validHistory.maxOrNull() ?: 180.0 else (currentMeasurement?.numericValue ?: 180.0)
+    val inRangeCount = if (hasSufficientDataForPeriod) validHistory.count { it in targetLow.toDouble()..targetHigh.toDouble() } else 0
+    val tirPercent = if (hasSufficientDataForPeriod && validHistory.isNotEmpty()) ((inRangeCount.toDouble() / validHistory.size) * 100).toInt() else 100
 
     val sensor = currentSensor ?: selectedPatient?.sensor
     val sensorDays = sensor?.getRemainingDays() ?: 14
@@ -500,7 +506,7 @@ fun MobileDashboardScreen(
         MobileSettingsScreen(
             selectedPatient = selectedPatient,
             sensor = sensor,
-            isDarkMode = settings?.isDarkMode ?: true,
+            isDarkMode = settings?.isDarkMode ?: false,
             onToggleDarkMode = { isDark ->
                 scope.launch {
                     preferencesRepository.saveDarkMode(isDark)
@@ -694,7 +700,7 @@ fun MobileDashboardScreen(
                         DashboardStatsCard(
                             selectedPeriod = selectedPeriod,
                             availableDataDays = availableDataDays,
-                            insufficientDataNotice = insufficientDataNotice,
+                            insufficientDataNotice = calculatedNotice,
                             tirPercent = tirPercent,
                             avgVal = avgVal,
                             minVal = minVal,
@@ -702,7 +708,6 @@ fun MobileDashboardScreen(
                             onSelectPeriod = { period ->
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 selectedPeriod = period
-                                insufficientDataNotice = null
                             }
                         )
 
@@ -774,7 +779,7 @@ fun MobileDashboardScreen(
                         DashboardStatsCard(
                             selectedPeriod = selectedPeriod,
                             availableDataDays = availableDataDays,
-                            insufficientDataNotice = insufficientDataNotice,
+                            insufficientDataNotice = calculatedNotice,
                             tirPercent = tirPercent,
                             avgVal = avgVal,
                             minVal = minVal,
@@ -782,7 +787,6 @@ fun MobileDashboardScreen(
                             onSelectPeriod = { period ->
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 selectedPeriod = period
-                                insufficientDataNotice = null
                             }
                         )
                     }
@@ -890,35 +894,42 @@ fun MobileDashboardScreen(
                             )
                             Spacer(modifier = Modifier.height(10.dp))
                             Text(
-                                text = "Reloj Detectado: ${autoDiscoveredPairingPayload?.deviceName ?: "Galaxy Watch"}",
-                                fontSize = 15.sp,
+                                text = "Enlace con Smartwatch Wear OS",
+                                fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = colors.textPrimary,
                                 textAlign = TextAlign.Center
                             )
-                            Spacer(modifier = Modifier.height(6.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Código de Seguridad",
-                                fontSize = 12.sp,
+                                text = autoDiscoveredPairingPayload?.deviceName ?: "Galaxy Watch",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = colors.mint
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Código de verificación",
+                                fontSize = 11.5.sp,
                                 color = colors.textSecondary
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = autoDiscoveredPairingPayload?.verificationCode?.takeIf { it.isNotBlank() } ?: "--- ---",
-                                fontSize = 32.sp,
+                                fontSize = 30.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = colors.mint,
                                 letterSpacing = 2.sp
                             )
                             Spacer(modifier = Modifier.height(10.dp))
                             Text(
-                                text = "Comprueba que este código coincide con el de tu Reloj. Si coincide, pulsa el tick para emparejar.",
-                                fontSize = 13.sp,
-                                color = colors.textPrimary,
+                                text = "Comprueba que la clave numérica coincide exactamente con la que aparece en la pantalla de tu reloj antes de autorizar la sincronización cifrada de lecturas.",
+                                fontSize = 12.sp,
+                                color = colors.textSecondary,
                                 textAlign = TextAlign.Center,
-                                lineHeight = 18.sp
+                                lineHeight = 17.sp
                             )
-                            Spacer(modifier = Modifier.height(20.dp))
+                            Spacer(modifier = Modifier.height(18.dp))
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -933,7 +944,7 @@ fun MobileDashboardScreen(
                                     shape = RoundedCornerShape(12.dp),
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    Text("Cancelar", fontWeight = FontWeight.SemiBold)
+                                    Text("Rechazar", fontWeight = FontWeight.SemiBold)
                                 }
 
                                 Button(
@@ -958,7 +969,7 @@ fun MobileDashboardScreen(
                                     shape = RoundedCornerShape(12.dp),
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    Text("Emparejar", fontWeight = FontWeight.Bold)
+                                    Text("Autorizar", fontWeight = FontWeight.Bold)
                                 }
                             }
                         } else {
@@ -970,17 +981,18 @@ fun MobileDashboardScreen(
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                text = "¡Reloj Vinculado!",
-                                fontSize = 18.sp,
+                                text = "Dispositivo Enlazado",
+                                fontSize = 17.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = colors.textPrimary
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = "Sesión transferida con éxito a ${autoDiscoveredPairingPayload?.deviceName}",
-                                fontSize = 13.sp,
+                                text = "Canal cifrado establecido con ${autoDiscoveredPairingPayload?.deviceName}. Las lecturas de glucosa se transmitirán en tiempo real.",
+                                fontSize = 12.5.sp,
                                 color = colors.textSecondary,
-                                textAlign = TextAlign.Center
+                                textAlign = TextAlign.Center,
+                                lineHeight = 17.sp
                             )
                             Spacer(modifier = Modifier.height(20.dp))
                             Button(
@@ -992,7 +1004,7 @@ fun MobileDashboardScreen(
                                 shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text("Aceptar", fontWeight = FontWeight.Bold)
+                                Text("Finalizar", fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -1810,7 +1822,8 @@ fun MobileGlucoseChart(
     }
 
     val validMeasurements = remember(rawValidMeasurements) {
-        val consolidated = com.example.opengluco.core.model.CgmCurveSmoother.consolidateTemporalBuckets(rawValidMeasurements)
+        val subsampled = com.example.opengluco.core.model.CgmCurveSmoother.subsampleOneOfThree(rawValidMeasurements)
+        val consolidated = com.example.opengluco.core.model.CgmCurveSmoother.consolidateTemporalBuckets(subsampled)
         com.example.opengluco.core.model.CgmCurveSmoother.smoothMeasurements(consolidated)
     }
 
@@ -2569,10 +2582,8 @@ private fun DashboardStatsCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Period Selector Tabs (Solo periodos con datos reales)
-            val availablePeriods = MetricPeriod.entries.filter {
-                availableDataDays >= it.days || (it == MetricPeriod.DAY && availableDataDays >= 1)
-            }.ifEmpty { listOf(MetricPeriod.DAY) }
+            // Period Selector Tabs
+            val availablePeriods = MetricPeriod.entries.toList()
 
             Row(
                 modifier = Modifier
@@ -2612,27 +2623,52 @@ private fun DashboardStatsCard(
             }
 
             insufficientDataNotice?.let { notice ->
-                Spacer(modifier = Modifier.height(8.dp))
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(colors.lowCoral.copy(alpha = 0.12f))
-                        .border(1.dp, colors.lowCoral.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                Spacer(modifier = Modifier.height(10.dp))
+                Card(
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = colors.surfaceOrb),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, colors.highAmber.copy(alpha = 0.5f)),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        text = "[Aviso] $notice",
-                        fontSize = 11.5.sp,
-                        color = colors.lowCoral,
-                        lineHeight = 15.sp
-                    )
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Info,
+                            contentDescription = "Información",
+                            tint = colors.highAmber,
+                            modifier = Modifier.size(18.dp).padding(top = 1.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = "Historial insuficiente",
+                                fontSize = 12.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = colors.textPrimary
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = notice,
+                                fontSize = 11.5.sp,
+                                color = colors.textSecondary,
+                                lineHeight = 16.sp
+                            )
+                        }
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // 4 Métricas reales calculadas
+            // 4 Métricas reales calculadas (o marcador de espera si los datos son insuficientes)
+            val hasData = insufficientDataNotice == null
+            val tirDisplay = if (hasData) "$tirPercent%" else "--"
+            val avgDisplay = if (hasData) "${avgVal.toInt()}" else "--"
+            val minDisplay = if (hasData) "${minVal.toInt()}" else "--"
+            val maxDisplay = if (hasData) "${maxVal.toInt()}" else "--"
+
             val responsive = ClinicalTheme.responsive
             val useTwoByTwo = responsive.isLargeFont || responsive.isNarrowPhone
             if (useTwoByTwo) {
@@ -2646,14 +2682,14 @@ private fun DashboardStatsCard(
                     ) {
                         DailyStatItem(
                             title = "En Rango",
-                            value = "$tirPercent%",
+                            value = tirDisplay,
                             unit = "TIR",
                             accentColor = colors.mint,
                             modifier = Modifier.weight(1f)
                         )
                         DailyStatItem(
                             title = "Media",
-                            value = "${avgVal.toInt()}",
+                            value = avgDisplay,
                             unit = "mg/dL",
                             accentColor = colors.arcticCyan,
                             modifier = Modifier.weight(1f)
@@ -2665,14 +2701,14 @@ private fun DashboardStatsCard(
                     ) {
                         DailyStatItem(
                             title = "Mín",
-                            value = "${minVal.toInt()}",
+                            value = minDisplay,
                             unit = "mg/dL",
                             accentColor = colors.textPrimary,
                             modifier = Modifier.weight(1f)
                         )
                         DailyStatItem(
                             title = "Máx",
-                            value = "${maxVal.toInt()}",
+                            value = maxDisplay,
                             unit = "mg/dL",
                             accentColor = colors.textPrimary,
                             modifier = Modifier.weight(1f)
@@ -2686,28 +2722,28 @@ private fun DashboardStatsCard(
                 ) {
                     DailyStatItem(
                         title = "En Rango",
-                        value = "$tirPercent%",
+                        value = tirDisplay,
                         unit = "TIR",
                         accentColor = colors.mint,
                         modifier = Modifier.weight(1f)
                     )
                     DailyStatItem(
                         title = "Media",
-                        value = "${avgVal.toInt()}",
+                        value = avgDisplay,
                         unit = "mg/dL",
                         accentColor = colors.arcticCyan,
                         modifier = Modifier.weight(1f)
                     )
                     DailyStatItem(
                         title = "Mín",
-                        value = "${minVal.toInt()}",
+                        value = minDisplay,
                         unit = "mg/dL",
                         accentColor = colors.textPrimary,
                         modifier = Modifier.weight(1f)
                     )
                     DailyStatItem(
                         title = "Máx",
-                        value = "${maxVal.toInt()}",
+                        value = maxDisplay,
                         unit = "mg/dL",
                         accentColor = colors.textPrimary,
                         modifier = Modifier.weight(1f)

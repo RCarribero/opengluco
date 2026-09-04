@@ -26,6 +26,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ErrorOutline
@@ -59,6 +60,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -84,10 +86,18 @@ import androidx.compose.ui.window.DialogProperties
 import com.example.opengluco.core.data.AlarmRepository
 import com.example.opengluco.core.data.GlucoseUnit
 import com.example.opengluco.core.model.AlarmSeverity
+import com.example.opengluco.core.model.AlarmSoundType
 import com.example.opengluco.core.model.AlarmType
 import com.example.opengluco.core.model.GlucoseAlarm
+import android.net.Uri
+import android.provider.OpenableColumns
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import com.example.opengluco.mobile.notification.MobileAlarmNotificationHelper
 import com.example.opengluco.mobile.service.MobileAlarmSyncHelper
 import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
 import java.util.Locale
 import java.util.UUID
 import kotlin.math.roundToInt
@@ -500,11 +510,15 @@ private fun AlarmCard(
     }
 
     val cooldownText = when (alarm.cooldownMinutes) {
+        1 -> "Cada 1 min"
+        2 -> "Cada 2 min"
+        3 -> "Cada 3 min"
+        4 -> "Cada 4 min"
         5 -> "Cada 5 min"
         10 -> "Cada 10 min"
         15 -> "Cada 15 min"
         30 -> "Cada 30 min"
-        else -> "No repetir"
+        else -> if (alarm.cooldownMinutes > 0) "Cada ${alarm.cooldownMinutes} min" else "No repetir"
     }
 
     val scheduleText = if (alarm.isAllDay) {
@@ -575,12 +589,26 @@ private fun AlarmCard(
                     color = TextSecondary,
                     fontSize = 11.sp
                 )
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "•  $cooldownText",
+                    text = "-  $cooldownText",
                     color = TextSecondary,
                     fontSize = 11.sp
                 )
+                if (alarm.soundType != AlarmSoundType.DEFAULT) {
+                    val label = if (alarm.soundType == AlarmSoundType.CUSTOM && !alarm.customSoundName.isNullOrBlank()) {
+                        alarm.customSoundName
+                    } else {
+                        alarm.soundType.label
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "-  $label",
+                        color = ColorArcticCyan,
+                        fontSize = 10.5.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
             }
         }
 
@@ -617,6 +645,39 @@ private fun AlarmCard(
     }
 }
 
+private fun copyCustomAudioToInternalStorage(context: android.content.Context, sourceUri: Uri): Uri? {
+    return try {
+        val alarmsDir = File(context.filesDir, "custom_alarms").apply { if (!exists()) mkdirs() }
+        val displayName = getFileNameFromUri(context, sourceUri) ?: "custom_alarm_${System.currentTimeMillis()}.mp3"
+        val cleanName = displayName.replace("[^a-zA-Z0-9._-]".toRegex(), "_")
+        val destFile = File(alarmsDir, "alarm_${System.currentTimeMillis()}_$cleanName")
+        context.contentResolver.openInputStream(sourceUri)?.use { input ->
+            FileOutputStream(destFile).use { output ->
+                input.copyTo(output)
+            }
+        }
+        Uri.fromFile(destFile)
+    } catch (_: Exception) {
+        null
+    }
+}
+
+private fun getFileNameFromUri(context: android.content.Context, uri: Uri): String? {
+    if (uri.scheme == "content") {
+        try {
+            context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (nameIndex != -1) {
+                        return cursor.getString(nameIndex)
+                    }
+                }
+            }
+        } catch (_: Exception) {}
+    }
+    return uri.path?.substringAfterLast('/')
+}
+
 /**
  * Dialogo modal de creacion / edicion con:
  * 1. Soporte completo de unidades (mg/dL o mmol/L).
@@ -635,6 +696,7 @@ fun AlarmCreationDialog(
     onSave: (GlucoseAlarm) -> Unit
 ) {
     val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
     var alarmType by remember { mutableStateOf(existingAlarm?.type ?: initialType) }
     val isMmol = unit == GlucoseUnit.MMOL
 
@@ -658,6 +720,9 @@ fun AlarmCreationDialog(
     }
 
     var severity by remember { mutableStateOf(existingAlarm?.severity ?: AlarmSeverity.ALERT) }
+    var soundType by remember { mutableStateOf(existingAlarm?.soundType ?: AlarmSoundType.DEFAULT) }
+    var customSoundUri by remember { mutableStateOf(existingAlarm?.customSoundUri) }
+    var customSoundName by remember { mutableStateOf(existingAlarm?.customSoundName) }
     var cooldownMinutes by remember { mutableIntStateOf(existingAlarm?.cooldownMinutes ?: 15) }
     var isAllDay by remember { mutableStateOf(existingAlarm?.isAllDay ?: true) }
     var startHour by remember { mutableIntStateOf(existingAlarm?.activeStartHour ?: 22) }
@@ -666,6 +731,35 @@ fun AlarmCreationDialog(
     var endMinute by remember { mutableIntStateOf(existingAlarm?.activeEndMinute ?: 0) }
 
     var expandedCooldown by remember { mutableStateOf(false) }
+    var expandedSound by remember { mutableStateOf(false) }
+    var isPreviewPlaying by remember { mutableStateOf(false) }
+
+    val audioPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            val localUri = copyCustomAudioToInternalStorage(context, uri)
+            if (localUri != null) {
+                val name = getFileNameFromUri(context, uri) ?: "audio_personalizado"
+                customSoundUri = localUri.toString()
+                customSoundName = name
+                soundType = AlarmSoundType.CUSTOM
+                MobileAlarmNotificationHelper.previewSound(
+                    context = context,
+                    soundType = AlarmSoundType.CUSTOM,
+                    severity = severity,
+                    customSoundUri = customSoundUri
+                )
+                isPreviewPlaying = true
+            }
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            MobileAlarmNotificationHelper.stopPreview()
+        }
+    }
 
     // Color dinamico segun severidad y nivel
     val dynamicColor = when (severity) {
@@ -683,6 +777,10 @@ fun AlarmCreationDialog(
     }
 
     val cooldownOptions = listOf(
+        1 to "1 minuto",
+        2 to "2 minutos",
+        3 to "3 minutos",
+        4 to "4 minutos",
         5 to "5 minutos",
         10 to "10 minutos",
         15 to "15 minutos",
@@ -690,7 +788,7 @@ fun AlarmCreationDialog(
         0 to "No repetir"
     )
 
-    val cooldownLabel = cooldownOptions.find { it.first == cooldownMinutes }?.second ?: "15 minutos"
+    val cooldownLabel = cooldownOptions.find { it.first == cooldownMinutes }?.second ?: if (cooldownMinutes > 0) "$cooldownMinutes minutos" else "No repetir"
 
     val responsive = ClinicalTheme.responsive
 
@@ -732,8 +830,13 @@ fun AlarmCreationDialog(
                             fontSize = 12.sp
                         )
                     }
-                    IconButton(onClick = onDismiss) {
-                        Text("X", color = TextSecondary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Cerrar",
+                            tint = TextSecondary,
+                            modifier = Modifier.size(18.dp)
+                        )
                     }
                 }
 
@@ -1108,7 +1211,152 @@ fun AlarmCreationDialog(
 
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // 6. Horario Activo (24 Horas vs Personalizado)
+                // 6. Sonido de la Alarma (Personalizable con Vista Previa y Audios Propios)
+                Text("Sonido de la Alarma", color = TextSecondary, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        ExposedDropdownMenuBox(
+                            expanded = expandedSound,
+                            onExpandedChange = { expandedSound = it }
+                        ) {
+                            val displaySoundText = if (soundType == AlarmSoundType.CUSTOM && !customSoundName.isNullOrBlank()) {
+                                "Movil: $customSoundName"
+                            } else {
+                                soundType.label
+                            }
+                            OutlinedTextField(
+                                value = displaySoundText,
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedSound) },
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .fillMaxWidth(),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = ColorMint,
+                                    unfocusedBorderColor = BorderColor,
+                                    focusedTextColor = TextPrimary,
+                                    unfocusedTextColor = TextPrimary,
+                                    focusedContainerColor = BgCard,
+                                    unfocusedContainerColor = BgCard
+                                ),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            ExposedDropdownMenu(
+                                expanded = expandedSound,
+                                onDismissRequest = { expandedSound = false }
+                            ) {
+                                AlarmSoundType.values().forEach { st ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Column {
+                                                Text(st.label, color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                                                val detail = when (st) {
+                                                    AlarmSoundType.DEFAULT -> "Segun severidad: ${
+                                                        when (severity) {
+                                                            AlarmSeverity.URGENT -> "Sirena Extrema"
+                                                            AlarmSeverity.ALERT -> "Sirena Medica"
+                                                            AlarmSeverity.INFORMATIVE -> "Alerta Estandar"
+                                                        }
+                                                    }"
+                                                    AlarmSoundType.CUSTOM -> if (!customSoundName.isNullOrBlank()) "Archivo: $customSoundName" else "Elegir archivo del telefono (MP3, WAV, OGG...)"
+                                                    AlarmSoundType.URGENT_EXTREME -> "Pitido muy fuerte y llamativo (maxima urgencia)"
+                                                    AlarmSoundType.URGENT_MEDICAL -> "Sirena clinica de hospital"
+                                                    AlarmSoundType.ALERT_STANDARD -> "Doble tono clinico fuera de rango"
+                                                    AlarmSoundType.DISCRETE_CHIME -> "Aviso corto y suave"
+                                                    AlarmSoundType.SILENT -> "Sin sonido, solo notificacion y vibracion"
+                                                }
+                                                Text(detail, color = TextMuted, fontSize = 10.5.sp)
+                                            }
+                                        },
+                                        onClick = {
+                                            soundType = st
+                                            expandedSound = false
+                                            MobileAlarmNotificationHelper.stopPreview()
+                                            isPreviewPlaying = false
+                                            if (st == AlarmSoundType.CUSTOM && customSoundUri == null) {
+                                                audioPickerLauncher.launch("audio/*")
+                                            }
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    if (soundType != AlarmSoundType.SILENT) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        IconButton(
+                            onClick = {
+                                if (isPreviewPlaying) {
+                                    MobileAlarmNotificationHelper.stopPreview()
+                                    isPreviewPlaying = false
+                                } else {
+                                    MobileAlarmNotificationHelper.previewSound(
+                                        context = context,
+                                        soundType = soundType,
+                                        severity = severity,
+                                        customSoundUri = customSoundUri
+                                    )
+                                    isPreviewPlaying = true
+                                }
+                            },
+                            modifier = Modifier
+                                .size(50.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (isPreviewPlaying) ColorMint.copy(alpha = 0.2f) else BgCard)
+                                .border(1.dp, if (isPreviewPlaying) ColorMint else BorderColor, RoundedCornerShape(12.dp))
+                        ) {
+                            Icon(
+                                imageVector = if (isPreviewPlaying) Icons.Default.Close else Icons.Default.NotificationsActive,
+                                contentDescription = if (isPreviewPlaying) "Detener prueba" else "Probar sonido",
+                                tint = if (isPreviewPlaying) ColorMint else TextSecondary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                }
+
+                if (soundType == AlarmSoundType.CUSTOM) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = {
+                            MobileAlarmNotificationHelper.stopPreview()
+                            isPreviewPlaying = false
+                            audioPickerLauncher.launch("audio/*")
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(42.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = BgCardInner,
+                            contentColor = ColorArcticCyan
+                        ),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, ColorArcticCyan.copy(alpha = 0.4f))
+                    ) {
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = null,
+                            modifier = Modifier.size(15.dp),
+                            tint = ColorArcticCyan
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (customSoundName.isNullOrBlank()) "Elegir archivo de audio de mi movil..." else "Cambiar audio ($customSoundName)",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // 7. Horario Activo (24 Horas vs Personalizado)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1223,7 +1471,7 @@ fun AlarmCreationDialog(
 
                 Spacer(modifier = Modifier.height(30.dp))
 
-                // 7. Botones de Accion
+                // 8. Botones de Accion
                 if (responsive.isExtraLargeFont) {
                     Column(
                         modifier = Modifier.fillMaxWidth(),
@@ -1232,6 +1480,7 @@ fun AlarmCreationDialog(
                         Button(
                             onClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                MobileAlarmNotificationHelper.stopPreview()
                                 val finalThresholdMgDl = thresholdMgDl.roundToInt().coerceIn(40, 400)
                                 val alarmToSave = GlucoseAlarm(
                                     id = existingAlarm?.id ?: UUID.randomUUID().toString(),
@@ -1244,7 +1493,10 @@ fun AlarmCreationDialog(
                                     activeStartMinute = startMinute,
                                     activeEndHour = endHour,
                                     activeEndMinute = endMinute,
-                                    isAllDay = isAllDay
+                                    isAllDay = isAllDay,
+                                    soundType = soundType,
+                                    customSoundUri = if (soundType == AlarmSoundType.CUSTOM) customSoundUri else null,
+                                    customSoundName = if (soundType == AlarmSoundType.CUSTOM) customSoundName else null
                                 )
                                 onSave(alarmToSave)
                             },
@@ -1261,7 +1513,10 @@ fun AlarmCreationDialog(
                         }
 
                         Button(
-                            onClick = onDismiss,
+                            onClick = {
+                                MobileAlarmNotificationHelper.stopPreview()
+                                onDismiss()
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .heightIn(min = 48.dp),
@@ -1280,7 +1535,10 @@ fun AlarmCreationDialog(
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Button(
-                            onClick = onDismiss,
+                            onClick = {
+                                MobileAlarmNotificationHelper.stopPreview()
+                                onDismiss()
+                            },
                             modifier = Modifier
                                 .weight(1f)
                                 .heightIn(min = 48.dp),
@@ -1296,6 +1554,7 @@ fun AlarmCreationDialog(
                         Button(
                             onClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                MobileAlarmNotificationHelper.stopPreview()
                                 val finalThresholdMgDl = thresholdMgDl.roundToInt().coerceIn(40, 400)
                                 val alarmToSave = GlucoseAlarm(
                                     id = existingAlarm?.id ?: UUID.randomUUID().toString(),
@@ -1308,7 +1567,10 @@ fun AlarmCreationDialog(
                                     activeStartMinute = startMinute,
                                     activeEndHour = endHour,
                                     activeEndMinute = endMinute,
-                                    isAllDay = isAllDay
+                                    isAllDay = isAllDay,
+                                    soundType = soundType,
+                                    customSoundUri = if (soundType == AlarmSoundType.CUSTOM) customSoundUri else null,
+                                    customSoundName = if (soundType == AlarmSoundType.CUSTOM) customSoundName else null
                                 )
                                 onSave(alarmToSave)
                             },

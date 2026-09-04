@@ -188,7 +188,7 @@ fun QrScannerScreen(
                             )
                             Spacer(modifier = Modifier.height(10.dp))
                             Text(
-                                text = "Código de Seguridad",
+                                text = "Código de Verificación",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = colors.textSecondary
@@ -203,7 +203,7 @@ fun QrScannerScreen(
                             )
                             Spacer(modifier = Modifier.height(10.dp))
                             Text(
-                                text = "Comprueba que este código coincide con el de tu Reloj. Si coincide, pulsa el tick para emparejar.",
+                                text = "Comprueba que este código coincide con el mostrado en tu dispositivo. Confirma la vinculación para iniciar la transferencia cifrada.",
                                 fontSize = 13.sp,
                                 color = colors.textPrimary,
                                 textAlign = TextAlign.Center,
@@ -224,7 +224,7 @@ fun QrScannerScreen(
                                     shape = RoundedCornerShape(12.dp),
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    Text("Cancelar", fontWeight = FontWeight.SemiBold)
+                                    Text("Rechazar", fontWeight = FontWeight.SemiBold)
                                 }
 
                                 Button(
@@ -243,7 +243,7 @@ fun QrScannerScreen(
                                     shape = RoundedCornerShape(12.dp),
                                     modifier = Modifier.weight(1f)
                                 ) {
-                                    Text("Emparejar", fontWeight = FontWeight.Bold)
+                                    Text("Autorizar", fontWeight = FontWeight.Bold)
                                 }
                             }
                         }
@@ -279,7 +279,7 @@ fun QrScannerScreen(
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = "Sesión transferida con éxito a: ${scannedPayload?.deviceName}",
+                                text = "Canal seguro establecido con ${scannedPayload?.deviceName}. Las lecturas se sincronizarán de forma continua.",
                                 fontSize = 13.sp,
                                 color = colors.textSecondary,
                                 textAlign = TextAlign.Center

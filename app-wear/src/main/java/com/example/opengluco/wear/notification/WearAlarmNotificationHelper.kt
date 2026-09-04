@@ -22,9 +22,9 @@ import com.example.opengluco.wear.R
  */
 object WearAlarmNotificationHelper {
 
-    private const val CHANNEL_URGENT = "cgm_urgent_alarms"
-    private const val CHANNEL_ALERT = "cgm_alert_alarms"
-    private const val CHANNEL_INFO = "cgm_info_alarms"
+    private const val CHANNEL_URGENT = "cgm_urgent_alarms_v5"
+    private const val CHANNEL_ALERT = "cgm_alert_alarms_v5"
+    private const val CHANNEL_INFO = "cgm_info_alarms_v5"
     private const val NOTIFICATION_ID_ALARM = 1001
 
     fun createChannels(context: Context) {
@@ -38,7 +38,7 @@ object WearAlarmNotificationHelper {
             ).apply {
                 description = "Alertas criticas de hipoglucemia e hiperglucemia urgente"
                 enableVibration(true)
-                vibrationPattern = longArrayOf(0, 600, 150, 600, 150, 600)
+                vibrationPattern = longArrayOf(0, 800, 150, 800, 150, 800)
                 setBypassDnd(true)
             }
 
@@ -47,18 +47,19 @@ object WearAlarmNotificationHelper {
                 "Alertas de Glucosa",
                 NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
-                description = "Alertas moderadas de niveles fuera de rango"
+                description = "Alertas sonoras y tactiles de niveles fuera de rango"
                 enableVibration(true)
-                vibrationPattern = longArrayOf(0, 300, 200, 300)
+                vibrationPattern = longArrayOf(0, 400, 200, 400)
             }
 
             val infoChannel = NotificationChannel(
                 CHANNEL_INFO,
                 "Avisos de Glucosa",
-                NotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
-                description = "Notificaciones informativas silenciosas de glucosa"
-                enableVibration(false)
+                description = "Notificaciones informativas de glucosa con vibracion suave"
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 250)
             }
 
             manager.createNotificationChannel(urgentChannel)
@@ -170,8 +171,6 @@ object WearAlarmNotificationHelper {
     }
 
     private fun triggerHapticAlarm(context: Context, severity: AlarmSeverity) {
-        if (severity == AlarmSeverity.INFORMATIVE) return
-
         try {
             val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 val manager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
@@ -183,9 +182,9 @@ object WearAlarmNotificationHelper {
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val timings = when (severity) {
-                    AlarmSeverity.URGENT -> longArrayOf(0, 600, 150, 600, 150, 600)
-                    AlarmSeverity.ALERT -> longArrayOf(0, 300, 200, 300)
-                    else -> return
+                    AlarmSeverity.URGENT -> longArrayOf(0, 800, 150, 800, 150, 800)
+                    AlarmSeverity.ALERT -> longArrayOf(0, 400, 200, 400)
+                    AlarmSeverity.INFORMATIVE -> longArrayOf(0, 250)
                 }
                 vibrator.vibrate(VibrationEffect.createWaveform(timings, -1))
             }

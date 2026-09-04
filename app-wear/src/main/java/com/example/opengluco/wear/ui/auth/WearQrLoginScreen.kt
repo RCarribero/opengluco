@@ -332,7 +332,7 @@ fun WearQrLoginScreen(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = "Pulsa el tick al coincidir",
+                        text = "Confirma cuando coincida",
                         fontSize = 9.sp,
                         color = ClinicalTextSecondary,
                         textAlign = TextAlign.Center

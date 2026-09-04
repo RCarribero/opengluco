@@ -193,7 +193,7 @@ fun MobileStatDetailModal(
                         .fillMaxWidth()
                         .height(44.dp)
                 ) {
-                    Text("Aceptar", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Text("Cerrar", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 }
             }
         }

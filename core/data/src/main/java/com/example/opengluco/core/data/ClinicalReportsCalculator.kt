@@ -40,15 +40,18 @@ object ClinicalReportsCalculator {
         val valid = readings.filter { it.numericValue > 0 }
         if (valid.isEmpty()) return 0
 
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply {
+            timeZone = TimeZone.getDefault()
+        }
+
         val distinctDates = valid.mapNotNull { m ->
-            val ts = m.timestamp ?: m.factoryTimestamp
-            if (!ts.isNullOrBlank() && ts.length >= 10) {
-                ts.substring(0, 10)
+            val epoch = m.getEpochMillis()
+            if (epoch > 0L) {
+                sdf.format(Date(epoch))
             } else {
-                val epoch = m.getEpochMillis()
-                if (epoch > 0) {
-                    val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-                    sdf.format(Date(epoch))
+                val ts = m.timestamp ?: m.factoryTimestamp
+                if (!ts.isNullOrBlank() && ts.length >= 10 && ts[4] == '-' && ts[7] == '-') {
+                    ts.substring(0, 10)
                 } else null
             }
         }.toSet()
@@ -469,11 +472,20 @@ object ClinicalReportsCalculator {
         }
 
         val dateGroups = mutableMapOf<String, MutableList<GlucoseMeasurement>>()
-        val sdfDate = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        val sdfDate = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply {
+            timeZone = TimeZone.getDefault()
+        }
 
         for (r in valid) {
-            val ts = r.timestamp.orEmpty()
-            val dateKey = if (ts.length >= 10) ts.substring(0, 10) else sdfDate.format(Date(r.getEpochMillis()))
+            val epoch = r.getEpochMillis()
+            val ts = r.timestamp ?: r.factoryTimestamp ?: ""
+            val dateKey = if (epoch > 0L) {
+                sdfDate.format(Date(epoch))
+            } else if (ts.length >= 10 && ts[4] == '-' && ts[7] == '-') {
+                ts.substring(0, 10)
+            } else {
+                "Desconocido"
+            }
             dateGroups.getOrPut(dateKey) { mutableListOf() }.add(r)
         }
 
@@ -587,15 +599,22 @@ object ClinicalReportsCalculator {
     private fun extractHour(timestamp: String?, sdf: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)): Int {
         if (timestamp.isNullOrBlank()) return 12
         return try {
-            if (timestamp.contains(":") && timestamp.length >= 13) {
-                // Formato ISO "YYYY-MM-DD HH:mm:ss" -> substring en posicion 11..12
+            if (timestamp.length >= 19 && timestamp[4] == '-' && timestamp[7] == '-') {
+                // Formato ISO "YYYY-MM-DD HH:mm:ss" o "YYYY-MM-DDTHH:mm:ss" -> substring en posicion 11..12
                 val hourSub = timestamp.substring(11, 13)
                 hourSub.toIntOrNull() ?: 12
             } else {
-                val d = sdf.parse(timestamp)
-                val cal = Calendar.getInstance()
-                if (d != null) cal.time = d
-                cal.get(Calendar.HOUR_OF_DAY)
+                val epoch = GlucoseMeasurement(timestamp = timestamp).getEpochMillis()
+                if (epoch > 0L) {
+                    val cal = Calendar.getInstance(TimeZone.getDefault())
+                    cal.timeInMillis = epoch
+                    cal.get(Calendar.HOUR_OF_DAY)
+                } else {
+                    val d = sdf.parse(timestamp)
+                    val cal = Calendar.getInstance()
+                    if (d != null) cal.time = d
+                    cal.get(Calendar.HOUR_OF_DAY)
+                }
             }
         } catch (e: Exception) {
             12

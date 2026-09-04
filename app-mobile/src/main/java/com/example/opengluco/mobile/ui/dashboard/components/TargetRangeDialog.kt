@@ -123,13 +123,13 @@ fun TargetRangeDialog(
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
-                                text = "Rango Objetivo",
+                                text = "Rango Glucémico Objetivo",
                                 fontSize = 17.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = colors.textPrimary
                             )
                             Text(
-                                text = "Personaliza tus umbrales (${unit.label})",
+                                text = "Límites clínicos de referencia (${unit.label})",
                                 fontSize = 11.5.sp,
                                 color = colors.textSecondary
                             )
@@ -390,7 +390,7 @@ fun TargetRangeDialog(
                             )
                         ) {
                             Text(
-                                text = "Guardar Rango",
+                                text = "Aplicar Rango",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 13.sp
                             )
@@ -442,7 +442,7 @@ fun TargetRangeDialog(
                             )
                         ) {
                             Text(
-                                text = "Guardar Rango",
+                                text = "Aplicar Rango",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 13.sp
                             )

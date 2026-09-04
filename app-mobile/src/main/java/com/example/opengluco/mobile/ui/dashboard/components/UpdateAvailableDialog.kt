@@ -96,16 +96,16 @@ fun UpdateAvailableDialog(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = "Nueva Version Disponible",
+                    text = "Actualización de Software",
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
+                    fontSize = 17.sp,
                     color = colors.textPrimary
                 )
 
                 Text(
-                    text = "Version ${releaseInfo.versionName}",
+                    text = "Versión ${releaseInfo.versionName}",
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp,
+                    fontSize = 13.5.sp,
                     color = colors.mint
                 )
 
@@ -167,7 +167,7 @@ fun UpdateAvailableDialog(
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "Descargando actualizacion: $downloadProgress%",
+                            text = "Descargando actualización: $downloadProgress%",
                             fontSize = 12.sp,
                             color = colors.textSecondary
                         )
@@ -184,7 +184,7 @@ fun UpdateAvailableDialog(
                             border = BorderStroke(1.dp, colors.surfaceBorder),
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.textSecondary)
                         ) {
-                            Text("Mas tarde", fontSize = 13.sp)
+                            Text("Posponer", fontSize = 13.sp)
                         }
 
                         Button(
@@ -230,7 +230,7 @@ fun UpdateAvailableDialog(
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Actualizar", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            Text("Instalar", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }

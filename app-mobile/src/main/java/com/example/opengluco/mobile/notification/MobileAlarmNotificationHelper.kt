@@ -12,27 +12,30 @@ import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.example.opengluco.core.model.AlarmSeverity
+import com.example.opengluco.core.model.AlarmSoundType
 import com.example.opengluco.core.model.AlarmType
 import com.example.opengluco.core.model.GlucoseAlarm
 import com.example.opengluco.mobile.MainActivity
 import com.example.opengluco.mobile.R
 
 object MobileAlarmNotificationHelper {
-    const val CHANNEL_URGENT = "cgm_urgent_alarms_v4"
-    const val CHANNEL_ALERT = "cgm_alert_alarms_v4"
-    const val CHANNEL_INFO = "cgm_info_alarms_v4"
-    const val CHANNEL_LIVE_STATUS = "cgm_live_status_v4"
+    const val CHANNEL_URGENT = "cgm_urgent_alarms_v5"
+    const val CHANNEL_ALERT = "cgm_alert_alarms_v5"
+    const val CHANNEL_INFO = "cgm_info_alarms_v5"
+    const val CHANNEL_LIVE_STATUS = "cgm_live_status_v5"
 
     const val NOTIFICATION_ID_LIVE_STATUS = 9001
 
     private var emergencyMediaPlayer: MediaPlayer? = null
+    private var previewMediaPlayer: MediaPlayer? = null
 
     fun createChannels(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-            val urgentSoundUri = Uri.parse("android.resource://${context.packageName}/${R.raw.alarm_urgent_medical}")
-            val alertSoundUri = Uri.parse("android.resource://${context.packageName}/${R.raw.alarm_alert}")
+            val urgentSoundUri = Uri.parse("android.resource://${context.packageName}/${R.raw.alarm_urgent_extreme}")
+            val alertSoundUri = Uri.parse("android.resource://${context.packageName}/${R.raw.alarm_urgent_medical}")
+            val infoSoundUri = Uri.parse("android.resource://${context.packageName}/${R.raw.alarm_alert}")
 
             val urgentAudioAttributes = AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_ALARM)
@@ -46,11 +49,11 @@ object MobileAlarmNotificationHelper {
 
             val urgentChannel = NotificationChannel(
                 CHANNEL_URGENT,
-                "Alarmas Urgentes (Sirena Médica)",
+                "Alarmas Urgentes (Sirena Extrema)",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Alertas críticas de hipoglucemia e hiperglucemia urgente con sonido estroboscópico"
-                vibrationPattern = longArrayOf(0, 600, 150, 600, 150, 600)
+                description = "Alertas criticas de hipoglucemia e hiperglucemia urgente con sirena estroboscopica de maxima intensidad"
+                vibrationPattern = longArrayOf(0, 800, 150, 800, 150, 800)
                 enableVibration(true)
                 setSound(urgentSoundUri, urgentAudioAttributes)
                 setBypassDnd(true)
@@ -62,8 +65,8 @@ object MobileAlarmNotificationHelper {
                 "Alarmas de Glucosa Fuera de Rango",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Alertas sonoras de glucosa fuera de rango objetivo"
-                vibrationPattern = longArrayOf(0, 300, 200, 300)
+                description = "Alertas sonoras de glucosa fuera de rango objetivo con tono medico urgente"
+                vibrationPattern = longArrayOf(0, 400, 200, 400)
                 enableVibration(true)
                 setSound(alertSoundUri, alertAudioAttributes)
                 lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
@@ -71,12 +74,14 @@ object MobileAlarmNotificationHelper {
 
             val infoChannel = NotificationChannel(
                 CHANNEL_INFO,
-                "Avisos de Información",
-                NotificationManager.IMPORTANCE_LOW
+                "Avisos de Informacion Sonora",
+                NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
-                description = "Información del sensor y estado"
-                enableVibration(false)
-                setSound(null, null)
+                description = "Avisos informativos de glucosa con alerta sonora estandar"
+                enableVibration(true)
+                vibrationPattern = longArrayOf(0, 250)
+                setSound(infoSoundUri, alertAudioAttributes)
+                lockscreenVisibility = android.app.Notification.VISIBILITY_PUBLIC
             }
 
             val liveStatusChannel = NotificationChannel(
@@ -84,7 +89,7 @@ object MobileAlarmNotificationHelper {
                 "Monitor de Glucosa en Tiempo Real",
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "Muestra la última lectura en tiempo real en la barra de notificaciones"
+                description = "Muestra la ultima lectura en tiempo real en la barra de notificaciones"
                 enableVibration(false)
                 setSound(null, null)
                 setShowBadge(false)
@@ -95,6 +100,118 @@ object MobileAlarmNotificationHelper {
             notificationManager.createNotificationChannel(infoChannel)
             notificationManager.createNotificationChannel(liveStatusChannel)
         }
+    }
+
+    /**
+     * Resuelve el recurso de audio crudo (R.raw.*) asignado a una alarma concreta.
+     * Considera la configuracion individual soundType o delega en la severidad por defecto.
+     */
+    fun resolveSoundRawRes(alarm: GlucoseAlarm): Int? {
+        return when (alarm.soundType) {
+            AlarmSoundType.SILENT, AlarmSoundType.CUSTOM -> null
+            AlarmSoundType.URGENT_EXTREME -> R.raw.alarm_urgent_extreme
+            AlarmSoundType.URGENT_MEDICAL -> R.raw.alarm_urgent_medical
+            AlarmSoundType.ALERT_STANDARD -> R.raw.alarm_alert
+            AlarmSoundType.DISCRETE_CHIME -> R.raw.alarm_discrete
+            AlarmSoundType.DEFAULT -> when (alarm.severity) {
+                AlarmSeverity.URGENT -> R.raw.alarm_urgent_extreme
+                AlarmSeverity.ALERT -> R.raw.alarm_urgent_medical
+                AlarmSeverity.INFORMATIVE -> R.raw.alarm_alert
+            }
+        }
+    }
+
+    /**
+     * Resuelve el URI final de audio (recurso nativo R.raw o archivo personalizado en almacenamiento interno).
+     */
+    fun resolveSoundUri(context: Context, alarm: GlucoseAlarm): Uri? {
+        if (alarm.soundType == AlarmSoundType.SILENT) return null
+        if (alarm.soundType == AlarmSoundType.CUSTOM && !alarm.customSoundUri.isNullOrBlank()) {
+            return Uri.parse(alarm.customSoundUri)
+        }
+        val rawRes = resolveSoundRawRes(alarm) ?: return null
+        return Uri.parse("android.resource://${context.packageName}/$rawRes")
+    }
+
+    /**
+     * Resuelve el recurso sonoro segun tipo de sonido y severidad para preescucha en UI.
+     */
+    fun resolveSoundRawResForType(soundType: AlarmSoundType, severity: AlarmSeverity = AlarmSeverity.ALERT): Int? {
+        return when (soundType) {
+            AlarmSoundType.SILENT, AlarmSoundType.CUSTOM -> null
+            AlarmSoundType.URGENT_EXTREME -> R.raw.alarm_urgent_extreme
+            AlarmSoundType.URGENT_MEDICAL -> R.raw.alarm_urgent_medical
+            AlarmSoundType.ALERT_STANDARD -> R.raw.alarm_alert
+            AlarmSoundType.DISCRETE_CHIME -> R.raw.alarm_discrete
+            AlarmSoundType.DEFAULT -> when (severity) {
+                AlarmSeverity.URGENT -> R.raw.alarm_urgent_extreme
+                AlarmSeverity.ALERT -> R.raw.alarm_urgent_medical
+                AlarmSeverity.INFORMATIVE -> R.raw.alarm_alert
+            }
+        }
+    }
+
+    /**
+     * Reproduce una vista previa sonora en la interfaz de configuracion.
+     * Soporta tanto tonos del catalogo clinico como archivos personalizados del usuario.
+     */
+    fun previewSound(
+        context: Context,
+        soundType: AlarmSoundType,
+        severity: AlarmSeverity = AlarmSeverity.ALERT,
+        customSoundUri: String? = null
+    ) {
+        stopPreview()
+        if (soundType == AlarmSoundType.CUSTOM && !customSoundUri.isNullOrBlank()) {
+            previewCustomSound(context, Uri.parse(customSoundUri))
+            return
+        }
+        val soundRes = resolveSoundRawResForType(soundType, severity) ?: return
+        try {
+            val uri = Uri.parse("android.resource://${context.packageName}/$soundRes")
+            previewCustomSound(context, uri)
+        } catch (_: Exception) {}
+    }
+
+    /**
+     * Reproduce una vista previa de un URI de audio especifico.
+     */
+    fun previewCustomSound(context: Context, uri: Uri) {
+        stopPreview()
+        try {
+            previewMediaPlayer = MediaPlayer().apply {
+                setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                        .build()
+                )
+                if (uri.scheme == "file" && uri.path != null) {
+                    setDataSource(uri.path!!)
+                } else {
+                    setDataSource(context, uri)
+                }
+                prepare()
+                start()
+                setOnCompletionListener {
+                    it.release()
+                    if (previewMediaPlayer == it) {
+                        previewMediaPlayer = null
+                    }
+                }
+            }
+        } catch (_: Exception) {}
+    }
+
+    /**
+     * Detiene la reproduccion de vista previa.
+     */
+    fun stopPreview() {
+        try {
+            previewMediaPlayer?.stop()
+            previewMediaPlayer?.release()
+            previewMediaPlayer = null
+        } catch (_: Exception) {}
     }
 
     /**
@@ -199,7 +316,7 @@ object MobileAlarmNotificationHelper {
         val priority = when (alarm.severity) {
             AlarmSeverity.URGENT -> NotificationCompat.PRIORITY_MAX
             AlarmSeverity.ALERT -> NotificationCompat.PRIORITY_HIGH
-            AlarmSeverity.INFORMATIVE -> NotificationCompat.PRIORITY_LOW
+            AlarmSeverity.INFORMATIVE -> NotificationCompat.PRIORITY_DEFAULT
         }
 
         val category = when (alarm.severity) {
@@ -207,11 +324,7 @@ object MobileAlarmNotificationHelper {
             else -> NotificationCompat.CATEGORY_STATUS
         }
 
-        val soundUri = when (alarm.severity) {
-            AlarmSeverity.URGENT -> Uri.parse("android.resource://${context.packageName}/${R.raw.alarm_urgent_medical}")
-            AlarmSeverity.ALERT -> Uri.parse("android.resource://${context.packageName}/${R.raw.alarm_alert}")
-            AlarmSeverity.INFORMATIVE -> null
-        }
+        val soundUri = resolveSoundUri(context, alarm)
 
         val builder = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(icon)
@@ -230,16 +343,19 @@ object MobileAlarmNotificationHelper {
 
         notificationManager.notify(notificationId, builder.build())
 
-        // En alarmas urgentes, reproducir audio forzado por canal de alarma
-        if (alarm.severity == AlarmSeverity.URGENT) {
-            playEmergencyAlarmSound(context)
+        // Reproducir audio forzado por canal de alarma en casos urgentes, extrema urgencia o audio personalizado
+        if (alarm.soundType != AlarmSoundType.SILENT) {
+            if (alarm.severity == AlarmSeverity.URGENT || alarm.soundType == AlarmSoundType.URGENT_EXTREME || alarm.soundType == AlarmSoundType.CUSTOM) {
+                if (soundUri != null) {
+                    playEmergencyAlarmSoundUri(context, soundUri)
+                }
+            }
         }
     }
 
-    private fun playEmergencyAlarmSound(context: Context) {
+    private fun playEmergencyAlarmSoundUri(context: Context, uri: Uri) {
         try {
             stopEmergencyAlarmSound()
-            val uri = Uri.parse("android.resource://${context.packageName}/${R.raw.alarm_urgent_medical}")
             emergencyMediaPlayer = MediaPlayer().apply {
                 setAudioAttributes(
                     AudioAttributes.Builder()
@@ -248,7 +364,11 @@ object MobileAlarmNotificationHelper {
                         .setLegacyStreamType(AudioManager.STREAM_ALARM)
                         .build()
                 )
-                setDataSource(context, uri)
+                if (uri.scheme == "file" && uri.path != null) {
+                    setDataSource(uri.path!!)
+                } else {
+                    setDataSource(context, uri)
+                }
                 prepare()
                 start()
             }

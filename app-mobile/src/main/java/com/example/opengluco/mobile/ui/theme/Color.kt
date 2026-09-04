@@ -22,15 +22,15 @@ val DarkUrgentCrimson = Color(0xFFEF4444)
 val DarkHighAmber = Color(0xFFFBBF24)
 val DarkVeryHighOrange = Color(0xFFFB923C)
 
-// --- PALETA CLÍNICA MODO CLARO (CLEAN CLINICAL WHITE) ---
-val LightBackground = Color(0xFFF8FAFC)
-val LightSurfaceOrb = Color(0xFFFFFFFF)
+// --- PALETA CLÍNICA MODO CLARO (WHITE & LIME GREEN DEFAULT) ---
+val LightBackground = Color(0xFFFFFFFF)
+val LightSurfaceOrb = Color(0xFFF7FAF2)
 val LightSurfaceCard = Color(0xFFFFFFFF)
-val LightSurfaceBorder = Color(0xFFE2E8F0)
+val LightSurfaceBorder = Color(0xFFE2E8DC)
 val LightTextPrimary = Color(0xFF0F172A)
-val LightTextSecondary = Color(0xFF64748B)
+val LightTextSecondary = Color(0xFF475569)
 val LightTextMuted = Color(0xFF94A3B8)
-val LightMint = Color(0xFF16A34A)
+val LightMint = Color(0xFF65A30D)
 val LightArcticCyan = Color(0xFF0284C7)
 val LightLowCoral = Color(0xFFDC2626)
 val LightUrgentCrimson = Color(0xFFB91C1C)
@@ -143,28 +143,28 @@ val DarkColorScheme = darkColorScheme(
     onBackground = DarkTextPrimary,
     surface = DarkSurfaceCard,
     onSurface = DarkTextPrimary,
-    surfaceVariant = DarkSurfaceOrb,
+    surfaceVariant = DarkSurfaceBorder,
     onSurfaceVariant = DarkTextSecondary,
     outline = DarkSurfaceBorder,
     outlineVariant = DarkSurfaceBorder,
     error = DarkUrgentCrimson,
-    onError = Color.White
+    onError = Color.Black
 )
 
 val LightColorScheme = lightColorScheme(
     primary = LightMint,
-    onPrimary = Color.White,
+    onPrimary = Color(0xFFFFFFFF),
     primaryContainer = LightSurfaceOrb,
     onPrimaryContainer = LightMint,
     secondary = LightArcticCyan,
-    onSecondary = Color.White,
+    onSecondary = Color(0xFFFFFFFF),
     secondaryContainer = LightSurfaceCard,
     onSecondaryContainer = LightArcticCyan,
     background = LightBackground,
     onBackground = LightTextPrimary,
     surface = LightSurfaceCard,
     onSurface = LightTextPrimary,
-    surfaceVariant = Color(0xFFF1F5F9),
+    surfaceVariant = LightSurfaceBorder,
     onSurfaceVariant = LightTextSecondary,
     outline = LightSurfaceBorder,
     outlineVariant = LightSurfaceBorder,
@@ -175,7 +175,7 @@ val LightColorScheme = lightColorScheme(
 fun getClinicalStatusColor(valueInMgDl: Double, low: Int = 70, high: Int = 180, isDark: Boolean = true): Color {
     return when {
         valueInMgDl <= 55 -> if (isDark) DarkUrgentCrimson else LightUrgentCrimson
-        valueInMgDl < low -> if (isDark) DarkHighAmber else LightHighAmber
+        valueInMgDl < low -> if (isDark) DarkLowCoral else LightLowCoral
         valueInMgDl > 250 -> if (isDark) DarkVeryHighOrange else LightVeryHighOrange
         valueInMgDl > high -> if (isDark) DarkHighAmber else LightHighAmber
         else -> if (isDark) DarkMint else LightMint

@@ -77,10 +77,10 @@ fun LegalNoticeDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     val headerTitle = when (type) {
-                        LegalNoticeType.MEDICAL_DISCLAIMER -> "Aviso Médico Importante"
-                        LegalNoticeType.TRADEMARKS -> "Marcas y No Afiliación"
-                        LegalNoticeType.PRIVACY_GDPR -> "Privacidad y Salud (RGPD)"
-                        LegalNoticeType.DELETE_CONFIRMATION -> "Borrar Todos los Datos"
+                        LegalNoticeType.MEDICAL_DISCLAIMER -> "Descargo de Responsabilidad Médica"
+                        LegalNoticeType.TRADEMARKS -> "Propiedad Intelectual y Marcas"
+                        LegalNoticeType.PRIVACY_GDPR -> "Protección de Datos Sanitarios (RGPD)"
+                        LegalNoticeType.DELETE_CONFIRMATION -> "Eliminar Historial Local"
                         LegalNoticeType.NONE -> ""
                     }
 
@@ -117,20 +117,20 @@ fun LegalNoticeDialog(
                             LegalSectionBox(
                                 badge = "MDR UE 2017/745 / FDA MDDS",
                                 title = "Visualizador Secundario de Conveniencia",
-                                content = "Esta aplicación es un visor secundario pasivo desarrollado con fines exclusivamente informativos y de seguimiento personal.\n\n" +
-                                        "1. NO es un Dispositivo Médico: Este software no está certificado como dispositivo médico bajo el Reglamento de la UE (MDR 2017/745) ni por la FDA.\n\n" +
-                                        "2. Prohibido para Dosificación: NUNCA use las lecturas, tendencias o gráficas de esta app para calcular dosis de insulina, ajustar tratamientos o tomar decisiones médicas críticas.\n\n" +
-                                        "3. Comprobación Capilar Obligatoria: Ante cualquier síntoma, duda o discrepancia, confirme siempre su nivel con una prueba capilar de glucosa en sangre o mediante su lector oficial FreeStyle Libre."
+                                content = "OpenGluco opera como un visor secundario pasivo desarrollado exclusivamente para monitorización informativa y de seguimiento personal.\n\n" +
+                                        "1. Marco Regulatorio: No constituye un dispositivo médico certificado bajo el Reglamento Europeo MDR UE 2017/745 ni directrices FDA MDDS.\n\n" +
+                                        "2. Prohibido para Dosificación: Está estrictamente prohibido utilizar lecturas, curvas o estimaciones para calcular dosis de insulina o pautas terapéuticas críticas.\n\n" +
+                                        "3. Comprobación Capilar Obligatoria: Ante cualquier síntoma de malestar, sospecha o variación brusca, confirme siempre sus niveles mediante una prueba capilar de glucosa en sangre o lector oficial FreeStyle Libre."
                             )
                         }
 
                         LegalNoticeType.TRADEMARKS -> {
                             LegalSectionBox(
                                 badge = "Uso Legítimo Nominativo",
-                                title = "Titularidad de Marcas de Terceros",
-                                content = "FreeStyle, Libre, LibreLink, LibreLinkUp, LibreView y sus logotipos son marcas registradas de Abbott Laboratories y/o Abbott Diabetes Care Inc.\n\n" +
-                                        "• OpenGluco es un proyecto comunitario independiente y NO está patrocinado, afiliado, autorizado ni respaldado de ninguna manera por Abbott.\n\n" +
-                                        "• La mención a dichas marcas se realiza exclusivamente para describir la compatibilidad técnica e interoperabilidad del software con el servicio del usuario."
+                                title = "Titularidad de Marcas",
+                                content = "FreeStyle, Libre, LibreLink, LibreLinkUp, LibreView y logotipos asociados son marcas registradas de Abbott Laboratories y/o Abbott Diabetes Care Inc.\n\n" +
+                                        "• OpenGluco es un proyecto independiente y NO está patrocinado, afiliado, autorizado ni respaldado en forma alguna por Abbott Laboratories.\n\n" +
+                                        "• Las referencias a dichas marcas se realizan conforme a la doctrina de Uso Legítimo Nominativo para describir la interoperabilidad técnica con el servicio del usuario."
                             )
                         }
 
@@ -138,10 +138,10 @@ fun LegalNoticeDialog(
                             LegalSectionBox(
                                 badge = "RGPD Art. 9 / LOPDGDD",
                                 title = "Tratamiento y Protección de Datos de Salud",
-                                content = "Sus lecturas de glucosa constituyen datos relativos a la salud protegidos bajo el Artículo 9 del RGPD.\n\n" +
-                                        "1. Arquitectura 100% Local (Local-First): Sus credenciales y telemetría histórica se guardan cifradas exclusivamente en la memoria segura de su propio dispositivo mediante Android Keystore.\n\n" +
-                                        "2. Cero Servidores Intermediarios: La app se comunica directamente con los servidores oficiales de Abbott. Ningún tercero ni el desarrollador recopila, retransmite ni almacena sus datos.\n\n" +
-                                        "3. Derechos de Portabilidad y Supresión: Dispone de funciones integradas para exportar su historial a CSV o borrarlo de forma definitiva e irreversible."
+                                content = "Las lecturas de telemetría constituyen datos sensibles relativos a la salud amparados por el RGPD Art. 9 y normativas aplicables.\n\n" +
+                                        "1. Arquitectura 100% Local (Local-First): Credenciales y mediciones se custodian exclusivamente en su dispositivo mediante Android Keystore con cifrado de hardware.\n\n" +
+                                        "2. Cero Servidores Intermediarios: La comunicación se establece de forma directa con los servidores de Abbott. Ninguna infraestructura externa recopila ni almacena sus lecturas.\n\n" +
+                                        "3. Control y Portabilidad: Puede exportar su histórico íntegro en formato CSV o destruirlo permanentemente en cualquier instante."
                             )
                         }
 
@@ -163,7 +163,7 @@ fun LegalNoticeDialog(
                                     )
                                     Spacer(modifier = Modifier.height(6.dp))
                                     Text(
-                                        text = "Se eliminarán permanentemente todas las lecturas de glucosa acumuladas de los últimos 90 días, la caché local y las credenciales de sesión guardadas en este dispositivo.\n\n¿Está seguro de que desea continuar?",
+                                        text = "Se suprimirán de manera definitiva todas las lecturas de glucosa de los últimos 90 días, las sesiones y la caché de cifrado local almacenadas en este dispositivo.\n\n¿Desea proceder con la eliminación completa?",
                                         fontSize = 12.sp,
                                         lineHeight = 17.sp,
                                         color = colors.textPrimary
@@ -224,7 +224,7 @@ fun LegalNoticeDialog(
                             .fillMaxWidth()
                             .height(44.dp)
                     ) {
-                        Text("Entendido", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text("Cerrar", fontWeight = FontWeight.Bold, fontSize = 13.sp)
                     }
                 }
             }
