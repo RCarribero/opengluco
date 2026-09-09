@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.core.data
+package com.example.opengluco.core.data
 
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
@@ -17,28 +17,45 @@ object KeystoreCryptoHelper {
     private const val GCM_IV_LENGTH = 12
     private const val GCM_TAG_LENGTH = 128
 
+    @Volatile
+    private var jvmFallbackKey: SecretKey? = null
+
     private fun getOrCreateSecretKey(): SecretKey {
-        val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
-        if (keyStore.containsAlias(KEY_ALIAS)) {
-            val entry = keyStore.getEntry(KEY_ALIAS, null) as? KeyStore.SecretKeyEntry
-            if (entry != null) {
-                return entry.secretKey
+        return try {
+            val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
+            if (keyStore.containsAlias(KEY_ALIAS)) {
+                val entry = keyStore.getEntry(KEY_ALIAS, null) as? KeyStore.SecretKeyEntry
+                if (entry != null) {
+                    return entry.secretKey
+                }
+            }
+
+            val keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE)
+            val spec = KeyGenParameterSpec.Builder(
+                KEY_ALIAS,
+                KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
+            )
+                .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                .setKeySize(256)
+                .setRandomizedEncryptionRequired(true)
+                .build()
+
+            keyGenerator.init(spec)
+            keyGenerator.generateKey()
+        } catch (_: Throwable) {
+            // Entorno JVM / Unit Tests sin AndroidKeyStore: clave en memoria AES-256
+            val existing = jvmFallbackKey
+            if (existing != null) {
+                existing
+            } else {
+                val keyGen = KeyGenerator.getInstance("AES")
+                keyGen.init(256)
+                val newKey = keyGen.generateKey()
+                jvmFallbackKey = newKey
+                newKey
             }
         }
-
-        val keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE)
-        val spec = KeyGenParameterSpec.Builder(
-            KEY_ALIAS,
-            KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
-        )
-            .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-            .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-            .setKeySize(256)
-            .setRandomizedEncryptionRequired(true)
-            .build()
-
-        keyGenerator.init(spec)
-        return keyGenerator.generateKey()
     }
 
     fun encrypt(plainText: String): String {
@@ -55,24 +72,33 @@ object KeystoreCryptoHelper {
             System.arraycopy(iv, 0, combined, 0, iv.size)
             System.arraycopy(cipherBytes, 0, combined, iv.size, cipherBytes.size)
 
-            "ENC:" + Base64.encodeToString(combined, Base64.NO_WRAP)
+            val base64Str = try {
+                Base64.encodeToString(combined, Base64.NO_WRAP)
+            } catch (_: Throwable) {
+                java.util.Base64.getEncoder().encodeToString(combined)
+            }
+            "ENC:$base64Str"
         } catch (_: Exception) {
-            // Safe fallback
-            plainText
+            // Fail-closed: nunca devolver datos sensibles en texto claro
+            ""
         }
     }
 
     fun decrypt(encryptedPayload: String): String {
         if (encryptedPayload.isBlank()) return ""
         if (!encryptedPayload.startsWith("ENC:")) {
-            // Not encrypted (legacy migration support)
+            // Soporte de migración heredada para tokens no cifrados
             return encryptedPayload
         }
 
         return try {
             val rawBase64 = encryptedPayload.removePrefix("ENC:")
-            val combined = Base64.decode(rawBase64, Base64.NO_WRAP)
-            if (combined.size < GCM_IV_LENGTH) return encryptedPayload
+            val combined = try {
+                Base64.decode(rawBase64, Base64.NO_WRAP)
+            } catch (_: Throwable) {
+                java.util.Base64.getDecoder().decode(rawBase64)
+            }
+            if (combined.size < GCM_IV_LENGTH) return ""
 
             val iv = ByteArray(GCM_IV_LENGTH)
             System.arraycopy(combined, 0, iv, 0, GCM_IV_LENGTH)
@@ -88,7 +114,7 @@ object KeystoreCryptoHelper {
             val plainBytes = cipher.doFinal(cipherBytes)
             String(plainBytes, Charsets.UTF_8)
         } catch (_: Exception) {
-            // In case of decryption error or altered data, return empty or fallback
+            // En caso de payload corrupto o clave incorrecta, devolver vacío
             ""
         }
     }

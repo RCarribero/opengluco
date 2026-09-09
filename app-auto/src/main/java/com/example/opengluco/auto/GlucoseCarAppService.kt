@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.auto
+package com.example.opengluco.auto
 
 import android.content.Intent
 import androidx.car.app.CarAppService
@@ -8,7 +8,9 @@ import androidx.car.app.validation.HostValidator
 class GlucoseCarAppService : CarAppService() {
 
     override fun createHostValidator(): HostValidator {
-        return HostValidator.ALLOW_ALL_HOSTS_VALIDATOR
+        return HostValidator.Builder(this)
+            .addAllowedHosts(androidx.car.app.R.array.hosts_allowlist_sample)
+            .build()
     }
 
     override fun onCreateSession(): Session {

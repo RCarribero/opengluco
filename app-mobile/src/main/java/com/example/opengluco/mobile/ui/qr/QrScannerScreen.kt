@@ -138,7 +138,7 @@ fun QrScannerScreen(
                 if (scannedPayload == null) {
                     CameraPreview(
                         onQrDetected = { rawQr ->
-                            Log.d("QrScanner", "QR detectado en cámara: $rawQr")
+                            Log.d("QrScanner", "Código QR detectado en cámara, procesando validación.")
                             val payload = QrAuthHelper.parsePairingPayload(rawQr)
                             if (payload != null && scannedPayload == null) {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)

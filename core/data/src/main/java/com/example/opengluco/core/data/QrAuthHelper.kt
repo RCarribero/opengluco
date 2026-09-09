@@ -236,8 +236,7 @@ object QrAuthHelper {
                                             val decryptedJson = decryptAesGcm(encPayload.encryptedDataHex, secretKeyHex, encPayload.ivHex)
                                             session = parseSessionExchange(decryptedJson)
                                         } catch (_: Exception) {
-                                            // Fallback attempt to plain if needed
-                                            session = parseSessionExchange(rawBody)
+                                            session = null
                                         }
                                     } else {
                                         session = parseSessionExchange(rawBody)
@@ -251,6 +250,11 @@ object QrAuthHelper {
                                         client.close()
                                         onSessionReceived(session)
                                         return@Thread
+                                    } else {
+                                        val out = client.getOutputStream()
+                                        val errorResponse = "HTTP/1.1 401 Unauthorized\r\nContent-Type: application/json\r\nContent-Length: 26\r\n\r\n{\"error\":\"unauthorized\"}"
+                                        out.write(errorResponse.toByteArray(Charsets.UTF_8))
+                                        out.flush()
                                     }
                                 }
                                 client.close()

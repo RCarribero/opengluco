@@ -220,11 +220,16 @@ class UserPreferencesRepository(private val context: Context) {
 
     suspend fun clearSession() {
         context.dataStore.edit { preferences ->
+            preferences.remove(PreferencesKeys.EMAIL)
             preferences.remove(PreferencesKeys.TOKEN)
             preferences.remove(PreferencesKeys.USER_ID)
             preferences.remove(PreferencesKeys.SELECTED_PATIENT_ID)
             preferences.remove(PreferencesKeys.TRUSTED_PHONE_MAC)
+            preferences.remove(PreferencesKeys.LAST_GLUCOSE)
+            preferences.remove(PreferencesKeys.LAST_TREND)
+            preferences.remove(PreferencesKeys.LAST_TIMESTAMP)
         }
+        clearAllHistoricalData(null)
     }
 
     suspend fun clearAllHistoricalData(patientId: String? = null) = withContext(Dispatchers.IO) {

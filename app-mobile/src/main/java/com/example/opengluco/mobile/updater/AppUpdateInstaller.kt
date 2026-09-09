@@ -34,7 +34,14 @@ object AppUpdateInstaller {
      * Inicia el instalador de paquetes nativo de Android con el APK descargado.
      */
     fun installApk(context: Context, apkFile: File) {
-        if (!apkFile.exists()) return
+        if (!apkFile.exists() || apkFile.length() == 0L) return
+
+        // Validar integridad estructural del paquete APK antes de invocar el instalador del sistema
+        val archiveInfo = context.packageManager.getPackageArchiveInfo(apkFile.absolutePath, 0)
+        if (archiveInfo == null) {
+            apkFile.delete()
+            return
+        }
 
         // En Android 8.0+ (Oreo), verificar si la app tiene permiso para instalar paquetes
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

@@ -172,6 +172,22 @@ class AppUpdateRepository {
     }
 
     /**
+     * Calcula el digest SHA-256 de un archivo para verificación criptográfica de integridad.
+     */
+    fun calculateSha256(file: File): String {
+        if (!file.exists() || !file.isFile) return ""
+        val digest = java.security.MessageDigest.getInstance("SHA-256")
+        file.inputStream().use { input ->
+            val buffer = ByteArray(8192)
+            var bytesRead: Int
+            while (input.read(buffer).also { bytesRead = it } != -1) {
+                digest.update(buffer, 0, bytesRead)
+            }
+        }
+        return digest.digest().joinToString("") { "%02x".format(it) }
+    }
+
+    /**
      * Compara semánticamente dos versiones.
      */
     fun isVersionNewer(remoteVersion: String, currentVersion: String): Boolean {
