@@ -113,3 +113,16 @@ data class AlarmEvaluationResult(
     val currentValueMgDl: Double = 0.0,
     val isInCooldown: Boolean = false
 )
+
+/**
+ * Payload para transmisión de disparos de alarma en tiempo real entre móvil y Wear OS.
+ *
+ * @param alarm definición de la alarma que se ha disparado.
+ * @param glucoseValueMgDl valor de glucosa que ha motivado el disparo.
+ */
+@Serializable
+data class AlarmTriggerPayload(
+    val alarm: GlucoseAlarm,
+    val glucoseValueMgDl: Double
+)
+

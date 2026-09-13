@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.mobile.service
+package com.example.opengluco.mobile.service
 
 import android.util.Log
 import com.example.opengluco.core.data.AlarmRepository
@@ -33,6 +33,16 @@ class MobileWearableMessageListenerService : WearableListenerService() {
                     .addOnFailureListener { e ->
                         Log.w(TAG, "Error respondiendo con alarmas: ${e.message}")
                     }
+            }
+            "/opengluco_alarm_dismiss" -> {
+                val alarmId = String(messageEvent.data, Charsets.UTF_8)
+                if (alarmId.isNotBlank()) {
+                    Log.d(TAG, "Orden de silenciar alarma recibida desde Wear OS: $alarmId")
+                    com.example.opengluco.mobile.notification.MobileAlarmNotificationHelper.dismissAlarm(
+                        applicationContext,
+                        alarmId
+                    )
+                }
             }
         }
     }

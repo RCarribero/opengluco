@@ -186,4 +186,29 @@ class AlarmSerializationSyncTest {
         assertEquals("file:///data/user/0/com.example.opengluco/files/custom_alarms/my_sound.mp3", decoded.customSoundUri)
         assertEquals("my_sound.mp3", decoded.customSoundName)
     }
+
+    @Test
+    fun testAlarmTriggerPayloadSerializationForWearImmediateBridge() {
+        val alarm = GlucoseAlarm(
+            id = "alarm-high-trigger",
+            type = AlarmType.HIGH,
+            thresholdMgDl = 200,
+            severity = AlarmSeverity.ALERT,
+            enabled = true,
+            cooldownMinutes = 2
+        )
+        val payload = com.example.opengluco.core.model.AlarmTriggerPayload(
+            alarm = alarm,
+            glucoseValueMgDl = 245.0
+        )
+
+        val encoded = json.encodeToString(payload)
+        assertTrue(encoded.contains("\"glucoseValueMgDl\":245.0"))
+        assertTrue(encoded.contains("\"alarm-high-trigger\""))
+
+        val decoded = json.decodeFromString<com.example.opengluco.core.model.AlarmTriggerPayload>(encoded)
+        assertEquals("alarm-high-trigger", decoded.alarm.id)
+        assertEquals(AlarmSeverity.ALERT, decoded.alarm.severity)
+        assertEquals(245.0, decoded.glucoseValueMgDl, 0.01)
+    }
 }

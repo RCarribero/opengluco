@@ -80,6 +80,9 @@ dependencies {
     // WorkManager (Segundo plano)
     implementation("androidx.work:work-runtime-ktx:2.9.1")
 
+    // Kotlinx Serialization
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+
     // Test dependencies
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.0")

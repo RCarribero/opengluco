@@ -98,6 +98,15 @@
             android:exported="false"
             android:foregroundServiceType="connectedDevice" />
 
+        <!-- Receptor para silenciar alarmas desde la notificacion del reloj -->
+        <receiver
+            android:name=".notification.WearAlarmDismissReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.example.opengluco.wear.ACTION_DISMISS_ALARM" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

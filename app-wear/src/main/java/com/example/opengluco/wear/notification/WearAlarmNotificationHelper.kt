@@ -129,6 +129,8 @@ object WearAlarmNotificationHelper {
             AlarmSeverity.INFORMATIVE -> android.R.drawable.ic_dialog_info
         }
 
+        val dismissPendingIntent = WearAlarmDismissReceiver.createPendingIntent(context, alarm.id)
+
         val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(icon)
             .setContentTitle(title)
@@ -137,6 +139,7 @@ object WearAlarmNotificationHelper {
             .setCategory(category)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
+            .addAction(0, "Silenciar", dismissPendingIntent)
             .build()
 
         val notificationId = alarm.id.hashCode().let { if (it == 0) NOTIFICATION_ID_ALARM else it }

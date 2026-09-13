@@ -343,6 +343,13 @@ object MobileAlarmNotificationHelper {
 
         notificationManager.notify(notificationId, builder.build())
 
+        // Transmitir inmediatamente el disparo de alarma por Bluetooth DataLayer a Wear OS
+        com.example.opengluco.mobile.service.MobileAlarmSyncHelper.sendAlarmTriggerToWear(
+            context = context,
+            alarm = alarm,
+            glucoseValueMgDl = glucoseValueMgDl
+        )
+
         // Reproducir audio forzado por canal de alarma en casos urgentes, extrema urgencia o audio personalizado
         if (alarm.soundType != AlarmSoundType.SILENT) {
             if (alarm.severity == AlarmSeverity.URGENT || alarm.soundType == AlarmSoundType.URGENT_EXTREME || alarm.soundType == AlarmSoundType.CUSTOM) {
@@ -387,6 +394,9 @@ object MobileAlarmNotificationHelper {
         stopEmergencyAlarmSound()
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.cancel(alarmId.hashCode())
+
+        // Notificar cancelacion / silenciado a los relojes Wear OS conectados
+        com.example.opengluco.mobile.service.MobileAlarmSyncHelper.sendAlarmDismissToWear(context, alarmId)
     }
 
     /**
