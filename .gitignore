@@ -81,4 +81,5 @@ output.json
 tools/gem_knowledge_export/
 screengraph-out/
 graphify-out/cache/
+releases/
 
