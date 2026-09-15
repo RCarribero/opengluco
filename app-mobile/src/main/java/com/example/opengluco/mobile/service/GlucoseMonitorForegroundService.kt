@@ -117,21 +117,32 @@ class GlucoseMonitorForegroundService : Service() {
                 allToSave.add(em)
             }
         }
-        preferencesRepository.saveHistoricalReadings(allToSave, targetPatient.patientId)
+        val resolvedSensor = if (graphDataObj != null) graphDataObj.resolvedSensor else targetPatient.sensor?.takeIf { it.isValid }
+        val isSensorActive = resolvedSensor != null && (resolvedSensor.getRemainingDays() ?: 0) > 0 && resolvedSensor.isSensorActive != false
+
+        // Notificar alertas de ciclo de vida del sensor si aplica
+        com.example.opengluco.core.data.ClinicalReportsCalculator.checkSensorExpirationAlert(resolvedSensor)?.let { alert ->
+            MobileAlarmNotificationHelper.notifySensorExpiration(
+                context = applicationContext,
+                alert = alert
+            )
+        }
 
         val latest = targetPatient.effectiveMeasurement ?: graphData.lastOrNull() ?: return
         val value = latest.numericValue
         if (value <= 0.0) return
 
-        val arrow = latest.trendSymbol
+        val isStale = latest.isStale() || !isSensorActive
+        val arrow = if (isStale) "--" else latest.trendSymbol
         val name = targetPatient.fullName.ifBlank { "Paciente" }
 
         // 1. Actualizar la tarjeta persistente de la barra de notificaciones
         MobileAlarmNotificationHelper.updateLiveGlucoseNotification(
             context = applicationContext,
-            glucoseValueMgDl = value,
+            glucoseValueMgDl = if (isStale) 0.0 else value,
             trendArrow = arrow,
-            patientName = name
+            patientName = name,
+            isStale = isStale
         )
 
         // 2. Actualizar los Widgets de escritorio (Compacto y con Gráfica)
@@ -139,10 +150,16 @@ class GlucoseMonitorForegroundService : Service() {
             context = applicationContext,
             latestMeasurement = latest,
             history = allToSave,
-            patientName = name
+            patientName = name,
+            isSensorActive = isSensorActive
         )
 
-        // 3. Evaluar alarmas clínicas y disparar si se supera un umbral
+        // 3. Si los datos están obsoletos o no hay sensor activo, inhibir alarmas acústicas/vibratorias
+        if (isStale) {
+            return
+        }
+
+        // Evaluar alarmas clínicas y disparar si se supera un umbral
         val alarms = alarmRepository.getAllAlarms()
         val timestamps = alarmRepository.getLastFiredTimestamps()
         val result = AlarmEvaluator.evaluate(

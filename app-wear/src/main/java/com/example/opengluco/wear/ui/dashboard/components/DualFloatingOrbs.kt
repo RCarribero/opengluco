@@ -44,13 +44,28 @@ fun DualFloatingOrbs(
     unit: GlucoseUnit = GlucoseUnit.MGDL,
     targetLow: Int = 70,
     targetHigh: Int = 180,
+    isSensorActive: Boolean = true,
+    isStale: Boolean = false,
     onGlucoseOrbClick: () -> Unit = {},
     onTrendOrbClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
+    val effectiveStale = isStale || !isSensorActive || measurement == null || measurement.isStale()
     val mgdl = measurement?.numericValue ?: 0.0
-    val statusColor = if (measurement != null) getClinicalStatusColor(mgdl, targetLow, targetHigh) else Color(0xFF64748B)
+    val statusColor = if (!effectiveStale && mgdl > 0.0) {
+        getClinicalStatusColor(mgdl, targetLow, targetHigh)
+    } else {
+        Color(0xFF64748B)
+    }
+
+    val displayValue = if (effectiveStale) "--" else (measurement?.getFormattedValue(isMmol = unit == GlucoseUnit.MMOL) ?: "--")
+    val trendSymbol = if (effectiveStale) "--" else (measurement?.trendSymbol ?: "→")
+    val trendText = if (effectiveStale) {
+        if (!isSensorActive) "Sin sensor" else "Desconectado"
+    } else {
+        measurement?.trendText ?: "Estable"
+    }
 
     Row(
         modifier = modifier
@@ -88,10 +103,10 @@ fun DualFloatingOrbs(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = measurement?.getFormattedValue(isMmol = unit == GlucoseUnit.MMOL) ?: "--",
+                    text = displayValue,
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    color = ClinicalTextPrimary,
+                    color = if (effectiveStale) Color(0xFF94A3B8) else ClinicalTextPrimary,
                     textAlign = TextAlign.Center
                 )
                 Text(
@@ -124,10 +139,10 @@ fun DualFloatingOrbs(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = measurement?.trendSymbol ?: "→",
+                    text = trendSymbol,
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Bold,
-                    color = ClinicalTextPrimary,
+                    color = if (effectiveStale) Color(0xFF94A3B8) else ClinicalTextPrimary,
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(2.dp))
@@ -137,7 +152,7 @@ fun DualFloatingOrbs(
                         .padding(horizontal = 6.dp, vertical = 2.dp)
                 ) {
                     Text(
-                        text = measurement?.trendText ?: "Estable",
+                        text = trendText,
                         fontSize = 8.sp,
                         fontWeight = FontWeight.Bold,
                         color = statusColor,

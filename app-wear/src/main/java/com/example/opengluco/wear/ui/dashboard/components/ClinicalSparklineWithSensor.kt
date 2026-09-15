@@ -53,7 +53,7 @@ fun ClinicalSparklineWithSensor(
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
-    val daysRemaining = sensor?.getRemainingDays() ?: 14
+    val daysRemaining = sensor?.getRemainingDays() ?: 0
 
     Row(
         modifier = modifier
@@ -176,11 +176,22 @@ fun ClinicalSparklineWithSensor(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
+                val sensorText = when {
+                    sensor == null -> "--"
+                    daysRemaining <= 0 -> "0d"
+                    sensor.getLifecycleState() is com.example.opengluco.core.model.SensorLifecycleState.WarmingUp -> "WUp"
+                    else -> "${daysRemaining}d"
+                }
+                val badgeColor = when {
+                    sensor == null || daysRemaining <= 0 -> Color(0xFFEF4444)
+                    daysRemaining <= 2 -> Color(0xFFF87171)
+                    else -> ClinicalTextPrimary
+                }
                 Text(
-                    text = "${daysRemaining}d",
+                    text = sensorText,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
-                    color = if (daysRemaining <= 2) Color(0xFFF87171) else ClinicalTextPrimary,
+                    color = badgeColor,
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.height(2.dp))

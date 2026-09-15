@@ -50,10 +50,11 @@ fun MobileStatDetailModal(
     minVal: Double,
     maxVal: Double,
     tirPercent: Int = 100,
-    sensorDays: Int = 14,
+    sensorDays: Int = 0,
     sensorSerial: String = "",
     trendText: String = "Estable",
     trendSymbol: String = "→",
+    sensorState: com.example.opengluco.core.model.SensorLifecycleState = com.example.opengluco.core.model.SensorLifecycleState.NoSensor,
     onDismiss: () -> Unit
 ) {
     if (type == DetailModalType.NONE) return
@@ -168,10 +169,18 @@ fun MobileStatDetailModal(
                                 .border(1.dp, colors.surfaceBorder, RoundedCornerShape(16.dp))
                                 .padding(16.dp)
                         ) {
+                            val daysText = if (sensorDays > 0) "$sensorDays días" else "--"
+                            val serialText = sensorSerial.ifBlank { "Sin sensor" }
+                            val statusText = when (sensorState) {
+                                is com.example.opengluco.core.model.SensorLifecycleState.NoSensor -> "Sin sensor activo"
+                                is com.example.opengluco.core.model.SensorLifecycleState.Expired -> "Caducado / Finalizado"
+                                is com.example.opengluco.core.model.SensorLifecycleState.WarmingUp -> "En calentamiento (${sensorState.remainingMinutes} min)"
+                                is com.example.opengluco.core.model.SensorLifecycleState.Active -> "Activo y Calibrado"
+                            }
                             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                StatRow("Días restantes:", "$sensorDays días", highlight = sensorDays > 2)
-                                StatRow("Número de Serie (S/N):", sensorSerial.ifBlank { "Sensor Vinculado" })
-                                StatRow("Estado Operativo:", if (sensorDays > 0) "Activo y Calibrado" else "Caducado")
+                                StatRow("Días restantes:", daysText, highlight = sensorDays > 2)
+                                StatRow("Número de Serie (S/N):", serialText)
+                                StatRow("Estado Operativo:", statusText)
                                 StatRow("Tipo de Dispositivo:", "FreeStyle Libre Sensor")
                             }
                         }

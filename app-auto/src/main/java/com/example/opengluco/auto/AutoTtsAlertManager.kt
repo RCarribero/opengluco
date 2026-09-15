@@ -48,11 +48,17 @@ class AutoTtsAlertManager(private val context: Context) : TextToSpeech.OnInitLis
         glucoseMgDl: Double,
         trendText: String,
         lowThreshold: Double = 70.0,
-        highThreshold: Double = 180.0
+        highThreshold: Double = 180.0,
+        measurementTimestampMs: Long = 0L,
+        isSensorActive: Boolean = true
     ) {
-        if (!isInitialized || glucoseMgDl <= 0.0) return
+        if (!isInitialized || glucoseMgDl <= 0.0 || !isSensorActive) return
 
         val now = System.currentTimeMillis()
+        if (measurementTimestampMs <= 0L || (now - measurementTimestampMs > 20 * 60 * 1000L) || (now - measurementTimestampMs < -5 * 60 * 1000L)) {
+            return
+        }
+
         val timeSinceLast = now - lastSpokenTimestamp
         val isCriticalLow = glucoseMgDl <= 55.0
         val isLow = glucoseMgDl < lowThreshold

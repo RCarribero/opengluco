@@ -73,6 +73,18 @@ data class ConnectionItem(
             .ifBlank { "Paciente" }
 }
 
+// --- CICLO DE VIDA Y ESTADOS DEL SENSOR ---
+
+sealed interface SensorLifecycleState {
+    object NoSensor : SensorLifecycleState
+    data class WarmingUp(val remainingMinutes: Int) : SensorLifecycleState
+    data class Active(val remainingDays: Int) : SensorLifecycleState
+    object Expired : SensorLifecycleState
+
+    val isActive: Boolean
+        get() = this is Active
+}
+
 @Serializable
 data class SensorInfo(
     @SerialName("deviceId") val deviceId: String? = null,
@@ -83,11 +95,17 @@ data class SensorInfo(
     @SerialName("l") val lifetimeDays: Int? = null,
     @SerialName("s") val isSensorActive: Boolean? = null
 ) {
-    fun getRemainingDays(): Int? {
+    val isValid: Boolean
+        get() = (activatedTimestamp != null && activatedTimestamp > 0L) ||
+                !serialNumber.isNullOrBlank() ||
+                !deviceId.isNullOrBlank()
+
+    fun getRemainingDays(nowMs: Long = System.currentTimeMillis()): Int? {
         val activated = activatedTimestamp ?: return null
         if (activated <= 0L) return null
+        if (isSensorActive == false) return 0
         val activatedSec = if (activated > 10_000_000_000L) activated / 1000.0 else activated.toDouble()
-        val nowSec = System.currentTimeMillis() / 1000.0
+        val nowSec = nowMs / 1000.0
 
         // Duracion oficial de sensores FreeStyle Libre (14 dias)
         // O el valor explicitamente indicado en lifetimeDays (l) si existe
@@ -103,6 +121,33 @@ data class SensorInfo(
         }
     }
 
+    fun getLifecycleState(nowMs: Long = System.currentTimeMillis()): SensorLifecycleState {
+        val activated = activatedTimestamp ?: return SensorLifecycleState.NoSensor
+        if (activated <= 0L) return SensorLifecycleState.NoSensor
+
+        if (isSensorActive == false) {
+            return SensorLifecycleState.Expired
+        }
+
+        val activatedMs = if (activated > 10_000_000_000L) activated else activated * 1000L
+        val elapsedMs = nowMs - activatedMs
+
+        // Calentamiento durante los primeros 60 min (o warmupDurationMinutes)
+        val warmupMinutes = warmupDurationMinutes ?: 60
+        val warmupMs = warmupMinutes * 60 * 1000L
+        if (elapsedMs in 0 until warmupMs) {
+            val remainingMin = kotlin.math.ceil((warmupMs - elapsedMs) / 60_000.0).toInt().coerceAtLeast(1)
+            return SensorLifecycleState.WarmingUp(remainingMin)
+        }
+
+        val remainingDays = getRemainingDays(nowMs) ?: 0
+        if (remainingDays <= 0) {
+            return SensorLifecycleState.Expired
+        }
+
+        return SensorLifecycleState.Active(remainingDays)
+    }
+
     val sensorModelName: String
         get() = when (sensorType) {
             3 -> "FreeStyle Libre 3"
@@ -112,14 +157,51 @@ data class SensorInfo(
         }
 }
 
+fun SensorInfo?.lifecycleState(nowMs: Long = System.currentTimeMillis()): SensorLifecycleState =
+    this?.getLifecycleState(nowMs) ?: SensorLifecycleState.NoSensor
+
+@Serializable
+data class DeviceInfo(
+    @SerialName("did") val did: String? = null,
+    @SerialName("dtid") val dtid: Int? = null,
+    @SerialName("v") val v: String? = null
+)
+
+@Serializable
+data class ActiveSensorEntry(
+    @SerialName("sensor") val sensor: SensorInfo? = null,
+    @SerialName("device") val device: DeviceInfo? = null
+)
+
 // --- HISTORIAL Y LECTURAS DE GLUCOSA ---
 
 @Serializable
 data class GraphData(
     @SerialName("connection") val connection: ConnectionItem? = null,
-    @SerialName("activeSensors") val activeSensors: List<SensorInfo>? = null,
+    @SerialName("activeSensors") val activeSensors: List<ActiveSensorEntry>? = null,
     @SerialName("graphData") val graphData: List<GlucoseMeasurement> = emptyList()
-)
+) {
+    val resolvedSensor: SensorInfo?
+        get() {
+            val list = activeSensors
+            if (list != null) {
+                val validSensors = list.mapNotNull { it.sensor }.filter { it.isValid }
+                if (validSensors.isEmpty()) {
+                    return connection?.sensor?.takeIf { it.isValid }?.copy(isSensorActive = false)
+                }
+                val activeOnly = validSensors.filter { it.isSensorActive == true }
+                if (activeOnly.isNotEmpty()) {
+                    return activeOnly.maxByOrNull { it.activatedTimestamp ?: 0L }
+                }
+                val potentiallyActive = validSensors.filter { it.isSensorActive != false && (it.getRemainingDays() ?: 0) > 0 }
+                if (potentiallyActive.isNotEmpty()) {
+                    return potentiallyActive.maxByOrNull { it.activatedTimestamp ?: 0L }
+                }
+                return validSensors.maxByOrNull { it.activatedTimestamp ?: 0L }
+            }
+            return connection?.sensor?.takeIf { it.isValid }
+        }
+}
 
 @Serializable
 data class GlucoseMeasurement(
@@ -196,6 +278,13 @@ data class GlucoseMeasurement(
         return 0L
     }
 
+    fun isStale(nowMs: Long = System.currentTimeMillis(), thresholdMinutes: Long = 20): Boolean {
+        val epoch = getEpochMillis()
+        if (epoch <= 0L) return true
+        val diff = nowMs - epoch
+        return diff > thresholdMinutes * 60 * 1000L || diff < -5 * 60 * 1000L
+    }
+
     fun getDisplayTime(): String {
         val epoch = getEpochMillis()
         if (epoch > 0) {
@@ -212,7 +301,9 @@ sealed interface ClinicalErrorType {
     object None : ClinicalErrorType
     data class NetworkError(val message: String = "Sin conexión a Internet") : ClinicalErrorType
     data class AuthExpired(val message: String = "Sesión caducada") : ClinicalErrorType
-    data class NoSensor(val message: String = "Sin sensor activo o en calentamiento") : ClinicalErrorType
+    data class NoSensor(val message: String = "Sin sensor activo vinculado") : ClinicalErrorType
+    data class SensorExpired(val message: String = "El sensor ha finalizado") : ClinicalErrorType
+    data class SensorWarmingUp(val remainingMinutes: Int = 0, val message: String = "Sensor en calentamiento") : ClinicalErrorType
     data class NoPatients(val message: String = "No hay pacientes vinculados a esta cuenta") : ClinicalErrorType
     data class Generic(val message: String) : ClinicalErrorType
 }

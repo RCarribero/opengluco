@@ -75,11 +75,13 @@ class GlucoseTileService : TileService() {
         val last = history.lastOrNull()
 
         val isMmol = settings.unit == GlucoseUnit.MMOL
-        val displayVal = last?.getFormattedValue(isMmol) ?: "--"
-        val trendSymbol = last?.trendSymbol ?: "→"
-        val mgdl = last?.numericValue ?: 0.0
+        val isStale = last == null || last.isStale()
+        val displayVal = if (isStale) "--" else (last.getFormattedValue(isMmol))
+        val trendSymbol = if (isStale) "--" else (last.trendSymbol)
+        val mgdl = if (isStale) 0.0 else (last.numericValue)
 
         val (statusText, statusColorArgb) = when {
+            isStale -> "Desconectado (${last?.getDisplayTime() ?: "--:--"})" to 0xFF94A3B8.toInt()
             mgdl <= 55 -> "Urgente bajo" to 0xFFEF4444.toInt()
             mgdl < settings.lowThreshold -> "Bajo" to 0xFFF87171.toInt()
             mgdl > 250 -> "Muy alto" to 0xFFFB923C.toInt()

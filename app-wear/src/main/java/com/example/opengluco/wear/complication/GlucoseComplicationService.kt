@@ -61,10 +61,13 @@ class GlucoseComplicationService : ComplicationDataSourceService() {
         }
         val last = history.lastOrNull()
         val isMmol = settings.unit == GlucoseUnit.MMOL
-        val displayVal = last?.getFormattedValue(isMmol) ?: "--"
-        val trendSymbol = last?.trendSymbol ?: "→"
-        val displayText = "$displayVal $trendSymbol"
-        val mgdl = (last?.numericValue ?: 104.0).toFloat()
+        val isStale = last == null || last.isStale()
+        val displayVal = if (isStale) "--" else (last.getFormattedValue(isMmol))
+        val trendSymbol = if (isStale) "--" else (last.trendSymbol)
+        val displayText = if (isStale) "--" else "$displayVal $trendSymbol"
+        val timeFormatted = last?.getDisplayTime() ?: "--:--"
+        val complicationTitle = if (isStale) timeFormatted else "GLU"
+        val mgdl = if (isStale) 40f else (last.numericValue.toFloat())
 
         val complicationData = when (request.complicationType) {
             ComplicationType.SHORT_TEXT -> {
@@ -72,7 +75,7 @@ class GlucoseComplicationService : ComplicationDataSourceService() {
                     text = PlainComplicationText.Builder(displayText).build(),
                     contentDescription = PlainComplicationText.Builder("Glucosa: $displayText").build()
                 )
-                    .setTitle(PlainComplicationText.Builder("GLU").build())
+                    .setTitle(PlainComplicationText.Builder(complicationTitle).build())
                     .setTapAction(tapIntent)
                     .build()
             }
@@ -84,7 +87,7 @@ class GlucoseComplicationService : ComplicationDataSourceService() {
                     contentDescription = PlainComplicationText.Builder("Glucosa: $displayVal").build()
                 )
                     .setText(PlainComplicationText.Builder(displayVal).build())
-                    .setTitle(PlainComplicationText.Builder("GLU").build())
+                    .setTitle(PlainComplicationText.Builder(complicationTitle).build())
                     .setTapAction(tapIntent)
                     .build()
             }

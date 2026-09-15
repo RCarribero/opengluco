@@ -141,6 +141,9 @@ fun WearDashboardScreen(
                         Spacer(modifier = Modifier.height(18.dp))
                     }
 
+                    val isSensorActive = state.sensor != null && (state.sensor.getRemainingDays() ?: 0) > 0 && state.sensor.isSensorActive != false
+                    val isStale = state.currentMeasurement == null || state.currentMeasurement.isStale() || !isSensorActive
+
                     // 1. FILA SUPERIOR: 2 ESFERAS FLOTANTES (GLUCOSA + TENDENCIA)
                     item {
                         DualFloatingOrbs(
@@ -148,6 +151,8 @@ fun WearDashboardScreen(
                             unit = state.unit,
                             targetLow = state.lowThreshold,
                             targetHigh = state.highThreshold,
+                            isSensorActive = isSensorActive,
+                            isStale = isStale,
                             onGlucoseOrbClick = { activeModal = DetailModalType.GLUCOSE_STATS },
                             onTrendOrbClick = { activeModal = DetailModalType.TREND_INFO }
                         )
@@ -266,14 +271,16 @@ fun WearDashboardScreen(
                 }
 
                 // Modal interactivo desplegable al tocar componentes
+                val sensorLifecycle = state.sensor?.getLifecycleState() ?: com.example.opengluco.core.model.SensorLifecycleState.NoSensor
                 WearStatDetailModal(
                     type = activeModal,
                     avgVal = avgVal,
                     minVal = minVal,
                     maxVal = maxVal,
-                    sensorDays = state.sensor?.getRemainingDays() ?: 14,
+                    sensorDays = state.sensor?.getRemainingDays() ?: 0,
                     sensorSerial = state.sensor?.serialNumber ?: "",
                     trendText = state.currentMeasurement?.trendText ?: "Estable",
+                    sensorState = sensorLifecycle,
                     onDismiss = { activeModal = DetailModalType.NONE }
                 )
             }

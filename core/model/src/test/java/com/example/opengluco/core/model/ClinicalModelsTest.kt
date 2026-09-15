@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.core.model
+package com.example.opengluco.core.model
 
 import kotlinx.serialization.json.Json
 import org.junit.Assert.*
@@ -223,4 +223,224 @@ class ClinicalModelsTest {
         assertEquals(0, deserialized.status)
         assertEquals("jane@example.com", deserialized.data?.user?.email)
     }
+
+    // --- Sensor Lifecycle State & Staleness Tests ---
+
+    @Test
+    fun testSensorLifecycleState_nullOrZeroTimestamp_returnsNoSensor() {
+        val nullSensor: SensorInfo? = null
+        assertEquals(SensorLifecycleState.NoSensor, nullSensor.lifecycleState())
+
+        val zeroSensor = SensorInfo(activatedTimestamp = 0L)
+        assertEquals(SensorLifecycleState.NoSensor, zeroSensor.getLifecycleState())
+
+        val negativeSensor = SensorInfo(activatedTimestamp = -100L)
+        assertEquals(SensorLifecycleState.NoSensor, negativeSensor.getLifecycleState())
+    }
+
+    @Test
+    fun testSensorLifecycleState_warmingUp_detectsRemainingMinutes() {
+        val nowMs = System.currentTimeMillis()
+        val activatedMs = nowMs - (15 * 60 * 1000L) // 15 min de 60 min de calentamiento
+        val sensor = SensorInfo(
+            activatedTimestamp = activatedMs,
+            warmupDurationMinutes = 60,
+            lifetimeDays = 14
+        )
+        val state = sensor.getLifecycleState(nowMs)
+        assertTrue(state is SensorLifecycleState.WarmingUp)
+        assertEquals(45, (state as SensorLifecycleState.WarmingUp).remainingMinutes)
+    }
+
+    @Test
+    fun testSensorLifecycleState_active_calculatesRemainingDays() {
+        val nowMs = System.currentTimeMillis()
+        val activatedMs = nowMs - (2 * 24 * 3600 * 1000L) // 2 días de 14
+        val sensor = SensorInfo(
+            activatedTimestamp = activatedMs,
+            warmupDurationMinutes = 60,
+            lifetimeDays = 14
+        )
+        val state = sensor.getLifecycleState(nowMs)
+        assertTrue(state is SensorLifecycleState.Active)
+        assertEquals(12, (state as SensorLifecycleState.Active).remainingDays)
+    }
+
+    @Test
+    fun testSensorLifecycleState_expired_byTimeOrFlag() {
+        val nowMs = System.currentTimeMillis()
+        // Vencido por tiempo (15 días de 14)
+        val expiredByTime = SensorInfo(
+            activatedTimestamp = nowMs - (15 * 24 * 3600 * 1000L),
+            lifetimeDays = 14
+        )
+        assertEquals(SensorLifecycleState.Expired, expiredByTime.getLifecycleState(nowMs))
+        assertEquals(0, expiredByTime.getRemainingDays(nowMs))
+
+        // Vencido por flag isSensorActive = false
+        val inactiveFlag = SensorInfo(
+            activatedTimestamp = nowMs - (2 * 24 * 3600 * 1000L),
+            isSensorActive = false,
+            lifetimeDays = 14
+        )
+        assertEquals(SensorLifecycleState.Expired, inactiveFlag.getLifecycleState(nowMs))
+        assertEquals(0, inactiveFlag.getRemainingDays(nowMs))
+    }
+
+    @Test
+    fun testAbbottActiveSensorsDeserialization_resolvesSensorCorrectly() {
+        val rawJson = """
+            {
+                "connection": null,
+                "activeSensors": [
+                    {
+                        "sensor": {
+                            "a": 1700000000,
+                            "sn": "0M001A2B3C",
+                            "pt": 3
+                        },
+                        "device": {
+                            "did": "device-uuid-1234",
+                            "dtid": 1,
+                            "v": "3.4.0"
+                        }
+                    }
+                ],
+                "graphData": []
+            }
+        """.trimIndent()
+
+        val graphData = json.decodeFromString<GraphData>(rawJson)
+        assertNotNull(graphData.activeSensors)
+        assertEquals(1, graphData.activeSensors!!.size)
+
+        val resolved = graphData.resolvedSensor
+        assertNotNull("resolvedSensor should extract the nested sensor object", resolved)
+        assertEquals("0M001A2B3C", resolved!!.serialNumber)
+        assertEquals(3, resolved.sensorType)
+        assertEquals(1700000000L, resolved.activatedTimestamp)
+        assertEquals("FreeStyle Libre 3", resolved.sensorModelName)
+    }
+
+    @Test
+    fun testGlucoseMeasurement_isStaleThreshold() {
+        val nowMs = System.currentTimeMillis()
+        val recentDate = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.US).format(java.util.Date(nowMs - 5 * 60 * 1000L))
+        val recentMeasurement = GlucoseMeasurement(timestamp = recentDate)
+        assertFalse("Measurement from 5 min ago should not be stale", recentMeasurement.isStale(nowMs))
+
+        val staleDate = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.US).format(java.util.Date(nowMs - 22 * 60 * 1000L))
+        val staleMeasurement = GlucoseMeasurement(timestamp = staleDate)
+        assertTrue("Measurement from 22 min ago must be stale", staleMeasurement.isStale(nowMs))
+
+        val emptyMeasurement = GlucoseMeasurement(timestamp = null)
+        assertTrue("Measurement with null timestamp must be stale", emptyMeasurement.isStale(nowMs))
+    }
+
+    @Test
+    fun testAbbottActiveSensors_multipleSensors_selectsActiveOne() {
+        val rawJson = """
+            {
+                "connection": null,
+                "activeSensors": [
+                    {
+                        "sensor": {
+                            "a": 1690000000,
+                            "sn": "OLD_EXPIRED",
+                            "pt": 2,
+                            "s": false
+                        }
+                    },
+                    {
+                        "sensor": {
+                            "a": 1700000000,
+                            "sn": "NEW_ACTIVE",
+                            "pt": 3,
+                            "s": true
+                        }
+                    }
+                ],
+                "graphData": []
+            }
+        """.trimIndent()
+
+        val graphData = json.decodeFromString<GraphData>(rawJson)
+        val resolved = graphData.resolvedSensor
+        assertNotNull(resolved)
+        assertEquals("NEW_ACTIVE", resolved!!.serialNumber)
+        assertEquals(true, resolved.isSensorActive)
+    }
+
+    @Test
+    fun testAbbottActiveSensors_emptyList_marksConnectionSensorAsExpired() {
+        val rawJson = """
+            {
+                "connection": {
+                    "id": "c1",
+                    "patientId": "p1",
+                    "sensor": {
+                        "a": 1700000000,
+                        "sn": "HISTORICAL_SENSOR",
+                        "pt": 2,
+                        "l": 14
+                    }
+                },
+                "activeSensors": [],
+                "graphData": []
+            }
+        """.trimIndent()
+
+        val graphData = json.decodeFromString<GraphData>(rawJson)
+        val resolved = graphData.resolvedSensor
+        assertNotNull(resolved)
+        assertEquals("HISTORICAL_SENSOR", resolved!!.serialNumber)
+        assertEquals(false, resolved.isSensorActive)
+        assertEquals(0, resolved.getRemainingDays())
+        assertEquals(SensorLifecycleState.Expired, resolved.getLifecycleState())
+    }
+
+    @Test
+    fun testAbbottActiveSensors_emptyList_withNullConnection_returnsNull() {
+        val rawJson = """
+            {
+                "connection": null,
+                "activeSensors": [],
+                "graphData": []
+            }
+        """.trimIndent()
+
+        val graphData = json.decodeFromString<GraphData>(rawJson)
+        assertNull(graphData.resolvedSensor)
+        assertEquals(SensorLifecycleState.NoSensor, graphData.resolvedSensor.lifecycleState())
+    }
+
+    @Test
+    fun testAbbottActiveSensors_nullSensorEntry_skipsNull() {
+        val rawJson = """
+            {
+                "connection": null,
+                "activeSensors": [
+                    {
+                        "sensor": null,
+                        "device": { "did": "dev1" }
+                    },
+                    {
+                        "sensor": {
+                            "a": 1700000000,
+                            "sn": "VALID_SN",
+                            "pt": 3,
+                            "s": true
+                        }
+                    }
+                ],
+                "graphData": []
+            }
+        """.trimIndent()
+
+        val graphData = json.decodeFromString<GraphData>(rawJson)
+        val resolved = graphData.resolvedSensor
+        assertNotNull(resolved)
+        assertEquals("VALID_SN", resolved!!.serialNumber)
+    }
 }
+

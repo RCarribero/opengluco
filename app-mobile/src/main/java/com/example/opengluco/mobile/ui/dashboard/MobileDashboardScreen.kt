@@ -61,6 +61,8 @@ import androidx.compose.material.icons.filled.PersonOff
 import androidx.compose.material.icons.filled.LockReset
 import androidx.compose.material.icons.filled.WarningAmber
 import com.example.opengluco.core.model.ClinicalErrorType
+import com.example.opengluco.core.model.SensorLifecycleState
+import com.example.opengluco.core.model.lifecycleState
 import com.example.opengluco.core.data.NetworkException
 import com.example.opengluco.core.data.AuthExpiredException
 import com.example.opengluco.mobile.ui.qr.MobilePairingHelper
@@ -271,20 +273,31 @@ fun MobileDashboardScreen(
         val arrow = em.trendSymbol
         val name = patient.fullName.ifBlank { "Paciente" }
 
+        val activeSensor = currentSensor ?: patient.sensor?.takeIf { it.isValid }
+        val isSensorActive = activeSensor != null && (activeSensor.getRemainingDays() ?: 0) > 0 && activeSensor.isSensorActive != false
+        val isStale = em.isStale() || !isSensorActive
+
         // 1. Actualizar la tarjeta persistente de estado en tiempo real en la barra de notificaciones
         MobileAlarmNotificationHelper.updateLiveGlucoseNotification(
             context = context,
-            glucoseValueMgDl = value,
-            trendArrow = arrow,
-            patientName = name
+            glucoseValueMgDl = if (isStale) 0.0 else value,
+            trendArrow = if (isStale) "--" else arrow,
+            patientName = name,
+            isStale = isStale
         )
 
         // 2. Actualizar Widgets de escritorio
         com.example.opengluco.mobile.widget.GlucoseWidgetUpdater.updateAllWidgets(
             context = context,
             latestMeasurement = em,
-            patientName = name
+            patientName = name,
+            isSensorActive = isSensorActive
         )
+
+        if (isStale) {
+            // Inhibir alarmas acústicas/vibratorias si la medición es obsoleta o no hay sensor activo
+            return
+        }
 
         // 3. Evaluar alarmas configuradas
         scope.launch {
@@ -322,11 +335,34 @@ fun MobileDashboardScreen(
                 onSuccess = { graphDataObj ->
                     val graphData = graphDataObj.graphData
                     history = graphData
-                    currentSensor = graphDataObj.activeSensors?.firstOrNull() ?: graphDataObj.connection?.sensor ?: patient.sensor
+                    val resolved = graphDataObj.resolvedSensor
+                    currentSensor = resolved
 
-                    // Si la llamada tuvo éxito, limpiar error de red previo
-                    if (clinicalError is ClinicalErrorType.NetworkError) {
-                        clinicalError = ClinicalErrorType.None
+                    // Actualizar alerta clínica en función del ciclo de vida del sensor
+                    val sensorState = resolved.lifecycleState()
+                    when (sensorState) {
+                        is SensorLifecycleState.NoSensor -> {
+                            clinicalError = ClinicalErrorType.NoSensor()
+                        }
+                        is SensorLifecycleState.Expired -> {
+                            clinicalError = ClinicalErrorType.SensorExpired()
+                        }
+                        is SensorLifecycleState.WarmingUp -> {
+                            clinicalError = ClinicalErrorType.SensorWarmingUp(sensorState.remainingMinutes)
+                        }
+                        is SensorLifecycleState.Active -> {
+                            if (clinicalError is ClinicalErrorType.NoSensor ||
+                                clinicalError is ClinicalErrorType.SensorExpired ||
+                                clinicalError is ClinicalErrorType.SensorWarmingUp ||
+                                clinicalError is ClinicalErrorType.NetworkError) {
+                                clinicalError = ClinicalErrorType.None
+                            }
+                        }
+                    }
+
+                    // Notificar alertas preventivas de expiración de sensor
+                    com.example.opengluco.core.data.ClinicalReportsCalculator.checkSensorExpirationAlert(resolved)?.let { alert ->
+                        MobileAlarmNotificationHelper.notifySensorExpiration(context, alert)
                     }
 
                     // Guardar lecturas continuas y última medición en el caché histórico persistente del paciente
@@ -338,12 +374,15 @@ fun MobileDashboardScreen(
                         }
                     }
                     preferencesRepository.saveHistoricalReadings(allToSave, patient.patientId)
+                    val isSensorActive = sensorState is SensorLifecycleState.Active
                     com.example.opengluco.mobile.widget.GlucoseWidgetUpdater.updateAllWidgets(
                         context = context,
                         latestMeasurement = patient.effectiveMeasurement,
                         history = allToSave,
-                        patientName = patient.fullName.ifBlank { "Paciente" }
+                        patientName = patient.fullName.ifBlank { "Paciente" },
+                        isSensorActive = isSensorActive
                     )
+                    evaluateAndNotify(patient)
                 },
                 onFailure = { error ->
                     when (error) {
@@ -488,11 +527,13 @@ fun MobileDashboardScreen(
     val inRangeCount = if (hasSufficientDataForPeriod) validHistory.count { it in targetLow.toDouble()..targetHigh.toDouble() } else 0
     val tirPercent = if (hasSufficientDataForPeriod && validHistory.isNotEmpty()) ((inRangeCount.toDouble() / validHistory.size) * 100).toInt() else 100
 
-    val sensor = currentSensor ?: selectedPatient?.sensor
-    val sensorDays = sensor?.getRemainingDays() ?: 14
-    val sensorSerial = sensor?.serialNumber ?: selectedPatient?.sensor?.serialNumber ?: "Sensor Vinculado"
-    val sensorModel = sensor?.sensorModelName ?: "FreeStyle Libre 3"
-    val isSensorActive = (sensor?.getRemainingDays() ?: 14) > 0
+    val sensor = currentSensor ?: selectedPatient?.sensor?.takeIf { it.isValid }
+    val sensorState = sensor.lifecycleState()
+    val sensorDays = sensor?.getRemainingDays() ?: 0
+    val sensorSerial = sensor?.serialNumber ?: selectedPatient?.sensor?.serialNumber ?: "Sin Sensor"
+    val sensorModel = sensor?.sensorModelName ?: "FreeStyle Libre"
+    val isSensorActive = sensorState is SensorLifecycleState.Active
+    val isStale = (currentMeasurement?.isStale() ?: true) || !isSensorActive
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (showReportsScreen) {
@@ -653,7 +694,9 @@ fun MobileDashboardScreen(
                             unit = settings?.unit ?: GlucoseUnit.MGDL,
                             targetLow = targetLow,
                             targetHigh = targetHigh,
-                            configuredAlarms = configuredAlarms
+                            configuredAlarms = configuredAlarms,
+                            isSensorActive = isSensorActive,
+                            isStale = isStale
                         )
 
                         DashboardSensorCard(
@@ -661,6 +704,7 @@ fun MobileDashboardScreen(
                             sensorDays = sensorDays,
                             isSensorActive = isSensorActive,
                             sensorSerial = sensorSerial,
+                            sensorState = sensorState,
                             onClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 activeModal = DetailModalType.SENSOR_INFO
@@ -749,7 +793,9 @@ fun MobileDashboardScreen(
                             unit = settings?.unit ?: GlucoseUnit.MGDL,
                             targetLow = targetLow,
                             targetHigh = targetHigh,
-                            configuredAlarms = configuredAlarms
+                            configuredAlarms = configuredAlarms,
+                            isSensorActive = isSensorActive,
+                            isStale = isStale
                         )
                     }
 
@@ -798,6 +844,7 @@ fun MobileDashboardScreen(
                             sensorDays = sensorDays,
                             isSensorActive = isSensorActive,
                             sensorSerial = sensorSerial,
+                            sensorState = sensorState,
                             onClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 activeModal = DetailModalType.SENSOR_INFO
@@ -826,6 +873,7 @@ fun MobileDashboardScreen(
                 sensorSerial = sensorSerial,
                 trendText = currentMeasurement?.trendText ?: "Estable",
                 trendSymbol = currentMeasurement?.trendSymbol ?: "→",
+                sensorState = sensor?.getLifecycleState() ?: SensorLifecycleState.NoSensor,
                 onDismiss = { activeModal = DetailModalType.NONE }
             )
         }
@@ -1216,17 +1264,25 @@ private fun MobileSettingsScreen(
                         .padding(14.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    val sensorState = sensor?.getLifecycleState() ?: SensorLifecycleState.NoSensor
+                    val (statusText, statusColor) = when (sensorState) {
+                        is SensorLifecycleState.NoSensor -> "Sin sensor activo vinculado" to colors.textSecondary
+                        is SensorLifecycleState.WarmingUp -> "En calentamiento (${sensorState.remainingMinutes} min restantes)" to colors.highAmber
+                        is SensorLifecycleState.Active -> "${sensorState.remainingDays} días restantes • Conectado" to colors.mint
+                        is SensorLifecycleState.Expired -> "Sensor expirado (0 días restantes)" to colors.urgentCrimson
+                    }
+
                     Box(
                         modifier = Modifier
                             .size(40.dp)
                             .clip(CircleShape)
-                            .background(colors.mint.copy(alpha = 0.15f)),
+                            .background(statusColor.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Sensors,
                             contentDescription = null,
-                            tint = colors.mint,
+                            tint = statusColor,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -1235,15 +1291,15 @@ private fun MobileSettingsScreen(
 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = sensor?.sensorModelName ?: "FreeStyle Libre 3",
+                            text = sensor?.sensorModelName ?: "FreeStyle Libre",
                             fontSize = 14.5.sp,
                             fontWeight = FontWeight.Bold,
                             color = colors.textPrimary
                         )
                         Text(
-                            text = "${sensor?.getRemainingDays() ?: 14} días restantes • Conectado",
+                            text = statusText,
                             fontSize = 11.5.sp,
-                            color = colors.mint
+                            color = statusColor
                         )
                     }
                 }
@@ -2403,6 +2459,138 @@ private fun DashboardClinicalErrorBanner(
                 }
             }
         }
+    } else if (clinicalError is ClinicalErrorType.NoSensor) {
+        Card(
+            shape = RoundedCornerShape(14.dp),
+            colors = CardDefaults.cardColors(containerColor = colors.surfaceCard),
+            border = androidx.compose.foundation.BorderStroke(1.dp, colors.surfaceBorder),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Sensors,
+                    contentDescription = null,
+                    tint = colors.textSecondary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Sin Sensor Activo",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                        color = colors.textPrimary
+                    )
+                    Text(
+                        text = "No hay un sensor FreeStyle Libre iniciado o vinculado en esta cuenta.",
+                        fontSize = 11.5.sp,
+                        color = colors.textSecondary,
+                        lineHeight = 15.sp
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(
+                    onClick = onRetry,
+                    colors = ButtonDefaults.buttonColors(containerColor = colors.mint),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("Actualizar", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    } else if (clinicalError is ClinicalErrorType.SensorExpired) {
+        Card(
+            shape = RoundedCornerShape(14.dp),
+            colors = CardDefaults.cardColors(containerColor = colors.urgentCrimson.copy(alpha = if (colors.isDark) 0.16f else 0.10f)),
+            border = androidx.compose.foundation.BorderStroke(1.dp, colors.urgentCrimson.copy(alpha = 0.45f)),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.WarningAmber,
+                    contentDescription = null,
+                    tint = colors.urgentCrimson,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Sensor Expirado",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                        color = colors.urgentCrimson
+                    )
+                    Text(
+                        text = "El sensor FreeStyle Libre ha finalizado su periodo de vida util. Aplica e inicia un sensor nuevo.",
+                        fontSize = 11.5.sp,
+                        color = colors.textSecondary,
+                        lineHeight = 15.sp
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(
+                    onClick = onRetry,
+                    colors = ButtonDefaults.buttonColors(containerColor = colors.urgentCrimson),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("Comprobar", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    } else if (clinicalError is ClinicalErrorType.SensorWarmingUp) {
+        Card(
+            shape = RoundedCornerShape(14.dp),
+            colors = CardDefaults.cardColors(containerColor = colors.highAmber.copy(alpha = if (colors.isDark) 0.15f else 0.10f)),
+            border = androidx.compose.foundation.BorderStroke(1.dp, colors.highAmber.copy(alpha = 0.40f)),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.AccessTime,
+                    contentDescription = null,
+                    tint = colors.highAmber,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Sensor en Calentamiento",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                        color = colors.highAmber
+                    )
+                    Text(
+                        text = "El sensor se esta inicializando. Mediciones disponibles en aprox. ${(clinicalError as? ClinicalErrorType.SensorWarmingUp)?.remainingMinutes ?: 60} min.",
+                        fontSize = 11.5.sp,
+                        color = colors.textSecondary,
+                        lineHeight = 15.sp
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(
+                    onClick = onRetry,
+                    colors = ButtonDefaults.buttonColors(containerColor = colors.highAmber),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("Refrescar", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
     }
 }
 
@@ -2412,9 +2600,23 @@ private fun DashboardHeroSection(
     unit: GlucoseUnit,
     targetLow: Int,
     targetHigh: Int,
-    configuredAlarms: List<GlucoseAlarm>
+    configuredAlarms: List<GlucoseAlarm>,
+    isSensorActive: Boolean = true,
+    isStale: Boolean = false
 ) {
     val colors = ClinicalTheme.colors
+    val effectiveStale = isStale || !isSensorActive || currentMeasurement == null || currentMeasurement.isStale()
+    val formattedTime = currentMeasurement?.getEpochMillis()?.let { epoch ->
+        val sdf = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+        sdf.format(java.util.Date(epoch))
+    } ?: currentMeasurement?.timestamp?.takeLast(5) ?: "--:--"
+
+    val statusText = when {
+        !isSensorActive -> "Sin sensor activo • $formattedTime"
+        effectiveStale -> "Desconectado • $formattedTime"
+        else -> "Última medición: $formattedTime"
+    }
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -2425,13 +2627,15 @@ private fun DashboardHeroSection(
             targetLow = targetLow,
             targetHigh = targetHigh,
             alarms = configuredAlarms,
+            isSensorActive = isSensorActive,
+            isStale = effectiveStale,
             onGlucoseOrbClick = {},
             onTrendOrbClick = {}
         )
 
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Última medición: ${currentMeasurement?.timestamp ?: "Ahora"}",
+            text = statusText,
             fontSize = 12.sp,
             color = colors.textMuted,
             textAlign = TextAlign.Center
@@ -2512,6 +2716,15 @@ private fun DashboardChartCard(
                     }
 
                     // Pastilla compacta del sensor
+                    val sensorBadgeText = when {
+                        sensorDays <= 0 -> "--"
+                        else -> "${sensorDays}d"
+                    }
+                    val sensorBadgeColor = when {
+                        sensorDays <= 0 -> colors.textSecondary
+                        sensorDays <= 2 -> colors.highAmber
+                        else -> colors.mint
+                    }
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(10.dp))
@@ -2521,10 +2734,10 @@ private fun DashboardChartCard(
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
                         Text(
-                            text = "${sensorDays}d",
+                            text = sensorBadgeText,
                             fontWeight = FontWeight.Bold,
                             fontSize = 11.5.sp,
-                            color = if (sensorDays <= 2) colors.highAmber else colors.mint
+                            color = sensorBadgeColor
                         )
                     }
                 }
@@ -2760,9 +2973,46 @@ private fun DashboardSensorCard(
     sensorDays: Int,
     isSensorActive: Boolean,
     sensorSerial: String,
+    sensorState: SensorLifecycleState = SensorLifecycleState.NoSensor,
     onClick: () -> Unit
 ) {
     val colors = ClinicalTheme.colors
+    val (statusTitle, statusBg, statusColor) = when (sensorState) {
+        is SensorLifecycleState.Active -> Triple(
+            "Activo",
+            colors.mint.copy(alpha = if (colors.isDark) 0.2f else 0.15f),
+            colors.mint
+        )
+        is SensorLifecycleState.WarmingUp -> Triple(
+            "Calentando",
+            colors.highAmber.copy(alpha = 0.2f),
+            colors.highAmber
+        )
+        is SensorLifecycleState.Expired -> Triple(
+            "Caducado",
+            colors.lowCoral.copy(alpha = 0.2f),
+            colors.lowCoral
+        )
+        is SensorLifecycleState.NoSensor -> Triple(
+            "Sin sensor",
+            colors.textSecondary.copy(alpha = 0.15f),
+            colors.textSecondary
+        )
+    }
+
+    val subtitleText = when (sensorState) {
+        is SensorLifecycleState.Active -> "$sensorModel • $sensorDays días restantes"
+        is SensorLifecycleState.WarmingUp -> "$sensorModel • Calentamiento (${sensorState.remainingMinutes} min)"
+        is SensorLifecycleState.Expired -> "$sensorModel • Sensor finalizado"
+        is SensorLifecycleState.NoSensor -> "Sin sensor vinculado"
+    }
+    val subtitleColor = when (sensorState) {
+        is SensorLifecycleState.Active -> if (sensorDays <= 2) colors.lowCoral else colors.mint
+        is SensorLifecycleState.WarmingUp -> colors.highAmber
+        is SensorLifecycleState.Expired -> colors.lowCoral
+        is SensorLifecycleState.NoSensor -> colors.textSecondary
+    }
+
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = colors.surfaceCard),
@@ -2787,7 +3037,7 @@ private fun DashboardSensorCard(
                     Icon(
                         Icons.Default.Sensors,
                         contentDescription = "Sensor",
-                        tint = colors.mint,
+                        tint = statusColor,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -2800,26 +3050,23 @@ private fun DashboardSensorCard(
                         color = colors.textPrimary
                     )
                     Text(
-                        text = "$sensorModel • $sensorDays días restantes",
+                        text = subtitleText,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = if (sensorDays <= 2) colors.lowCoral else colors.mint
+                        color = subtitleColor
                     )
                 }
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
-                        .background(
-                            if (isSensorActive) colors.mint.copy(alpha = if (colors.isDark) 0.2f else 0.15f)
-                            else colors.lowCoral.copy(alpha = 0.2f)
-                        )
+                        .background(statusBg)
                         .padding(horizontal = 10.dp, vertical = 5.dp)
                 ) {
                     Text(
-                        text = if (isSensorActive) "Activo" else "Caducado",
+                        text = statusTitle,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (isSensorActive) colors.mint else colors.lowCoral
+                        color = statusColor
                     )
                 }
             }

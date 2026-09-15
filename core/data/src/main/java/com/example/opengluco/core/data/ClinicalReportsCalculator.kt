@@ -291,8 +291,16 @@ object ClinicalReportsCalculator {
      * Evalua si el sensor requiere aviso preventivo de expiracion.
      */
     fun checkSensorExpirationAlert(sensor: SensorInfo?): com.example.opengluco.core.model.SensorExpirationAlert? {
-        if (sensor == null) return null
-        val daysRemaining = sensor.getRemainingDays() ?: return null
+        if (sensor == null || !sensor.isValid) {
+            return com.example.opengluco.core.model.SensorExpirationAlert(
+                daysRemaining = 0,
+                hoursRemaining = 0,
+                isCritical = true,
+                title = "Sin Sensor Activo",
+                message = "No se detecta ningun sensor activo vinculado. Inicia un nuevo sensor FreeStyle Libre."
+            )
+        }
+        val daysRemaining = sensor.getRemainingDays() ?: 0
         return when {
             daysRemaining <= 0 -> {
                 com.example.opengluco.core.model.SensorExpirationAlert(
@@ -563,10 +571,10 @@ object ClinicalReportsCalculator {
         val actual = valid.size
         val coverage = min(100.0, (actual.toDouble() / expected.toDouble()) * 100.0)
 
-        val remainingDays = sensor?.getRemainingDays() ?: 14
-        val model = sensor?.sensorModelName ?: "FreeStyle Libre 3"
-        val serial = sensor?.serialNumber ?: "SN-LIBRE-AUTO"
-        val active = remainingDays > 0
+        val remainingDays = sensor?.getRemainingDays() ?: 0
+        val model = if (sensor != null && sensor.isValid) sensor.sensorModelName else "Sin sensor"
+        val serial = sensor?.serialNumber?.takeIf { it.isNotBlank() } ?: "Sin sensor"
+        val active = sensor != null && sensor.isValid && remainingDays > 0 && sensor.isSensorActive != false
 
         return SensorUsageReport(
             periodDays = periodDays,

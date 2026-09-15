@@ -54,6 +54,7 @@ fun WearStatDetailModal(
     sensorSerial: String,
     trendText: String,
     onDismiss: () -> Unit,
+    sensorState: com.example.opengluco.core.model.SensorLifecycleState = com.example.opengluco.core.model.SensorLifecycleState.NoSensor,
     modifier: Modifier = Modifier
 ) {
     if (type == DetailModalType.NONE) return
@@ -172,10 +173,18 @@ fun WearStatDetailModal(
                                 .border(1.dp, ClinicalSurfaceBorder, RoundedCornerShape(12.dp))
                                 .padding(8.dp)
                         ) {
+                            val daysText = if (sensorDays > 0) "$sensorDays días" else "--"
+                            val serialText = sensorSerial.ifBlank { "Sin sensor" }
+                            val statusText = when (sensorState) {
+                                is com.example.opengluco.core.model.SensorLifecycleState.NoSensor -> "Sin sensor"
+                                is com.example.opengluco.core.model.SensorLifecycleState.Expired -> "Caducado"
+                                is com.example.opengluco.core.model.SensorLifecycleState.WarmingUp -> "Calentamiento (${sensorState.remainingMinutes} min)"
+                                is com.example.opengluco.core.model.SensorLifecycleState.Active -> "Operativo"
+                            }
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                StatRow("Días restantes:", "$sensorDays días")
-                                StatRow("Número de Serie:", sensorSerial.ifBlank { "Activo" })
-                                StatRow("Estado:", if (sensorDays > 0) "Operativo" else "Caducado")
+                                StatRow("Días restantes:", daysText)
+                                StatRow("Número de Serie:", serialText)
+                                StatRow("Estado:", statusText)
                             }
                         }
                     }

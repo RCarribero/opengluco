@@ -47,13 +47,27 @@ class GlucoseAlarmWorker(
         val patient = patients.find { it.patientId == settings.selectedPatientId }
             ?: patients.first()
 
-        val latest = patient.effectiveMeasurement
+        val graphRes = openGlucoRepo.getPatientGraph(patient.patientId)
+        val graphObj = graphRes.getOrNull()
+        val sensor = if (graphObj != null) graphObj.resolvedSensor else patient.sensor?.takeIf { it.isValid }
+        val isSensorActive = sensor != null && (sensor.getRemainingDays() ?: 0) > 0 && sensor.isSensorActive != false
+
+        com.example.opengluco.core.data.ClinicalReportsCalculator.checkSensorExpirationAlert(sensor)?.let { alert ->
+            MobileAlarmNotificationHelper.notifySensorExpiration(context, alert)
+        }
+
+        val latest = patient.effectiveMeasurement ?: graphObj?.graphData?.lastOrNull()
         if (latest == null) {
             return Result.success()
         }
 
         val value = latest.numericValue
         if (value <= 0.0) {
+            return Result.success()
+        }
+
+        // Si la medición es obsoleta (> 20 min) o no hay sensor activo, inhibir alarmas acústicas/vibratorias
+        if (latest.isStale() || !isSensorActive) {
             return Result.success()
         }
 

@@ -221,7 +221,8 @@ object MobileAlarmNotificationHelper {
         context: Context,
         glucoseValueMgDl: Double,
         trendArrow: String = "->",
-        patientName: String = ""
+        patientName: String = "",
+        isStale: Boolean = false
     ): android.app.Notification {
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -236,7 +237,13 @@ object MobileAlarmNotificationHelper {
         val pendingIntent = PendingIntent.getActivity(context, 0, intent, flags)
 
         val headerText = if (patientName.isNotBlank()) "OpenGluco • $patientName" else "OpenGluco"
-        val bodyText = if (glucoseValueMgDl > 0.0) "${glucoseValueMgDl.toInt()} $trendArrow mg/dL" else "Conectando al sensor..."
+        val bodyText = if (isStale) {
+            "Desconectado (Sin señal reciente)"
+        } else if (glucoseValueMgDl > 0.0) {
+            "${glucoseValueMgDl.toInt()} $trendArrow mg/dL"
+        } else {
+            "Conectando al sensor..."
+        }
 
         return NotificationCompat.Builder(context, CHANNEL_LIVE_STATUS)
             .setSmallIcon(R.drawable.ic_notification_glucose)
@@ -257,11 +264,12 @@ object MobileAlarmNotificationHelper {
         context: Context,
         glucoseValueMgDl: Double,
         trendArrow: String = "->",
-        patientName: String = ""
+        patientName: String = "",
+        isStale: Boolean = false
     ) {
-        if (glucoseValueMgDl <= 0.0) return
+        if (glucoseValueMgDl <= 0.0 && !isStale) return
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val notification = buildLiveGlucoseNotification(context, glucoseValueMgDl, trendArrow, patientName)
+        val notification = buildLiveGlucoseNotification(context, glucoseValueMgDl, trendArrow, patientName, isStale)
         notificationManager.notify(NOTIFICATION_ID_LIVE_STATUS, notification)
     }
 
@@ -425,9 +433,21 @@ object MobileAlarmNotificationHelper {
             .setStyle(NotificationCompat.BigTextStyle().bigText(alert.message))
             .setPriority(priority)
             .setAutoCancel(true)
+            .setOnlyAlertOnce(true)
             .setContentIntent(pendingIntent)
             .build()
 
         notificationManager.notify(8001, notification)
+    }
+
+    fun notifySensorExpiration(context: Context, title: String, message: String, isCritical: Boolean = false) {
+        notifySensorExpiration(
+            context,
+            com.example.opengluco.core.model.SensorExpirationAlert(
+                title = title,
+                message = message,
+                isCritical = isCritical
+            )
+        )
     }
 }

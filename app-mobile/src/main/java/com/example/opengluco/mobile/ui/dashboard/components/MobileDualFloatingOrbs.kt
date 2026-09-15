@@ -46,18 +46,31 @@ fun MobileDualFloatingOrbs(
     targetLow: Int = 70,
     targetHigh: Int = 180,
     alarms: List<GlucoseAlarm> = emptyList(),
+    isSensorActive: Boolean = true,
+    isStale: Boolean = false,
     onGlucoseOrbClick: () -> Unit = {},
     onTrendOrbClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val haptic = LocalHapticFeedback.current
     val colors = ClinicalTheme.colors
+    val effectiveStale = isStale || !isSensorActive || measurement == null || measurement.isStale()
     val mgdl = measurement?.numericValue ?: 0.0
-    val statusColor = if (measurement != null) getGlucoseValueColor(mgdl, targetLow, targetHigh, alarms, colors) else colors.textMuted
+    val statusColor = if (!effectiveStale && mgdl > 0.0) {
+        getGlucoseValueColor(mgdl, targetLow, targetHigh, alarms, colors)
+    } else {
+        colors.textMuted
+    }
 
-    val formattedVal = measurement?.getFormattedValue(isMmol = unit == GlucoseUnit.MMOL) ?: "--"
-    val glucoseDesc = "Nivel de glucosa actual: $formattedVal ${unit.label}"
-    val trendDesc = "Tendencia: ${measurement?.trendText ?: "Estable"}, direccion ${measurement?.trendSymbol ?: "→"}"
+    val formattedVal = if (effectiveStale) "--" else (measurement?.getFormattedValue(isMmol = unit == GlucoseUnit.MMOL) ?: "--")
+    val glucoseDesc = if (effectiveStale) "Glucosa desactualizada o desconectada" else "Nivel de glucosa actual: $formattedVal ${unit.label}"
+    val effectiveTrendSymbol = if (effectiveStale) "--" else (measurement?.trendSymbol ?: "→")
+    val effectiveTrendText = if (effectiveStale) {
+        if (!isSensorActive) "Sin sensor" else "Desconectado"
+    } else {
+        measurement?.trendText ?: "Estable"
+    }
+    val trendDesc = "Tendencia: $effectiveTrendText, direccion $effectiveTrendSymbol"
 
     val responsive = ClinicalTheme.responsive
     val orbSize = responsive.orbSize
@@ -103,10 +116,10 @@ fun MobileDualFloatingOrbs(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = measurement?.getFormattedValue(isMmol = unit == GlucoseUnit.MMOL) ?: "--",
+                    text = formattedVal,
                     fontSize = valFontSize,
                     fontWeight = FontWeight.Bold,
-                    color = colors.textPrimary,
+                    color = if (effectiveStale) colors.textMuted else colors.textPrimary,
                     textAlign = TextAlign.Center,
                     maxLines = 1
                 )
@@ -144,10 +157,10 @@ fun MobileDualFloatingOrbs(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = measurement?.trendSymbol ?: "→",
+                    text = effectiveTrendSymbol,
                     fontSize = symbolFontSize,
                     fontWeight = FontWeight.Bold,
-                    color = colors.textPrimary,
+                    color = if (effectiveStale) colors.textMuted else colors.textPrimary,
                     textAlign = TextAlign.Center,
                     maxLines = 1
                 )
@@ -158,7 +171,7 @@ fun MobileDualFloatingOrbs(
                         .padding(horizontal = if (responsive.isNarrowPhone) 7.dp else 10.dp, vertical = 3.dp)
                 ) {
                     Text(
-                        text = measurement?.trendText ?: "Estable",
+                        text = effectiveTrendText,
                         fontSize = trendFontSize,
                         fontWeight = FontWeight.Bold,
                         color = statusColor,

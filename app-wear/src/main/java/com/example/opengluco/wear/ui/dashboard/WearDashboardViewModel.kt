@@ -178,7 +178,8 @@ class WearDashboardViewModel(
         val graphResult = repository.getPatientGraph(patient.patientId)
         val history = graphResult.getOrNull()?.graphData.orEmpty()
         val latestMeasurement = patient.effectiveMeasurement ?: history.lastOrNull()
-        val activeSensor = patient.sensor ?: graphResult.getOrNull()?.activeSensors?.firstOrNull()
+        val graphObj = graphResult.getOrNull()
+        val activeSensor = if (graphObj != null) graphObj.resolvedSensor else patient.sensor?.takeIf { it.isValid }
 
         // Unificar historial y medición actual en tiempo real ordenada por timestamp
         val combinedHistory = if (latestMeasurement != null && history.none { it.timestamp == latestMeasurement.timestamp && !it.timestamp.isNullOrBlank() }) {
@@ -197,6 +198,15 @@ class WearDashboardViewModel(
             )
         }
 
+        val isSensorActive = activeSensor != null && (activeSensor.getRemainingDays() ?: 0) > 0 && activeSensor.isSensorActive != false
+        val isStale = latestMeasurement == null || latestMeasurement.isStale() || !isSensorActive
+        val updatedText = if (isStale) {
+            val t = latestMeasurement?.getDisplayTime() ?: "--:--"
+            if (!isSensorActive) "Sin sensor • $t" else "Desconectado • $t"
+        } else {
+            latestMeasurement.getDisplayTime()
+        }
+
         _uiState.value = WearDashboardUiState.Success(
             selectedPatient = patient,
             allPatients = allPatients,
@@ -206,7 +216,7 @@ class WearDashboardViewModel(
             unit = userSettings.unit,
             lowThreshold = userSettings.lowThreshold,
             highThreshold = userSettings.highThreshold,
-            lastUpdatedText = latestMeasurement?.getDisplayTime() ?: "Ahora",
+            lastUpdatedText = updatedText,
             isRefreshing = false
         )
     }

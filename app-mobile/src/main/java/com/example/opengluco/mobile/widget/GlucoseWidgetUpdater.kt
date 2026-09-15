@@ -33,7 +33,8 @@ object GlucoseWidgetUpdater {
         context: Context,
         latestMeasurement: GlucoseMeasurement? = null,
         history: List<GlucoseMeasurement>? = null,
-        patientName: String? = null
+        patientName: String? = null,
+        isSensorActive: Boolean = true
     ) {
         val appWidgetManager = AppWidgetManager.getInstance(context) ?: return
         val compactComponent = ComponentName(context, GlucoseCompactWidgetProvider::class.java)
@@ -65,7 +66,8 @@ object GlucoseWidgetUpdater {
                     unit = unit,
                     targetLow = targetLow,
                     targetHigh = targetHigh,
-                    patientName = displayPatient
+                    patientName = displayPatient,
+                    isSensorActive = isSensorActive
                 )
                 appWidgetManager.updateAppWidget(compactIds, views)
             }
@@ -79,7 +81,8 @@ object GlucoseWidgetUpdater {
                     unit = unit,
                     targetLow = targetLow,
                     targetHigh = targetHigh,
-                    patientName = displayPatient
+                    patientName = displayPatient,
+                    isSensorActive = isSensorActive
                 )
                 appWidgetManager.updateAppWidget(chartIds, views)
             }
@@ -92,7 +95,8 @@ object GlucoseWidgetUpdater {
         unit: GlucoseUnit,
         targetLow: Int,
         targetHigh: Int,
-        patientName: String
+        patientName: String,
+        isSensorActive: Boolean = true
     ): RemoteViews {
         val views = RemoteViews(context.packageName, R.layout.widget_glucose_compact)
 
@@ -111,45 +115,61 @@ object GlucoseWidgetUpdater {
         views.setTextViewText(R.id.widget_compact_patient, patientName)
 
         if (measurement != null && measurement.numericValue > 0.0) {
-            val mgDl = measurement.numericValue
-            val displayValue = if (unit == GlucoseUnit.MMOL) {
-                String.format(Locale.US, "%.1f", mgDl / 18.0)
-            } else {
-                mgDl.toInt().toString()
-            }
-
-            val statusText = when {
-                mgDl <= 55 -> "Urgente Bajo"
-                mgDl < targetLow -> "Bajo"
-                mgDl > 249 -> "Muy Alto"
-                mgDl > targetHigh -> "Alto"
-                else -> "En rango"
-            }
-
-            val clinicalColor = when {
-                mgDl <= 55 -> COLOR_URGENT_LOW
-                mgDl < targetLow -> COLOR_LOW
-                mgDl > 249 -> COLOR_VERY_HIGH
-                mgDl > targetHigh -> COLOR_HIGH
-                else -> COLOR_MINT
-            }
-
+            val isStale = !isSensorActive || measurement.isStale()
             val timeFormatted = formatTime24h(measurement.timestamp)
 
-            views.setTextViewText(R.id.widget_compact_value, displayValue)
-            views.setTextColor(R.id.widget_compact_value, clinicalColor)
+            if (isStale) {
+                val mutedColor = 0xFF94A3B8.toInt()
+                views.setTextViewText(R.id.widget_compact_value, "---")
+                views.setTextColor(R.id.widget_compact_value, mutedColor)
 
-            views.setTextViewText(R.id.widget_compact_arrow, measurement.trendSymbol)
-            views.setTextColor(R.id.widget_compact_arrow, clinicalColor)
+                views.setTextViewText(R.id.widget_compact_arrow, "--")
+                views.setTextColor(R.id.widget_compact_arrow, mutedColor)
 
-            views.setTextViewText(R.id.widget_compact_unit, if (unit == GlucoseUnit.MMOL) "mmol/L" else "mg/dL")
-            views.setTextViewText(R.id.widget_compact_status, statusText)
-            views.setTextColor(R.id.widget_compact_status, clinicalColor)
+                views.setTextViewText(R.id.widget_compact_unit, if (unit == GlucoseUnit.MMOL) "mmol/L" else "mg/dL")
+                views.setTextViewText(R.id.widget_compact_status, "Desconectado")
+                views.setTextColor(R.id.widget_compact_status, mutedColor)
 
-            views.setTextViewText(R.id.widget_compact_time, timeFormatted)
+                views.setTextViewText(R.id.widget_compact_time, timeFormatted)
+            } else {
+                val mgDl = measurement.numericValue
+                val displayValue = if (unit == GlucoseUnit.MMOL) {
+                    String.format(Locale.US, "%.1f", mgDl / 18.0)
+                } else {
+                    mgDl.toInt().toString()
+                }
+
+                val statusText = when {
+                    mgDl <= 55 -> "Urgente Bajo"
+                    mgDl < targetLow -> "Bajo"
+                    mgDl > 249 -> "Muy Alto"
+                    mgDl > targetHigh -> "Alto"
+                    else -> "En rango"
+                }
+
+                val clinicalColor = when {
+                    mgDl <= 55 -> COLOR_URGENT_LOW
+                    mgDl < targetLow -> COLOR_LOW
+                    mgDl > 249 -> COLOR_VERY_HIGH
+                    mgDl > targetHigh -> COLOR_HIGH
+                    else -> COLOR_MINT
+                }
+
+                views.setTextViewText(R.id.widget_compact_value, displayValue)
+                views.setTextColor(R.id.widget_compact_value, clinicalColor)
+
+                views.setTextViewText(R.id.widget_compact_arrow, measurement.trendSymbol)
+                views.setTextColor(R.id.widget_compact_arrow, clinicalColor)
+
+                views.setTextViewText(R.id.widget_compact_unit, if (unit == GlucoseUnit.MMOL) "mmol/L" else "mg/dL")
+                views.setTextViewText(R.id.widget_compact_status, statusText)
+                views.setTextColor(R.id.widget_compact_status, clinicalColor)
+
+                views.setTextViewText(R.id.widget_compact_time, timeFormatted)
+            }
         } else {
             views.setTextViewText(R.id.widget_compact_value, "---")
-            views.setTextViewText(R.id.widget_compact_arrow, "→")
+            views.setTextViewText(R.id.widget_compact_arrow, "--")
             views.setTextViewText(R.id.widget_compact_status, "Esperando datos")
             views.setTextViewText(R.id.widget_compact_time, "--:--")
         }
@@ -164,7 +184,8 @@ object GlucoseWidgetUpdater {
         unit: GlucoseUnit,
         targetLow: Int,
         targetHigh: Int,
-        patientName: String
+        patientName: String,
+        isSensorActive: Boolean = true
     ): RemoteViews {
         val views = RemoteViews(context.packageName, R.layout.widget_glucose_chart)
 
@@ -183,46 +204,63 @@ object GlucoseWidgetUpdater {
         views.setTextViewText(R.id.widget_chart_patient, patientName)
 
         if (measurement != null && measurement.numericValue > 0.0) {
-            val mgDl = measurement.numericValue
-            val displayValue = if (unit == GlucoseUnit.MMOL) {
-                String.format(Locale.US, "%.1f", mgDl / 18.0)
-            } else {
-                mgDl.toInt().toString()
-            }
-
-            val statusText = when {
-                mgDl <= 55 -> "Urgente Bajo"
-                mgDl < targetLow -> "Bajo"
-                mgDl > 249 -> "Muy Alto"
-                mgDl > targetHigh -> "Alto"
-                else -> "En rango"
-            }
-
-            val clinicalColor = when {
-                mgDl <= 55 -> COLOR_URGENT_LOW
-                mgDl < targetLow -> COLOR_LOW
-                mgDl > 249 -> COLOR_VERY_HIGH
-                mgDl > targetHigh -> COLOR_HIGH
-                else -> COLOR_MINT
-            }
-
+            val isStale = !isSensorActive || measurement.isStale()
             val timeFormatted = formatTime24h(measurement.timestamp)
 
-            views.setTextViewText(R.id.widget_chart_value, displayValue)
-            views.setTextColor(R.id.widget_chart_value, clinicalColor)
+            if (isStale) {
+                val mutedColor = 0xFF94A3B8.toInt()
+                views.setTextViewText(R.id.widget_chart_value, "---")
+                views.setTextColor(R.id.widget_chart_value, mutedColor)
 
-            views.setTextViewText(R.id.widget_chart_arrow, measurement.trendSymbol)
-            views.setTextColor(R.id.widget_chart_arrow, clinicalColor)
+                views.setTextViewText(R.id.widget_chart_arrow, "--")
+                views.setTextColor(R.id.widget_chart_arrow, mutedColor)
 
-            views.setTextViewText(R.id.widget_chart_unit, if (unit == GlucoseUnit.MMOL) "mmol/L" else "mg/dL")
+                views.setTextViewText(R.id.widget_chart_unit, if (unit == GlucoseUnit.MMOL) "mmol/L" else "mg/dL")
 
-            views.setTextViewText(R.id.widget_chart_status_badge, statusText)
-            views.setTextColor(R.id.widget_chart_status_badge, clinicalColor)
+                views.setTextViewText(R.id.widget_chart_status_badge, "Desconectado")
+                views.setTextColor(R.id.widget_chart_status_badge, mutedColor)
 
-            views.setTextViewText(R.id.widget_chart_time, timeFormatted)
+                views.setTextViewText(R.id.widget_chart_time, timeFormatted)
+            } else {
+                val mgDl = measurement.numericValue
+                val displayValue = if (unit == GlucoseUnit.MMOL) {
+                    String.format(Locale.US, "%.1f", mgDl / 18.0)
+                } else {
+                    mgDl.toInt().toString()
+                }
+
+                val statusText = when {
+                    mgDl <= 55 -> "Urgente Bajo"
+                    mgDl < targetLow -> "Bajo"
+                    mgDl > 249 -> "Muy Alto"
+                    mgDl > targetHigh -> "Alto"
+                    else -> "En rango"
+                }
+
+                val clinicalColor = when {
+                    mgDl <= 55 -> COLOR_URGENT_LOW
+                    mgDl < targetLow -> COLOR_LOW
+                    mgDl > 249 -> COLOR_VERY_HIGH
+                    mgDl > targetHigh -> COLOR_HIGH
+                    else -> COLOR_MINT
+                }
+
+                views.setTextViewText(R.id.widget_chart_value, displayValue)
+                views.setTextColor(R.id.widget_chart_value, clinicalColor)
+
+                views.setTextViewText(R.id.widget_chart_arrow, measurement.trendSymbol)
+                views.setTextColor(R.id.widget_chart_arrow, clinicalColor)
+
+                views.setTextViewText(R.id.widget_chart_unit, if (unit == GlucoseUnit.MMOL) "mmol/L" else "mg/dL")
+
+                views.setTextViewText(R.id.widget_chart_status_badge, statusText)
+                views.setTextColor(R.id.widget_chart_status_badge, clinicalColor)
+
+                views.setTextViewText(R.id.widget_chart_time, timeFormatted)
+            }
         } else {
             views.setTextViewText(R.id.widget_chart_value, "---")
-            views.setTextViewText(R.id.widget_chart_arrow, "→")
+            views.setTextViewText(R.id.widget_chart_arrow, "--")
             views.setTextViewText(R.id.widget_chart_status_badge, "Sin datos")
             views.setTextViewText(R.id.widget_chart_time, "--:--")
         }

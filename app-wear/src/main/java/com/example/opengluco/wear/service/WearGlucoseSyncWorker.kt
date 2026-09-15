@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.wear.service
+package com.example.opengluco.wear.service
 
 import android.content.Context
 import androidx.work.CoroutineWorker
@@ -38,6 +38,10 @@ class WearGlucoseSyncWorker(
             val graphRes = repository.getPatientGraph(patient.patientId)
             val history = graphRes.getOrNull()?.graphData.orEmpty()
             val latest = patient.effectiveMeasurement ?: history.lastOrNull()
+            val graphObj = graphRes.getOrNull()
+            val resolvedSensor = if (graphObj != null) graphObj.resolvedSensor else patient.sensor?.takeIf { it.isValid }
+            val isSensorActive = resolvedSensor != null && (resolvedSensor.getRemainingDays() ?: 0) > 0 && resolvedSensor.isSensorActive != false
+            val isStale = latest == null || latest.isStale() || !isSensorActive
 
             latest?.let {
                 val value = it.numericValue
@@ -47,8 +51,8 @@ class WearGlucoseSyncWorker(
                     timestamp = it.timestamp ?: ""
                 )
 
-                // Evaluacion de alarmas con el nuevo sistema multi-nivel
-                if (settings.hapticAlertsEnabled) {
+                // Evaluacion de alarmas con el nuevo sistema multi-nivel (inhibido si es obsoleta o sin sensor activo)
+                if (!isStale && settings.hapticAlertsEnabled) {
                     val alarmRepo = AlarmRepository(context)
                     val alarms = alarmRepo.getAllAlarms()
                     val timestamps = alarmRepo.getLastFiredTimestamps()

@@ -63,9 +63,9 @@ data class DailyPatternsReport(
 )
 
 data class SensorExpirationAlert(
-    val daysRemaining: Int,
-    val hoursRemaining: Int,
-    val isCritical: Boolean,
+    val daysRemaining: Int = 0,
+    val hoursRemaining: Int = 0,
+    val isCritical: Boolean = false,
     val title: String,
     val message: String
 )

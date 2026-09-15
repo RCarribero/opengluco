@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.wear.ui.dashboard.components
+package com.example.opengluco.wear.ui.dashboard.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -33,7 +33,7 @@ fun WearSensorChip(
         "Sensor: ${sensor.serialNumber ?: "OK"}"
     }
 
-    val iconColor = if ((daysLeft ?: 14) <= 2) GlucoseLow else GlucoseInRange
+    val iconColor = if (daysLeft == null || daysLeft <= 2) GlucoseLow else GlucoseInRange
 
     Button(
         onClick = { /* Detalle del sensor */ },

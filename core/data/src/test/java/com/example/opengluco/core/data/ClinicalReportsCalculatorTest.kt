@@ -285,5 +285,40 @@ class ClinicalReportsCalculatorTest {
         )
         val noAlert = ClinicalReportsCalculator.checkSensorExpirationAlert(goodSensor)
         org.junit.Assert.assertNull(noAlert)
+
+        // Sensor null -> alerta crítica Sin Sensor Activo
+        val nullAlert = ClinicalReportsCalculator.checkSensorExpirationAlert(null)
+        assertNotNull(nullAlert)
+        assertEquals(0, nullAlert!!.daysRemaining)
+        assertTrue(nullAlert.isCritical)
+        assertTrue(nullAlert.title.contains("Sin Sensor"))
+    }
+
+    @Test
+    fun testSensorUsage_nullSensor_returnsZeroDaysAndInactive() {
+        val usage = ClinicalReportsCalculator.calculateSensorUsage(emptyList(), null, 1)
+        assertEquals(0, usage.daysRemaining)
+        assertFalse(usage.isActive)
+        assertEquals("Sin sensor", usage.sensorModelName)
+    }
+
+    @Test
+    fun testSensorUsage_invalidSensor_returnsInactive() {
+        val invalidSensor = SensorInfo() // all nulls
+        val usage = ClinicalReportsCalculator.calculateSensorUsage(emptyList(), invalidSensor, 1)
+        assertEquals(0, usage.daysRemaining)
+        assertFalse(usage.isActive)
+        assertEquals("Sin sensor", usage.sensorModelName)
+        assertEquals("Sin sensor", usage.sensorSerialNumber)
+    }
+
+    @Test
+    fun testCheckSensorExpirationAlert_invalidSensor_returnsSinSensorActivo() {
+        val invalidSensor = SensorInfo() // all nulls, isValid = false
+        val alert = ClinicalReportsCalculator.checkSensorExpirationAlert(invalidSensor)
+        assertNotNull(alert)
+        assertEquals(0, alert!!.daysRemaining)
+        assertTrue(alert.isCritical)
+        assertTrue(alert.title.contains("Sin Sensor"))
     }
 }

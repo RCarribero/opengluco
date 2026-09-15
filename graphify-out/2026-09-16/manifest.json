@@ -18,9 +18,9 @@
     "semantic_hash": "d56a763cfd5068944037d868bebdb640"
   },
   "app-auto/src/main/java/com/example/opengluco/auto/screen/GlucoseDashboardCarScreen.kt": {
-    "mtime": 1789511017.762106,
-    "seen": 1789511388.5994084,
-    "ast_hash": "04f66ba6b62c54c400a3bb4cf0ec8f89",
+    "mtime": 1789510041.09792,
+    "seen": 1789510662.4829345,
+    "ast_hash": "9a725dd02001864996d4614f7efa78f0",
     "semantic_hash": ""
   },
   "app-auto/src/main/java/com/example/opengluco/auto/screen/PatientListCarScreen.kt": {
@@ -72,9 +72,9 @@
     "semantic_hash": "50392f15cf336652025c30a41612526f"
   },
   "app-mobile/src/main/java/com/example/opengluco/mobile/notification/MobileAlarmNotificationHelper.kt": {
-    "mtime": 1789511079.792226,
-    "seen": 1789511388.5994084,
-    "ast_hash": "f122e2b2660e16b32788cd0c297f343b",
+    "mtime": 1789510306.485078,
+    "seen": 1789510662.4829345,
+    "ast_hash": "bb985d22fab19b08000a161f643bd2a1",
     "semantic_hash": ""
   },
   "app-mobile/src/main/java/com/example/opengluco/mobile/service/BootReceiver.kt": {
@@ -84,15 +84,15 @@
     "semantic_hash": "6feb8e39bbb235d8bca54d8f68d38d73"
   },
   "app-mobile/src/main/java/com/example/opengluco/mobile/service/GlucoseAlarmWorker.kt": {
-    "mtime": 1789511070.3853133,
-    "seen": 1789511388.5994084,
-    "ast_hash": "4c2317c56c98729d3d8b0c338aa0576e",
+    "mtime": 1789510324.8281713,
+    "seen": 1789510662.4829345,
+    "ast_hash": "84431f6bca568a692a8bd92b423db73e",
     "semantic_hash": ""
   },
   "app-mobile/src/main/java/com/example/opengluco/mobile/service/GlucoseMonitorForegroundService.kt": {
-    "mtime": 1789511064.3087702,
-    "seen": 1789511388.5994084,
-    "ast_hash": "5454395a93894af643bbd025d8894b5f",
+    "mtime": 1789510330.6430469,
+    "seen": 1789510662.4829345,
+    "ast_hash": "e47d33550b551dd0243d9ada20ca3e30",
     "semantic_hash": ""
   },
   "app-mobile/src/main/java/com/example/opengluco/mobile/ui/auth/MobileLoginScreen.kt": {
@@ -102,9 +102,9 @@
     "semantic_hash": ""
   },
   "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt": {
-    "mtime": 1789511151.3199022,
-    "seen": 1789511388.5994084,
-    "ast_hash": "6ad1ee8fab34d8bb0c8ac5149f300765",
+    "mtime": 1789510500.666109,
+    "seen": 1789510662.4829345,
+    "ast_hash": "2aa85625c689ea64a71ef66b07d6632a",
     "semantic_hash": ""
   },
   "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/components/ConfigurationDiagnosticsDialog.kt": {
@@ -120,9 +120,9 @@
     "semantic_hash": ""
   },
   "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/components/MobileDualFloatingOrbs.kt": {
-    "mtime": 1789511038.3030052,
-    "seen": 1789511388.5994084,
-    "ast_hash": "c5663458add8ca3f9871de5af2fcb9dc",
+    "mtime": 1789510187.4806683,
+    "seen": 1789510662.4829345,
+    "ast_hash": "6a9970fc9f339593b55e605095b2cea2",
     "semantic_hash": ""
   },
   "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/components/MobileStatDetailModal.kt": {
@@ -186,9 +186,9 @@
     "semantic_hash": "fbe68fd0b0128c19b0c5c3b168bb430f"
   },
   "app-mobile/src/main/java/com/example/opengluco/mobile/widget/GlucoseWidgetUpdater.kt": {
-    "mtime": 1789511056.6645522,
-    "seen": 1789511388.5994084,
-    "ast_hash": "668bc39d5fe4716624b8dc0278c8f285",
+    "mtime": 1789510319.942415,
+    "seen": 1789510662.4829345,
+    "ast_hash": "9f522032cec581a63e32689fbab3eabb",
     "semantic_hash": ""
   },
   "app-mobile/src/main/java/com/example/opengluco/mobile/widget/WidgetChartRenderer.kt": {
@@ -240,9 +240,9 @@
     "semantic_hash": ""
   },
   "app-wear/src/main/java/com/example/opengluco/wear/service/WearGlucoseSyncWorker.kt": {
-    "mtime": 1789511223.009962,
-    "seen": 1789511388.5994084,
-    "ast_hash": "57b0886a1cbb5678b2a0a810c292b4ed",
+    "mtime": 1789510164.5049863,
+    "seen": 1789510662.4829345,
+    "ast_hash": "fd227b5b9afe8b1faaa2dd7833265ba8",
     "semantic_hash": ""
   },
   "app-wear/src/main/java/com/example/opengluco/wear/tile/GlucoseTileService.kt": {
@@ -276,9 +276,9 @@
     "semantic_hash": ""
   },
   "app-wear/src/main/java/com/example/opengluco/wear/ui/dashboard/WearDashboardViewModel.kt": {
-    "mtime": 1789511216.2164693,
-    "seen": 1789511388.5994084,
-    "ast_hash": "b82d0a5068db47243890470ecd1a87ff",
+    "mtime": 1789510138.4873872,
+    "seen": 1789510662.4829345,
+    "ast_hash": "f824d3e8e977f439523f67614d52aae6",
     "semantic_hash": ""
   },
   "app-wear/src/main/java/com/example/opengluco/wear/ui/dashboard/components/ClinicalSparklineWithSensor.kt": {
@@ -288,9 +288,9 @@
     "semantic_hash": ""
   },
   "app-wear/src/main/java/com/example/opengluco/wear/ui/dashboard/components/DualFloatingOrbs.kt": {
-    "mtime": 1789511033.7462473,
-    "seen": 1789511388.5994084,
-    "ast_hash": "a93d0ea32e5321ba76e66d3138bfcdab",
+    "mtime": 1789510051.0568748,
+    "seen": 1789510662.4829345,
+    "ast_hash": "59d16626c118529202630b94ff71afcf",
     "semantic_hash": ""
   },
   "app-wear/src/main/java/com/example/opengluco/wear/ui/dashboard/components/PatientSelectorChip.kt": {
@@ -396,9 +396,9 @@
     "semantic_hash": ""
   },
   "core/data/src/main/java/com/example/opengluco/core/data/ClinicalReportsCalculator.kt": {
-    "mtime": 1789511008.9245203,
-    "seen": 1789511388.5994084,
-    "ast_hash": "620341114b3d1a21e04ec0efa36e7225",
+    "mtime": 1789510025.4600215,
+    "seen": 1789510662.4829345,
+    "ast_hash": "09ae1838eb7a0dff4567024535b40466",
     "semantic_hash": ""
   },
   "core/data/src/main/java/com/example/opengluco/core/data/HealthDataExporter.kt": {
@@ -438,9 +438,9 @@
     "semantic_hash": ""
   },
   "core/data/src/test/java/com/example/opengluco/core/data/ClinicalReportsCalculatorTest.kt": {
-    "mtime": 1789511173.4770174,
-    "seen": 1789511388.5994084,
-    "ast_hash": "6ea5bcec0781f00881cd59dd656879d5",
+    "mtime": 1789510601.4136448,
+    "seen": 1789510662.4829345,
+    "ast_hash": "f9f316af24e98ed91d1b60762b6ca872",
     "semantic_hash": ""
   },
   "core/data/src/test/java/com/example/opengluco/core/data/HealthDataExporterTest.kt": {
@@ -522,9 +522,9 @@
     "semantic_hash": ""
   },
   "core/model/src/main/java/com/example/opengluco/core/model/OpenGlucoModels.kt": {
-    "mtime": 1789510998.6509757,
-    "seen": 1789511388.5994084,
-    "ast_hash": "a09d8bc636dde74a713c63b28bed4faf",
+    "mtime": 1789510487.3816113,
+    "seen": 1789510662.4829345,
+    "ast_hash": "4704f7a47ae164a5d55144e5e4a5ca1f",
     "semantic_hash": ""
   },
   "core/model/src/main/java/com/example/opengluco/core/model/QrAuthModels.kt": {
@@ -534,9 +534,9 @@
     "semantic_hash": "fd921930dec640399697768812c92436"
   },
   "core/model/src/test/java/com/example/opengluco/core/model/ClinicalModelsTest.kt": {
-    "mtime": 1789511163.4643197,
-    "seen": 1789511388.5994084,
-    "ast_hash": "56f033bb814bc7e6c3764efd11363448",
+    "mtime": 1789510626.6396,
+    "seen": 1789510662.4829345,
+    "ast_hash": "0757c11827770ca0443495e19267c0b7",
     "semantic_hash": ""
   },
   "core/model/src/test/java/com/example/opengluco/core/model/ModelSanityTest.kt": {
@@ -858,9 +858,9 @@
     "semantic_hash": ""
   },
   "app-auto/src/main/java/com/example/opengluco/auto/AutoTtsAlertManager.kt": {
-    "mtime": 1789511013.301535,
-    "seen": 1789511388.5994084,
-    "ast_hash": "527cfbe40bff06a1ba927b22b0b6b11e",
+    "mtime": 1789510028.4885137,
+    "seen": 1789510662.4829345,
+    "ast_hash": "b07c0adba8d8e058900332d2a41e5890",
     "semantic_hash": ""
   },
   "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/components/UpdateAvailableDialog.kt": {

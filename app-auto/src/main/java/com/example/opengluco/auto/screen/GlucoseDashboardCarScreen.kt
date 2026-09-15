@@ -90,23 +90,32 @@ class GlucoseDashboardCarScreen(carContext: CarContext) : Screen(carContext) {
     }
 
     private suspend fun loadPatientDetails(patient: ConnectionItem) {
-        currentPatient = patient
         preferencesRepository.loadPatientHistory(patient.patientId)
         val graphRes = repository.getPatientGraph(patient.patientId)
         val history = graphRes.getOrNull()?.graphData.orEmpty()
+        val graphObj = graphRes.getOrNull()
+        val resolvedSensor = if (graphObj != null) graphObj.resolvedSensor else patient.sensor?.takeIf { it.isValid }
+        currentPatient = patient.copy(sensor = resolvedSensor)
         lastMeasurement = patient.effectiveMeasurement ?: history.lastOrNull()
-        lastUpdated = lastMeasurement?.timestamp ?: "Ahora"
+        lastUpdated = lastMeasurement?.getDisplayTime() ?: "Ahora"
         preferencesRepository.saveHistoricalReadings(history, patient.patientId)
         isLoading = false
 
-        // Alerta de voz TTS si la medicion esta fuera de rango
-        lastMeasurement?.let { m ->
-            ttsAlertManager.speakGlucoseAlertIfNeeded(
-                glucoseMgDl = m.numericValue,
-                trendText = m.trendText,
-                lowThreshold = currentSettings.lowThreshold.toDouble(),
-                highThreshold = currentSettings.highThreshold.toDouble()
-            )
+        // Alerta de voz TTS si la medicion esta fuera de rango y NO es obsoleta
+        val isSensorActive = resolvedSensor != null && (resolvedSensor.getRemainingDays() ?: 0) > 0 && resolvedSensor.isSensorActive != false
+        val isStale = lastMeasurement == null || lastMeasurement!!.isStale() || !isSensorActive
+
+        if (!isStale) {
+            lastMeasurement?.let { m ->
+                ttsAlertManager.speakGlucoseAlertIfNeeded(
+                    glucoseMgDl = m.numericValue,
+                    trendText = m.trendText,
+                    lowThreshold = currentSettings.lowThreshold.toDouble(),
+                    highThreshold = currentSettings.highThreshold.toDouble(),
+                    measurementTimestampMs = m.getEpochMillis(),
+                    isSensorActive = isSensorActive
+                )
+            }
         }
 
         invalidate()
@@ -114,12 +123,14 @@ class GlucoseDashboardCarScreen(carContext: CarContext) : Screen(carContext) {
 
     override fun onGetTemplate(): Template {
         val measurement = lastMeasurement
-        val mgdl = measurement?.numericValue ?: 0.0
+        val sensor = currentPatient?.sensor
+        val isSensorActive = sensor != null && (sensor.getRemainingDays() ?: 0) > 0 && sensor.isSensorActive != false
+        val isStale = measurement == null || measurement.isStale() || !isSensorActive
 
         val isMmol = currentSettings.unit == com.example.opengluco.core.data.GlucoseUnit.MMOL
-        val displayValue = measurement?.getFormattedValue(isMmol = isMmol) ?: "--"
-        val trendSymbol = measurement?.trendSymbol ?: "→"
-        val trendText = measurement?.trendText ?: "Estable"
+        val displayValue = if (isStale) "--" else (measurement.getFormattedValue(isMmol = isMmol))
+        val trendSymbol = if (isStale) "--" else (measurement.trendSymbol)
+        val trendText = if (isStale) "Desconectado" else (measurement.trendText)
         val unitLabel = currentSettings.unit.label
         val lowThreshold = currentSettings.lowThreshold
         val highThreshold = currentSettings.highThreshold
@@ -144,39 +155,45 @@ class GlucoseDashboardCarScreen(carContext: CarContext) : Screen(carContext) {
             )
 
             // Fila 2: Estado del rango dinámico
-            val statusText = when {
-                mgdl <= 55 -> "[Urgente] Nivel muy bajo de glucosa (<= 55)"
-                mgdl < lowThreshold -> "[Alerta] Nivel bajo de glucosa (< $lowThreshold)"
-                mgdl > 250 -> "[Urgente] Nivel muy alto de glucosa (>= 250)"
-                mgdl > highThreshold -> "[Alerta] Nivel alto de glucosa (> $highThreshold)"
-                mgdl > 0 -> "[Normal] Nivel dentro del rango objetivo ($lowThreshold - $highThreshold)"
-                else -> "[Info] Sin datos recientes"
+            val statusText = if (isStale) {
+                if (!isSensorActive) {
+                    "[Desconectado] Sin sensor activo vinculado"
+                } else {
+                    "[Desconectado] Telemetría desactualizada (> 20 min)"
+                }
+            } else {
+                val mgdl = measurement.numericValue
+                when {
+                    mgdl <= 55 -> "[Urgente] Nivel muy bajo de glucosa (<= 55)"
+                    mgdl < lowThreshold -> "[Alerta] Nivel bajo de glucosa (< $lowThreshold)"
+                    mgdl > 250 -> "[Urgente] Nivel muy alto de glucosa (>= 250)"
+                    mgdl > highThreshold -> "[Alerta] Nivel alto de glucosa (> $highThreshold)"
+                    mgdl > 0 -> "[Normal] Nivel dentro del rango objetivo ($lowThreshold - $highThreshold)"
+                    else -> "[Info] Sin datos recientes"
+                }
             }
+            val formattedTime = measurement?.getDisplayTime() ?: lastUpdated
             paneBuilder.addRow(
                 Row.Builder()
                     .setTitle(statusText)
-                    .addText("Última actualización: $lastUpdated")
+                    .addText("Última actualización: $formattedTime")
                     .build()
             )
 
             // Fila 3: Sensor
-            val sensor = currentPatient?.sensor
-            if (sensor != null) {
-                val days = sensor.getRemainingDays() ?: 14
-                paneBuilder.addRow(
-                    Row.Builder()
-                        .setTitle("Sensor FreeStyle Libre")
-                        .addText("Días restantes de uso: $days días")
-                        .build()
-                )
-            } else {
-                paneBuilder.addRow(
-                    Row.Builder()
-                        .setTitle("Sensor FreeStyle Libre")
-                        .addText("Sensor activo / Vinculado")
-                        .build()
-                )
+            val sensorState = sensor?.getLifecycleState() ?: com.example.opengluco.core.model.SensorLifecycleState.NoSensor
+            val sensorRowText = when (sensorState) {
+                is com.example.opengluco.core.model.SensorLifecycleState.NoSensor -> "Sin sensor activo vinculado"
+                is com.example.opengluco.core.model.SensorLifecycleState.Expired -> "Sensor expirado. Sustituir sensor."
+                is com.example.opengluco.core.model.SensorLifecycleState.WarmingUp -> "Sensor en calentamiento (listo en ${sensorState.remainingMinutes} min)"
+                is com.example.opengluco.core.model.SensorLifecycleState.Active -> "Días restantes de uso: ${sensorState.remainingDays} días"
             }
+            paneBuilder.addRow(
+                Row.Builder()
+                    .setTitle("Sensor FreeStyle Libre")
+                    .addText(sensorRowText)
+                    .build()
+            )
 
             // Fila 4: Descargo legal pasivo obligatorio (MDR UE 2017/745 / FDA MDDS)
             paneBuilder.addRow(
