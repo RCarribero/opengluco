@@ -57,9 +57,9 @@ object MobileAlarmSyncHelper {
     /**
      * Envia de forma inmediata la orden de disparo de alarma a todos los relojes Wear OS conectados.
      */
-    fun sendAlarmTriggerToWear(context: Context, alarm: GlucoseAlarm, glucoseValueMgDl: Double) {
+    fun sendAlarmTriggerToWear(context: Context, alarm: GlucoseAlarm, glucoseValueMgDl: Double, trendArrow: String = "") {
         try {
-            val payload = AlarmTriggerPayload(alarm, glucoseValueMgDl)
+            val payload = AlarmTriggerPayload(alarm, glucoseValueMgDl, trendArrow)
             val jsonStr = json.encodeToString(payload)
             val bytes = jsonStr.toByteArray(Charsets.UTF_8)
             val nodeClient = Wearable.getNodeClient(context)

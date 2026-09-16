@@ -61,7 +61,8 @@ class WearAuthMessageListenerService : WearableListenerService() {
                                 WearAlarmNotificationHelper.triggerAlarmBySeverity(
                                     context = applicationContext,
                                     alarm = payload.alarm,
-                                    glucoseValueMgDl = payload.glucoseValueMgDl
+                                    glucoseValueMgDl = payload.glucoseValueMgDl,
+                                    trendArrow = payload.trendArrow
                                 )
                             } else {
                                 Log.i(TAG, "Alerta descartada en reloj: alertas hápticas desactivadas por el usuario")

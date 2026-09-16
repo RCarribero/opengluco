@@ -174,7 +174,8 @@ class GlucoseMonitorForegroundService : Service() {
             MobileAlarmNotificationHelper.triggerAlarm(
                 context = applicationContext,
                 alarm = triggered,
-                glucoseValueMgDl = value
+                glucoseValueMgDl = value,
+                trendArrow = latest.trendSymbol
             )
             alarmRepository.recordAlarmFired(triggered.id)
         }

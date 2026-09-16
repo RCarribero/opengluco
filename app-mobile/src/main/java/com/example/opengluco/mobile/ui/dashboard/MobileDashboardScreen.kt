@@ -75,6 +75,7 @@ import com.example.opengluco.mobile.notification.MobileAlarmNotificationHelper
 import com.google.android.gms.wearable.MessageClient
 import com.google.android.gms.wearable.Wearable
 import com.example.opengluco.mobile.ui.dashboard.components.TargetRangeDialog
+import com.example.opengluco.mobile.ui.dashboard.components.SensorDurationDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -196,6 +197,7 @@ fun MobileDashboardScreen(
     var currentSensor by remember { mutableStateOf<com.example.opengluco.core.model.SensorInfo?>(null) }
     var selectedChartTimeframe by remember { mutableStateOf(DashboardTimeframe.H24) }
     var showTargetRangeDialog by remember { mutableStateOf(false) }
+    var showSensorDurationDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
     var autoDiscoveredPairingPayload by remember { mutableStateOf<QrPairingPayload?>(null) }
     var autoPairingSuccess by remember { mutableStateOf(false) }
@@ -313,7 +315,8 @@ fun MobileDashboardScreen(
                 MobileAlarmNotificationHelper.triggerAlarm(
                     context = context,
                     alarm = triggered,
-                    glucoseValueMgDl = value
+                    glucoseValueMgDl = value,
+                    trendArrow = arrow
                 )
                 alarmRepo.recordAlarmFired(triggered.id)
             }
@@ -527,7 +530,9 @@ fun MobileDashboardScreen(
     val inRangeCount = if (hasSufficientDataForPeriod) validHistory.count { it in targetLow.toDouble()..targetHigh.toDouble() } else 0
     val tirPercent = if (hasSufficientDataForPeriod && validHistory.isNotEmpty()) ((inRangeCount.toDouble() / validHistory.size) * 100).toInt() else 100
 
-    val sensor = currentSensor ?: selectedPatient?.sensor?.takeIf { it.isValid }
+    val rawSensor = currentSensor ?: selectedPatient?.sensor?.takeIf { it.isValid }
+    val customDuration = settings?.sensorDurationDays?.takeIf { it > 0 }
+    val sensor = if (customDuration != null && rawSensor != null) rawSensor.copy(lifetimeDays = customDuration) else rawSensor
     val sensorState = sensor.lifecycleState()
     val sensorDays = sensor?.getRemainingDays() ?: 0
     val sensorSerial = sensor?.serialNumber ?: selectedPatient?.sensor?.serialNumber ?: "Sin Sensor"
@@ -562,6 +567,8 @@ fun MobileDashboardScreen(
             targetLow = targetLow,
             targetHigh = targetHigh,
             onOpenTargetRange = { showTargetRangeDialog = true },
+            sensorDurationDays = settings?.sensorDurationDays ?: 0,
+            onOpenSensorDuration = { showSensorDurationDialog = true },
             alarmsCount = configuredAlarms.size,
             onOpenAlarms = { showAlarmsManagementDialog = true },
             onOpenDiagnostics = { showDiagnosticsDialog = true },
@@ -871,9 +878,16 @@ fun MobileDashboardScreen(
                 tirPercent = tirPercent,
                 sensorDays = sensorDays,
                 sensorSerial = sensorSerial,
+                sensorModel = sensorModel,
+                totalWearDays = sensor?.totalLifetimeDays ?: 14,
+                sensorDurationDays = settings?.sensorDurationDays ?: 0,
+                warmupMinutes = sensor?.warmupDurationMinutes ?: 60,
+                sensorActivationDate = sensor?.getFormattedActivationDate(),
+                sensorExpirationDate = sensor?.getFormattedExpirationDate(),
                 trendText = currentMeasurement?.trendText ?: "Estable",
                 trendSymbol = currentMeasurement?.trendSymbol ?: "→",
                 sensorState = sensor?.getLifecycleState() ?: SensorLifecycleState.NoSensor,
+                onAdjustDuration = { showSensorDurationDialog = true },
                 onDismiss = { activeModal = DetailModalType.NONE }
             )
         }
@@ -1168,6 +1182,21 @@ fun MobileDashboardScreen(
                 }
             )
         }
+
+        // Modal de Configuración de Duración del Sensor
+        if (showSensorDurationDialog) {
+            SensorDurationDialog(
+                currentDurationDays = settings?.sensorDurationDays ?: 0,
+                sensor = sensor,
+                onDismiss = { showSensorDurationDialog = false },
+                onSave = { newDays ->
+                    scope.launch {
+                        preferencesRepository.saveSensorDurationDays(newDays)
+                    }
+                    showSensorDurationDialog = false
+                }
+            )
+        }
     }
 }
 
@@ -1183,6 +1212,8 @@ private fun MobileSettingsScreen(
     targetLow: Int,
     targetHigh: Int,
     onOpenTargetRange: () -> Unit,
+    sensorDurationDays: Int = 0,
+    onOpenSensorDuration: () -> Unit = {},
     alarmsCount: Int,
     onOpenAlarms: () -> Unit,
     onOpenDiagnostics: () -> Unit,
@@ -1344,6 +1375,22 @@ private fun MobileSettingsScreen(
                     subtitle = "Límites deseados para glucosa en rango",
                     value = targetRangeLabel,
                     onClick = onOpenTargetRange
+                )
+
+                SettingsDivider()
+
+                val durationLabel = if (sensorDurationDays == 0) {
+                    "Auto (${sensor?.totalLifetimeDays ?: 14}d)"
+                } else {
+                    "$sensorDurationDays días"
+                }
+
+                SettingsValueRow(
+                    icon = Icons.Default.Sensors,
+                    title = "Duración Nominal del Sensor",
+                    subtitle = "Vida útil nominal para cálculo de expiración",
+                    value = durationLabel,
+                    onClick = onOpenSensorDuration
                 )
             }
 

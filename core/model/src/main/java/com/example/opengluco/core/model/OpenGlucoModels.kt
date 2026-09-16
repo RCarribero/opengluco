@@ -62,11 +62,18 @@ data class ConnectionItem(
     @SerialName("targetHigh") val targetHigh: Int = 180,
     @SerialName("uom") val uom: Int = 1,
     @SerialName("sensor") val sensor: SensorInfo? = null,
+    @SerialName("patientDevice") val patientDevice: DeviceInfo? = null,
     @SerialName("glucoseMeasurement") val glucoseMeasurement: GlucoseMeasurement? = null,
     @SerialName("glucoseItem") val glucoseItem: GlucoseMeasurement? = null
 ) {
     val effectiveMeasurement: GlucoseMeasurement?
         get() = glucoseMeasurement ?: glucoseItem
+
+    val effectiveSensor: SensorInfo?
+        get() {
+            val s = sensor?.takeIf { it.isValid } ?: return null
+            return if (s.dtid == null && patientDevice?.dtid != null) s.copy(dtid = patientDevice.dtid) else s
+        }
 
     val fullName: String
         get() = listOfNotNull(firstName, lastName).filter { it.isNotBlank() }.joinToString(" ")
@@ -93,12 +100,53 @@ data class SensorInfo(
     @SerialName("w") val warmupDurationMinutes: Int? = null,
     @SerialName("pt") val sensorType: Int? = null,
     @SerialName("l") val lifetimeDays: Int? = null,
-    @SerialName("s") val isSensorActive: Boolean? = null
+    @SerialName("s") val isSensorActive: Boolean? = null,
+    @SerialName("lj") val lj: Boolean? = null,
+    @SerialName("dtid") val dtid: Int? = null
 ) {
     val isValid: Boolean
         get() = (activatedTimestamp != null && activatedTimestamp > 0L) ||
                 !serialNumber.isNullOrBlank() ||
                 !deviceId.isNullOrBlank()
+
+    /**
+     * Detección clínica de sensores de 15 días (sensores Plus):
+     * - FreeStyle Libre 2 Plus y FreeStyle Libre 3 Plus cuentan con una duración autorizada de 15 días.
+     * - En la infraestructura de Abbott y nomenclatura de la UE:
+     *   * Los sensores Libre 2 Plus poseen números de serie con prefijo "MH" (ej: MH01MPR9H4).
+     *   * Sensores con designación "PLUS" o prefijo "3P".
+     */
+    val isPlusSensor: Boolean
+        get() {
+            val sn = serialNumber?.uppercase()?.trim() ?: ""
+            return sn.startsWith("MH") || sn.contains("PLUS") || sn.startsWith("3P")
+        }
+
+    val totalLifetimeDays: Int
+        get() {
+            if (lifetimeDays != null && lifetimeDays > 0) return lifetimeDays
+            if (isPlusSensor) return 15
+            return 14
+        }
+
+    fun getFormattedActivationDate(): String? {
+        val activated = activatedTimestamp ?: return null
+        if (activated <= 0L) return null
+        val activatedMs = if (activated > 10_000_000_000L) activated else activated * 1000L
+        val sdf = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
+        return sdf.format(java.util.Date(activatedMs))
+    }
+
+    fun getFormattedExpirationDate(customDurationDays: Int? = null): String? {
+        val activated = activatedTimestamp ?: return null
+        if (activated <= 0L) return null
+        val activatedMs = if (activated > 10_000_000_000L) activated else activated * 1000L
+        val durationDays = customDurationDays?.takeIf { it > 0 } ?: totalLifetimeDays
+        val warmupMs = (warmupDurationMinutes ?: 60) * 60 * 1000L
+        val expirationMs = activatedMs + warmupMs + (durationDays * 24L * 3600L * 1000L)
+        val sdf = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
+        return sdf.format(java.util.Date(expirationMs))
+    }
 
     fun getRemainingDays(nowMs: Long = System.currentTimeMillis()): Int? {
         val activated = activatedTimestamp ?: return null
@@ -107,15 +155,13 @@ data class SensorInfo(
         val activatedSec = if (activated > 10_000_000_000L) activated / 1000.0 else activated.toDouble()
         val nowSec = nowMs / 1000.0
 
-        // Duracion oficial de sensores FreeStyle Libre (14 dias)
-        // O el valor explicitamente indicado en lifetimeDays (l) si existe
-        val totalDays = lifetimeDays?.takeIf { it > 0 }?.toDouble() ?: 14.0
+        val totalDays = totalLifetimeDays.toDouble()
         val totalSec = totalDays * 24.0 * 3600.0
         val remainingSec = totalSec - (nowSec - activatedSec)
 
         return if (remainingSec > 0) {
             val days = kotlin.math.ceil(remainingSec / (24.0 * 3600.0)).toInt()
-            days.coerceIn(1, 15)
+            days.coerceIn(1, totalLifetimeDays)
         } else {
             0
         }
@@ -149,10 +195,15 @@ data class SensorInfo(
     }
 
     val sensorModelName: String
-        get() = when (sensorType) {
-            3 -> "FreeStyle Libre 3"
-            2 -> "FreeStyle Libre 2"
-            1 -> "FreeStyle Libre 1"
+        get() = when {
+            isPlusSensor && (dtid == 40068 || sensorType == 4) -> "FreeStyle Libre 3 Plus"
+            isPlusSensor && (dtid == 40066 || dtid == 40067 || sensorType == 2 || sensorType == 3) -> "FreeStyle Libre 2 Plus"
+            isPlusSensor -> "FreeStyle Libre 2 Plus"
+            dtid == 40068 || sensorType == 4 -> "FreeStyle Libre 3"
+            dtid == 40067 || sensorType == 2 -> "FreeStyle Libre 2"
+            dtid == 40066 -> "FreeStyle Libre 2"
+            sensorType == 3 -> "FreeStyle Libre 3"
+            sensorType == 1 -> "FreeStyle Libre 1"
             else -> "FreeStyle Libre Sensor"
         }
 }
@@ -185,21 +236,26 @@ data class GraphData(
         get() {
             val list = activeSensors
             if (list != null) {
-                val validSensors = list.mapNotNull { it.sensor }.filter { it.isValid }
-                if (validSensors.isEmpty()) {
-                    return connection?.sensor?.takeIf { it.isValid }?.copy(isSensorActive = false)
+                val validEntries = list.filter { it.sensor?.isValid == true }
+                if (validEntries.isEmpty()) {
+                    return connection?.effectiveSensor?.copy(isSensorActive = false)
                 }
-                val activeOnly = validSensors.filter { it.isSensorActive == true }
-                if (activeOnly.isNotEmpty()) {
-                    return activeOnly.maxByOrNull { it.activatedTimestamp ?: 0L }
+                val activeOnly = validEntries.filter { it.sensor?.isSensorActive == true }
+                val chosenEntry = if (activeOnly.isNotEmpty()) {
+                    activeOnly.maxByOrNull { it.sensor?.activatedTimestamp ?: 0L }
+                } else {
+                    val potentiallyActive = validEntries.filter { it.sensor?.isSensorActive != false && (it.sensor?.getRemainingDays() ?: 0) > 0 }
+                    if (potentiallyActive.isNotEmpty()) {
+                        potentiallyActive.maxByOrNull { it.sensor?.activatedTimestamp ?: 0L }
+                    } else {
+                        validEntries.maxByOrNull { it.sensor?.activatedTimestamp ?: 0L }
+                    }
                 }
-                val potentiallyActive = validSensors.filter { it.isSensorActive != false && (it.getRemainingDays() ?: 0) > 0 }
-                if (potentiallyActive.isNotEmpty()) {
-                    return potentiallyActive.maxByOrNull { it.activatedTimestamp ?: 0L }
+                return chosenEntry?.sensor?.let { s ->
+                    if (s.dtid == null && chosenEntry.device?.dtid != null) s.copy(dtid = chosenEntry.device.dtid) else s
                 }
-                return validSensors.maxByOrNull { it.activatedTimestamp ?: 0L }
             }
-            return connection?.sensor?.takeIf { it.isValid }
+            return connection?.effectiveSensor
         }
 }
 

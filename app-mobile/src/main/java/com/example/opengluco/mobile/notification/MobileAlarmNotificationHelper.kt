@@ -273,7 +273,12 @@ object MobileAlarmNotificationHelper {
         notificationManager.notify(NOTIFICATION_ID_LIVE_STATUS, notification)
     }
 
-    fun triggerAlarm(context: Context, alarm: GlucoseAlarm, glucoseValueMgDl: Double) {
+    fun triggerAlarm(
+        context: Context,
+        alarm: GlucoseAlarm,
+        glucoseValueMgDl: Double,
+        trendArrow: String = ""
+    ) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         val channelId = when (alarm.severity) {
@@ -288,7 +293,8 @@ object MobileAlarmNotificationHelper {
             AlarmSeverity.INFORMATIVE -> if (alarm.type == AlarmType.LOW) "Aviso: Glucosa Baja" else "Aviso: Glucosa Alta"
         }
 
-        val contentText = "Glucosa actual: ${glucoseValueMgDl.toInt()} mg/dL. Umbral: ${alarm.thresholdMgDl} mg/dL."
+        val arrowText = if (trendArrow.isNotBlank()) " $trendArrow" else ""
+        val contentText = "Glucosa actual: ${glucoseValueMgDl.toInt()}$arrowText mg/dL. Umbral: ${alarm.thresholdMgDl} mg/dL."
         val notificationId = alarm.id.hashCode()
 
         val dismissIntent = Intent(context, AlarmDismissReceiver::class.java).apply {
@@ -355,7 +361,8 @@ object MobileAlarmNotificationHelper {
         com.example.opengluco.mobile.service.MobileAlarmSyncHelper.sendAlarmTriggerToWear(
             context = context,
             alarm = alarm,
-            glucoseValueMgDl = glucoseValueMgDl
+            glucoseValueMgDl = glucoseValueMgDl,
+            trendArrow = trendArrow
         )
 
         // Reproducir audio forzado por canal de alarma en casos urgentes, extrema urgencia o audio personalizado

@@ -52,6 +52,8 @@ fun WearStatDetailModal(
     maxVal: Double,
     sensorDays: Int,
     sensorSerial: String,
+    sensorModel: String = "FreeStyle Libre",
+    totalWearDays: Int = 14,
     trendText: String,
     onDismiss: () -> Unit,
     sensorState: com.example.opengluco.core.model.SensorLifecycleState = com.example.opengluco.core.model.SensorLifecycleState.NoSensor,
@@ -184,6 +186,8 @@ fun WearStatDetailModal(
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 StatRow("Días restantes:", daysText)
                                 StatRow("Número de Serie:", serialText)
+                                StatRow("Duración:", "$totalWearDays días")
+                                StatRow("Modelo:", sensorModel)
                                 StatRow("Estado:", statusText)
                             }
                         }

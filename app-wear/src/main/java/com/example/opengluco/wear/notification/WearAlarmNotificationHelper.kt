@@ -81,7 +81,8 @@ object WearAlarmNotificationHelper {
     fun triggerAlarmBySeverity(
         context: Context,
         alarm: GlucoseAlarm,
-        glucoseValueMgDl: Double
+        glucoseValueMgDl: Double,
+        trendArrow: String = ""
     ) {
         val channelId = when (alarm.severity) {
             AlarmSeverity.URGENT -> CHANNEL_URGENT
@@ -98,7 +99,8 @@ object WearAlarmNotificationHelper {
             else -> "Glucosa Alta"
         }
 
-        val contentText = "Glucosa: ${glucoseValueMgDl.toInt()} mg/dL. Umbral: ${alarm.thresholdMgDl} mg/dL."
+        val arrowText = if (trendArrow.isNotBlank()) " $trendArrow" else ""
+        val contentText = "Glucosa: ${glucoseValueMgDl.toInt()}$arrowText mg/dL. Umbral: ${alarm.thresholdMgDl} mg/dL."
 
         // Haptica reforzada segun severidad
         triggerHapticAlarm(context, alarm.severity)
@@ -150,7 +152,7 @@ object WearAlarmNotificationHelper {
     /**
      * Retrocompatibilidad: dispara alarma de hipoglucemia urgente con el sistema legacy.
      */
-    fun triggerUrgentLowAlarm(context: Context, glucoseVal: Double) {
+    fun triggerUrgentLowAlarm(context: Context, glucoseVal: Double, trendArrow: String = "") {
         triggerHapticAlarm(context, AlarmSeverity.URGENT)
 
         val intent = Intent(context, MainActivity::class.java)
@@ -161,10 +163,11 @@ object WearAlarmNotificationHelper {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        val arrowText = if (trendArrow.isNotBlank()) " $trendArrow" else ""
         val notification = NotificationCompat.Builder(context, CHANNEL_URGENT)
             .setSmallIcon(android.R.drawable.stat_notify_error)
             .setContentTitle("HIPOGLUCEMIA URGENTE")
-            .setContentText("Glucosa en ${glucoseVal.toInt()} mg/dL. Actua de inmediato.")
+            .setContentText("Glucosa en ${glucoseVal.toInt()}$arrowText mg/dL. Actua de inmediato.")
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setContentIntent(pendingIntent)

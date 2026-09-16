@@ -42,7 +42,8 @@ data class UserSettings(
     val urgentLowThreshold: Int = 55,
     val hapticAlertsEnabled: Boolean = true,
     val isDarkMode: Boolean = true,
-    val trustedPhoneMac: String = ""
+    val trustedPhoneMac: String = "",
+    val sensorDurationDays: Int = 0
 )
 
 class UserPreferencesRepository(private val context: Context) {
@@ -112,6 +113,7 @@ class UserPreferencesRepository(private val context: Context) {
         val LAST_TIMESTAMP = stringPreferencesKey("last_timestamp")
         val IS_DARK_MODE = booleanPreferencesKey("is_dark_mode")
         val TRUSTED_PHONE_MAC = stringPreferencesKey("trusted_phone_mac")
+        val SENSOR_DURATION_DAYS = intPreferencesKey("sensor_duration_days")
     }
 
     val userSettingsFlow: Flow<UserSettings> = context.dataStore.data.map { preferences ->
@@ -135,7 +137,8 @@ class UserPreferencesRepository(private val context: Context) {
             urgentLowThreshold = preferences[PreferencesKeys.URGENT_LOW_THRESHOLD] ?: 55,
             hapticAlertsEnabled = preferences[PreferencesKeys.HAPTIC_ALERTS] ?: true,
             isDarkMode = preferences[PreferencesKeys.IS_DARK_MODE] ?: true,
-            trustedPhoneMac = KeystoreCryptoHelper.decrypt(rawMac)
+            trustedPhoneMac = KeystoreCryptoHelper.decrypt(rawMac),
+            sensorDurationDays = preferences[PreferencesKeys.SENSOR_DURATION_DAYS] ?: 0
         )
     }
 
@@ -200,6 +203,12 @@ class UserPreferencesRepository(private val context: Context) {
     suspend fun saveDarkMode(isDark: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.IS_DARK_MODE] = isDark
+        }
+    }
+
+    suspend fun saveSensorDurationDays(days: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.SENSOR_DURATION_DAYS] = days
         }
     }
 

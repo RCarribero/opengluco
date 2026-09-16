@@ -123,6 +123,7 @@ data class AlarmEvaluationResult(
 @Serializable
 data class AlarmTriggerPayload(
     val alarm: GlucoseAlarm,
-    val glucoseValueMgDl: Double
+    val glucoseValueMgDl: Double,
+    val trendArrow: String = ""
 )
 

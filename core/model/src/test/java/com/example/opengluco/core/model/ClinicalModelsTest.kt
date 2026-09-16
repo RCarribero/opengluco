@@ -151,6 +151,84 @@ class ClinicalModelsTest {
     }
 
     @Test
+    fun testSensorRemainingDays_libre2Plus_15DaysWear() {
+        val nowSec = 1789569196L // Timestamp de prueba
+        val nowMs = nowSec * 1000L
+        val activatedSec = 1789296231L // Timestamp real del sensor del usuario
+        // Diferencia: 272965 segundos = 3.159 días
+        val sensor = SensorInfo(
+            deviceId = "f37a01ed-c928-11ee-9ed5-96da573a7aae",
+            serialNumber = "MH01MPR9H4",
+            activatedTimestamp = activatedSec,
+            sensorType = 3,
+            isSensorActive = true
+        )
+
+        assertTrue(sensor.isPlusSensor)
+        assertEquals(15, sensor.totalLifetimeDays)
+        assertEquals("FreeStyle Libre 2 Plus", sensor.sensorModelName)
+
+        val remaining = sensor.getRemainingDays(nowMs)
+        assertNotNull(remaining)
+        // Con 15 días: ceil(15 - 3.159) = 12 días restantes (en vez de 11 con 14 días)
+        assertEquals(12, remaining!!)
+    }
+
+    @Test
+    fun testSensorRemainingDays_customDuration7Days() {
+        val nowSec = 1789569196L
+        val nowMs = nowSec * 1000L
+        val activatedSec = 1789296231L // Activado hace 3.159 días
+        val sensor = SensorInfo(
+            deviceId = "sensor-custom",
+            serialNumber = "MH01MPR9H4",
+            activatedTimestamp = activatedSec,
+            lifetimeDays = 7
+        )
+
+        assertEquals(7, sensor.totalLifetimeDays)
+        val remaining = sensor.getRemainingDays(nowMs)
+        assertNotNull(remaining)
+        // ceil(7 - 3.159) = 4 días restantes
+        assertEquals(4, remaining!!)
+    }
+
+    @Test
+    fun testSensorModelName_libre3Plus_withDtid() {
+        val sensor = SensorInfo(
+            deviceId = "did-3p",
+            serialNumber = "3P998877",
+            activatedTimestamp = 1789296231L,
+            dtid = 40068
+        )
+        assertTrue(sensor.isPlusSensor)
+        assertEquals(15, sensor.totalLifetimeDays)
+        assertEquals("FreeStyle Libre 3 Plus", sensor.sensorModelName)
+    }
+
+    @Test
+    fun testSensorExpirationDate_includesWarmupHour() {
+        val activatedSec = 1789296231L
+        val sensor = SensorInfo(
+            deviceId = "sensor-exp",
+            serialNumber = "MH01MPR9H4",
+            activatedTimestamp = activatedSec,
+            warmupDurationMinutes = 60,
+            lifetimeDays = 15
+        )
+        val activationDate = sensor.getFormattedActivationDate()
+        val expirationDate = sensor.getFormattedExpirationDate()
+        assertNotNull(activationDate)
+        assertNotNull(expirationDate)
+        // La activación y la expiración deben tener los mismos minutos (:43) y 1 hora más en expiración (13:43 vs 12:43)
+        assertTrue(activationDate!!.endsWith(":43"))
+        assertTrue(expirationDate!!.endsWith(":43"))
+        val actHour = activationDate.substringAfter(" ").substringBefore(":").toInt()
+        val expHour = expirationDate.substringAfter(" ").substringBefore(":").toInt()
+        assertEquals((actHour + 1) % 24, expHour)
+    }
+
+    @Test
     fun testSensorRemainingDays_expiredSensor() {
         val nowSec = System.currentTimeMillis() / 1000
         val activatedTwentyDaysAgo = nowSec - (20 * 24 * 3600)

@@ -68,7 +68,8 @@ class WearGlucoseSyncWorker(
                         WearAlarmNotificationHelper.triggerAlarmBySeverity(
                             context = context,
                             alarm = triggered,
-                            glucoseValueMgDl = value
+                            glucoseValueMgDl = value,
+                            trendArrow = it.trendSymbol
                         )
                         alarmRepo.recordAlarmFired(triggered.id)
                     }

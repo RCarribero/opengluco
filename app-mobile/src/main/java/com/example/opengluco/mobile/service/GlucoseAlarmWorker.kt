@@ -86,7 +86,8 @@ class GlucoseAlarmWorker(
             MobileAlarmNotificationHelper.triggerAlarm(
                 context = context,
                 alarm = triggered,
-                glucoseValueMgDl = value
+                glucoseValueMgDl = value,
+                trendArrow = latest.trendSymbol
             )
             alarmRepo.recordAlarmFired(triggered.id)
         }

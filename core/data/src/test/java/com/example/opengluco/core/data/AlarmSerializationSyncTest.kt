@@ -210,5 +210,17 @@ class AlarmSerializationSyncTest {
         assertEquals("alarm-high-trigger", decoded.alarm.id)
         assertEquals(AlarmSeverity.ALERT, decoded.alarm.severity)
         assertEquals(245.0, decoded.glucoseValueMgDl, 0.01)
+        assertEquals("", decoded.trendArrow)
+
+        // Test with explicit trendArrow symbol
+        val payloadWithArrow = com.example.opengluco.core.model.AlarmTriggerPayload(
+            alarm = alarm,
+            glucoseValueMgDl = 245.0,
+            trendArrow = "↑"
+        )
+        val encodedWithArrow = json.encodeToString(payloadWithArrow)
+        assertTrue(encodedWithArrow.contains("\"trendArrow\":\"↑\""))
+        val decodedWithArrow = json.decodeFromString<com.example.opengluco.core.model.AlarmTriggerPayload>(encodedWithArrow)
+        assertEquals("↑", decodedWithArrow.trendArrow)
     }
 }

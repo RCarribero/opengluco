@@ -2,6 +2,7 @@ package com.example.opengluco.mobile.ui.dashboard.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,9 +53,16 @@ fun MobileStatDetailModal(
     tirPercent: Int = 100,
     sensorDays: Int = 0,
     sensorSerial: String = "",
+    sensorModel: String = "FreeStyle Libre Sensor",
+    totalWearDays: Int = 14,
+    sensorDurationDays: Int = 0,
+    warmupMinutes: Int = 60,
+    sensorActivationDate: String? = null,
+    sensorExpirationDate: String? = null,
     trendText: String = "Estable",
     trendSymbol: String = "→",
     sensorState: com.example.opengluco.core.model.SensorLifecycleState = com.example.opengluco.core.model.SensorLifecycleState.NoSensor,
+    onAdjustDuration: (() -> Unit)? = null,
     onDismiss: () -> Unit
 ) {
     if (type == DetailModalType.NONE) return
@@ -180,8 +188,49 @@ fun MobileStatDetailModal(
                             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                                 StatRow("Días restantes:", daysText, highlight = sensorDays > 2)
                                 StatRow("Número de Serie (S/N):", serialText)
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(text = "Duración Nominal:", fontSize = 13.sp, color = colors.textSecondary)
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Text(
+                                            text = "$totalWearDays días" + if (sensorDurationDays == 0) " (Auto)" else " (Fijo)",
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = colors.textPrimary
+                                        )
+                                        if (onAdjustDuration != null) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(6.dp))
+                                                    .background(colors.mint.copy(alpha = 0.15f))
+                                                    .clickable { onAdjustDuration() }
+                                                    .padding(horizontal = 8.dp, vertical = 2.dp)
+                                            ) {
+                                                Text(
+                                                    text = "Ajustar",
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = colors.mint
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                                StatRow("Calentamiento Inicial:", "$warmupMinutes min (incluido)")
+                                if (sensorActivationDate != null) {
+                                    StatRow("Fecha Activación:", sensorActivationDate)
+                                }
+                                if (sensorExpirationDate != null) {
+                                    StatRow("Fecha Fin Estimada:", sensorExpirationDate)
+                                }
                                 StatRow("Estado Operativo:", statusText)
-                                StatRow("Tipo de Dispositivo:", "FreeStyle Libre Sensor")
+                                StatRow("Tipo de Dispositivo:", sensorModel)
                             }
                         }
                     }

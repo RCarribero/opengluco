@@ -205,7 +205,8 @@ class WearBluetoothRfcommService : Service() {
                         WearAlarmNotificationHelper.triggerAlarmBySeverity(
                             context = applicationContext,
                             alarm = triggered,
-                            glucoseValueMgDl = numVal.toDouble()
+                            glucoseValueMgDl = numVal.toDouble(),
+                            trendArrow = measurement.trendSymbol
                         )
                         alarmRepo.recordAlarmFired(triggered.id)
                     }

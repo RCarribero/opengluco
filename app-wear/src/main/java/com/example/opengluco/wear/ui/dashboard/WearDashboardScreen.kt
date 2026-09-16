@@ -279,6 +279,8 @@ fun WearDashboardScreen(
                     maxVal = maxVal,
                     sensorDays = state.sensor?.getRemainingDays() ?: 0,
                     sensorSerial = state.sensor?.serialNumber ?: "",
+                    sensorModel = state.sensor?.sensorModelName ?: "FreeStyle Libre",
+                    totalWearDays = state.sensor?.totalLifetimeDays ?: 14,
                     trendText = state.currentMeasurement?.trendText ?: "Estable",
                     sensorState = sensorLifecycle,
                     onDismiss = { activeModal = DetailModalType.NONE }
