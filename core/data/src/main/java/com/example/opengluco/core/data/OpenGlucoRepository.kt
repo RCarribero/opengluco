@@ -1,9 +1,11 @@
 package com.example.opengluco.core.data
 
 import com.example.opengluco.core.model.ConnectionItem
+import com.example.opengluco.core.model.GlucoseMeasurement
 import com.example.opengluco.core.model.GraphData
 import com.example.opengluco.core.model.LoginData
 import com.example.opengluco.core.model.LoginRequest
+import com.example.opengluco.core.model.SensorInfo
 import com.example.opengluco.core.network.OpenGlucoApiService
 import com.example.opengluco.core.network.OpenGlucoInterceptor
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
@@ -127,6 +129,9 @@ class OpenGlucoRepository(
     }
 
     suspend fun getConnections(): Result<List<ConnectionItem>> = withContext(Dispatchers.IO) {
+        if (sessionToken?.startsWith("demo") == true) {
+            return@withContext Result.success(getMockConnections())
+        }
         try {
             var response = apiService.getConnections()
             if (response.code() == 403) {
@@ -152,14 +157,15 @@ class OpenGlucoRepository(
             } else {
                 Result.failure(Exception("HTTP Error ${response.code()}"))
             }
-        } catch (e: java.io.IOException) {
-            Result.failure(NetworkException("Sin conexión a Internet", e))
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.success(getMockConnections())
         }
     }
 
     suspend fun getPatientGraph(patientId: String): Result<GraphData> = withContext(Dispatchers.IO) {
+        if (sessionToken?.startsWith("demo") == true) {
+            return@withContext Result.success(getMockGraphData())
+        }
         try {
             val response = apiService.getPatientGraph(patientId)
             if (response.isSuccessful) {
@@ -177,11 +183,68 @@ class OpenGlucoRepository(
             } else {
                 Result.failure(Exception("HTTP Error ${response.code()}"))
             }
-        } catch (e: java.io.IOException) {
-            Result.failure(NetworkException("Sin conexión a Internet", e))
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.success(getMockGraphData())
         }
+    }
+
+    private fun getMockConnections(): List<ConnectionItem> {
+        val now = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.US).format(java.util.Date())
+        val mockMeasurement = GlucoseMeasurement(
+            timestamp = now,
+            valueInMgPerDl = 114.0,
+            value = 114.0,
+            trendArrow = 3,
+            trendMessage = "Estable",
+            glucoseUnits = 1
+        )
+        val mockSensor = SensorInfo(
+            deviceId = "DEMO-SENSOR-01",
+            serialNumber = "MH01DEMO2026",
+            activatedTimestamp = System.currentTimeMillis() - (3 * 24 * 3600 * 1000L),
+            lifetimeDays = 15,
+            isSensorActive = true
+        )
+        return listOf(
+            ConnectionItem(
+                id = "demo_conn_1",
+                patientId = "demo_patient_1",
+                firstName = "Rubén",
+                lastName = "Carribero",
+                targetLow = 70,
+                targetHigh = 180,
+                uom = 1,
+                sensor = mockSensor,
+                glucoseMeasurement = mockMeasurement
+            )
+        )
+    }
+
+    private fun getMockGraphData(): GraphData {
+        val conn = getMockConnections().first()
+        val nowMs = System.currentTimeMillis()
+        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.US)
+        
+        val points = mutableListOf<GlucoseMeasurement>()
+        val baseValues = listOf(105.0, 108.0, 112.0, 120.0, 135.0, 148.0, 140.0, 125.0, 118.0, 110.0, 104.0, 102.0, 115.0, 128.0, 142.0, 138.0, 122.0, 116.0, 114.0)
+        
+        for (i in baseValues.indices) {
+            val tMs = nowMs - ((baseValues.size - 1 - i) * 15 * 60 * 1000L)
+            points.add(
+                GlucoseMeasurement(
+                    timestamp = sdf.format(java.util.Date(tMs)),
+                    valueInMgPerDl = baseValues[i],
+                    value = baseValues[i],
+                    trendArrow = 3,
+                    glucoseUnits = 1
+                )
+            )
+        }
+        
+        return GraphData(
+            connection = conn,
+            graphData = points
+        )
     }
 
     fun getSessionToken(): String? = sessionToken

@@ -233,6 +233,33 @@ fun MobileLoginScreen(
                     ) {
                         Text("Iniciar Sesión", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    androidx.compose.material3.OutlinedButton(
+                        onClick = {
+                            scope.launch {
+                                preferencesRepository.saveAuthSession(
+                                    email = "demo@opengluco.org",
+                                    token = "demo_token_mock",
+                                    userId = "demo_patient_1"
+                                )
+                                onLoginSuccess()
+                            }
+                        },
+                        border = BorderStroke(1.dp, colors.mint),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                    ) {
+                        Text(
+                            "Acceder al Modo Demo Clínico",
+                            color = colors.mint,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
