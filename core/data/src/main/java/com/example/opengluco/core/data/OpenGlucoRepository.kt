@@ -224,23 +224,56 @@ class OpenGlucoRepository(
         val conn = getMockConnections().first()
         val nowMs = System.currentTimeMillis()
         val sdf = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.US)
-        
         val points = mutableListOf<GlucoseMeasurement>()
-        val baseValues = listOf(105.0, 108.0, 112.0, 120.0, 135.0, 148.0, 140.0, 125.0, 118.0, 110.0, 104.0, 102.0, 115.0, 128.0, 142.0, 138.0, 122.0, 116.0, 114.0)
-        
-        for (i in baseValues.indices) {
-            val tMs = nowMs - ((baseValues.size - 1 - i) * 15 * 60 * 1000L)
+
+        // 1. Historical readings across the past 90 days (6 samples/day from day -90 to day -2)
+        // so that Día (1d), Semana (7d), Mes (30d) and 3 Meses (90d) all have complete data and distinct metrics
+        for (dayAgo in 90 downTo 2) {
+            val dayShift = (kotlin.math.sin(dayAgo * 0.25) * 18.0) + (if (dayAgo % 6 == 0) 22.0 else -4.0)
+            val dailyPattern = listOf(96.0, 112.0, 148.0, 124.0, 162.0, 108.0)
+            for ((slotIdx, base) in dailyPattern.withIndex()) {
+                val hoursOffset = (dayAgo * 24) - (slotIdx * 4)
+                val tMs = nowMs - (hoursOffset * 3600 * 1000L)
+                val v = (base + dayShift + kotlin.math.cos(dayAgo + slotIdx.toDouble()) * 9.0).coerceIn(54.0, 265.0)
+                points.add(
+                    GlucoseMeasurement(
+                        timestamp = sdf.format(java.util.Date(tMs)),
+                        valueInMgPerDl = kotlin.math.round(v),
+                        value = kotlin.math.round(v),
+                        trendArrow = 3,
+                        glucoseUnits = 1
+                    )
+                )
+            }
+        }
+
+        // 2. High-resolution 24-hour continuous curve (every 10 minutes = 145 points)
+        // so 24h, 12h, 6h, 2h, and 1h all render smooth full-width curves after 1-of-3 subsampling
+        val totalRecentSteps = 144
+        for (step in totalRecentSteps downTo 0) {
+            val minsAgo = step * 10L
+            val hoursAgo = minsAgo / 60.0
+            val tMs = nowMs - (minsAgo * 60 * 1000L)
+            val rad = ((totalRecentSteps - step).toDouble() / totalRecentSteps) * kotlin.math.PI * 4.0
+            val circadian = kotlin.math.sin(rad) * 20.0 + kotlin.math.cos(rad * 2.2) * 10.0
+            val mealSpike = when {
+                hoursAgo in 13.0..16.5 -> 36.0 * kotlin.math.exp(-kotlin.math.pow(hoursAgo - 14.5, 2.0) / 1.2)
+                hoursAgo in 6.0..9.5 -> 44.0 * kotlin.math.exp(-kotlin.math.pow(hoursAgo - 7.8, 2.0) / 1.4)
+                hoursAgo in 1.2..3.8 -> 28.0 * kotlin.math.exp(-kotlin.math.pow(hoursAgo - 2.3, 2.0) / 0.8)
+                else -> 0.0
+            }
+            val rawVal = if (step == 0) 114.0 else (112.0 + circadian + mealSpike).coerceIn(58.0, 245.0)
             points.add(
                 GlucoseMeasurement(
                     timestamp = sdf.format(java.util.Date(tMs)),
-                    valueInMgPerDl = baseValues[i],
-                    value = baseValues[i],
-                    trendArrow = 3,
+                    valueInMgPerDl = kotlin.math.round(rawVal),
+                    value = kotlin.math.round(rawVal),
+                    trendArrow = if (step == 0) 3 else 3,
                     glucoseUnits = 1
                 )
             )
         }
-        
+
         return GraphData(
             connection = conn,
             graphData = points
