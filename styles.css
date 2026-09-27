@@ -1,218 +1,678 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap');
 
 :root {
-  /* Default: Dark Theme */
-  --bg-main: #06060a;
-  --bg-card: rgba(14, 14, 22, 0.75);
-  --border-card: rgba(255, 255, 255, 0.1);
-  --text-main: #f3f4f6;
-  --text-muted: #9ca3af;
-  --text-sub: #d1d5db;
-  --card-hover-bg: rgba(20, 20, 32, 0.85);
-  --chart-grid: rgba(255, 255, 255, 0.08);
-  --widget-bg: rgba(10, 10, 16, 0.9);
-  --widget-border: rgba(255, 255, 255, 0.15);
-  
-  /* Clinical Tokens */
-  --color-in-range: #4ADE80;
+  --bg-main: #000000;
+  --surface-orb: #1E232D;
+  --surface-card: #161A22;
+  --surface-elevated: #222834;
+  --surface-border: #2D3748;
+  --text-primary: #FFFFFF;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+
+  --color-mint: #4ADE80;
   --color-low: #F87171;
-  --color-urgent-low: #EF4444;
+  --color-urgent: #EF4444;
   --color-high: #FBBF24;
   --color-very-high: #FB923C;
+  --color-cyan: #38BDF8;
 
-  --theme-glow: var(--color-in-range);
-  --theme-glow-rgb: 74, 222, 128;
+  --active-status: #4ADE80;
+  --active-status-bg: rgba(74, 222, 128, 0.16);
 }
 
-/* Light Theme Variables */
-html.light {
-  --bg-main: #f8fafc;
-  --bg-card: rgba(255, 255, 255, 0.85);
-  --border-card: rgba(15, 23, 42, 0.1);
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --text-sub: #334155;
-  --card-hover-bg: rgba(255, 255, 255, 0.95);
-  --chart-grid: rgba(15, 23, 42, 0.08);
-  --widget-bg: #ffffff;
-  --widget-border: #e2e8f0;
-  
-  --color-in-range: #16a34a;
-  --color-low: #dc2626;
-  --color-urgent-low: #b91c1c;
-  --color-high: #d97706;
-  --color-very-high: #ea580c;
+html.light-theme {
+  --bg-main: #F8FAFC;
+  --surface-orb: #FFFFFF;
+  --surface-card: #FFFFFF;
+  --surface-elevated: #F1F5F9;
+  --surface-border: #E2E8F0;
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #64748B;
 
-  --theme-glow: #16a34a;
-  --theme-glow-rgb: 22, 163, 74;
+  --color-mint: #16A34A;
+  --color-low: #DC2626;
+  --color-urgent: #B91C1C;
+  --color-high: #D97706;
+  --color-very-high: #EA580C;
+  --color-cyan: #0284C7;
 }
 
 * {
+  box-sizing: border-box;
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
-html {
-  scroll-behavior: smooth;
-  background-color: var(--bg-main);
-  color: var(--text-main);
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  transition: background-color 0.4s ease, color 0.4s ease;
-}
-
-body {
-  background-color: transparent;
-  overflow-x: hidden;
+html, body {
+  width: 100%;
   min-height: 100vh;
-  position: relative;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow-x: hidden;
 }
 
-/* 3D Background Canvas Layer */
-#canvas-3d-background {
-  position: fixed;
+/* App Shell */
+.og-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(circle at 50% 0%, rgba(74, 222, 128, 0.06) 0%, transparent 55%), var(--bg-main);
+}
+
+/* Top Ecosystem Bar */
+.og-ecosystem-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 20px;
+  background: rgba(22, 26, 34, 0.92);
+  border-bottom: 1px solid var(--surface-border);
+  backdrop-filter: blur(12px);
+  position: sticky;
   top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 1;
-  pointer-events: auto;
-  cursor: grab;
-}
-
-#canvas-3d-background:active {
-  cursor: grabbing;
-}
-
-/* Foreground Content Wrapper */
-.content-wrapper {
-  position: relative;
-  z-index: 10;
-  pointer-events: none;
-}
-
-.content-wrapper * {
-  pointer-events: auto;
-}
-
-/* Floating Theme Switcher Button */
-.theme-toggle-btn {
-  position: fixed;
-  top: 24px;
-  right: 24px;
   z-index: 100;
-  width: 48px;
-  height: 48px;
+}
+
+html.light-theme .og-ecosystem-bar {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.og-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.og-brand-logo {
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  background: var(--bg-card);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--border-card);
-  color: var(--text-main);
+  border: 1px solid var(--surface-border);
+  object-fit: cover;
+}
+
+.og-brand-title {
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: -0.3px;
+}
+
+.og-version-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(74, 222, 128, 0.14);
+  color: var(--color-mint);
+  border: 1px solid rgba(74, 222, 128, 0.3);
+}
+
+/* Device Switcher Pills */
+.og-device-tabs {
+  display: flex;
+  background: var(--bg-main);
+  padding: 3px;
+  border-radius: 12px;
+  border: 1px solid var(--surface-border);
+  gap: 4px;
+}
+
+.og-device-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.og-device-tab:hover {
+  color: var(--text-primary);
+}
+
+.og-device-tab.active {
+  background: var(--surface-orb);
+  color: var(--color-mint);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+/* Live Telemetry Simulator Strip */
+.og-sim-strip {
+  background: var(--surface-card);
+  border-bottom: 1px solid var(--surface-border);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.og-sim-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.og-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--active-status);
+  box-shadow: 0 0 8px var(--active-status);
+  animation: ogPulse 2s infinite;
+}
+
+@keyframes ogPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.6; }
+}
+
+.og-sim-slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.og-sim-slider {
+  width: 150px;
+  accent-color: var(--active-status);
+  cursor: pointer;
+}
+
+.og-sim-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.og-preset-btn {
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface-orb);
+  color: var(--text-primary);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.og-preset-btn:hover {
+  border-color: var(--color-mint);
+  transform: translateY(-1px);
+}
+
+/* Main Viewport Container */
+.og-viewport {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px 16px 40px;
+}
+
+/* Login Screen Card */
+.og-login-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface-orb);
+  border: 1px solid var(--surface-border);
+  border-radius: 24px;
+  padding: 28px 24px;
+  margin-top: 16px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+  text-align: center;
+}
+
+.og-login-orb {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 0 24px rgba(74, 222, 128, 0.2);
+}
+
+.og-login-orb img {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.og-field-group {
+  text-align: left;
+  margin-bottom: 14px;
+}
+
+.og-field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.og-input {
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface-card);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.og-input:focus {
+  border-color: var(--color-mint);
+}
+
+.og-btn-primary {
+  width: 100%;
+  height: 50px;
+  border-radius: 12px;
+  border: none;
+  background: var(--color-mint);
+  color: #000000;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s, opacity 0.15s;
+}
+
+.og-btn-primary:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.og-btn-outline {
+  width: 100%;
+  height: 50px;
+  border-radius: 12px;
+  border: 1.5px solid var(--color-mint);
+  background: rgba(74, 222, 128, 0.06);
+  color: var(--color-mint);
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 12px;
+  transition: all 0.18s;
+}
+
+.og-btn-outline:hover {
+  background: rgba(74, 222, 128, 0.15);
+}
+
+/* Mobile Dashboard Container */
+.og-mobile-dashboard {
+  width: 100%;
+  max-width: 960px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Top AppBar inside Mobile View */
+.og-top-appbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 18px;
+}
+
+.og-patient-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px 6px 8px;
+  background: var(--surface-orb);
+  border: 1px solid var(--surface-border);
+  border-radius: 999px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.og-patient-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(74, 222, 128, 0.18);
+  color: var(--color-mint);
+  font-weight: 700;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.og-appbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.og-icon-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  border: 1px solid var(--surface-border);
+  background: var(--surface-orb);
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.18s;
 }
 
-.theme-toggle-btn:hover {
-  transform: scale(1.1) rotate(15deg);
-  border-color: var(--theme-glow);
-  box-shadow: 0 0 20px rgba(var(--theme-glow-rgb), 0.4);
+.og-icon-btn:hover {
+  border-color: var(--color-mint);
+  color: var(--color-mint);
 }
 
-/* 3D Glassmorphism Cards */
-.glass-card {
-  background: var(--bg-card);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--border-card);
-  border-radius: 24px;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease, background 0.3s ease;
-  transform-style: preserve-3d;
-}
-
-.glass-card:hover {
-  background: var(--card-hover-bg);
-  border-color: rgba(255, 255, 255, 0.25);
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
-}
-
-html.light .glass-card:hover {
-  border-color: rgba(15, 23, 42, 0.2);
-  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
-}
-
-/* Range Selector Buttons */
-.range-pill {
-  transition: all 0.25s ease;
-  border: 1px solid var(--border-card);
-  background: rgba(125, 125, 125, 0.08);
-  color: var(--text-muted);
-}
-
-.range-pill.active {
-  border-color: currentColor;
-  box-shadow: 0 0 16px rgba(var(--theme-glow-rgb), 0.35);
-  background: var(--bg-card);
-  font-weight: 700;
-}
-
-/* Sparkline Grid */
-.chart-grid-line {
-  stroke: var(--chart-grid);
-  stroke-dasharray: 4 4;
-}
-
-/* Watch Simulator */
-.watch-frame {
-  width: 180px;
-  height: 180px;
-  border-radius: 50%;
-  background: var(--widget-bg);
-  border: 3px solid var(--widget-border);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.watch-bubble {
-  width: 62px;
-  height: 62px;
-  border-radius: 50%;
-  background: var(--bg-card);
-  border: 2px solid var(--theme-glow);
-  box-shadow: 0 0 16px rgba(var(--theme-glow-rgb), 0.3);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Car Display Matrix */
-.car-display {
-  background: var(--widget-bg);
-  border: 1px solid var(--widget-border);
+/* Alarm Alert Banner */
+.og-alarm-banner {
+  background: rgba(239, 68, 68, 0.14);
+  border: 1.5px solid var(--color-urgent);
   border-radius: 16px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  animation: ogAlarmFlash 1.4s infinite;
 }
 
-/* 3D Interaction Hint Badge */
-.drag-hint-badge {
-  display: inline-flex;
+@keyframes ogAlarmFlash {
+  0%, 100% { box-shadow: 0 0 0 rgba(239, 68, 68, 0); }
+  50% { box-shadow: 0 0 24px rgba(239, 68, 68, 0.35); }
+}
+
+/* Responsive 2-column Grid on Tablet/Desktop (matching MobileDashboardScreen.kt responsive.isDualColumn) */
+.og-dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .og-dashboard-grid {
+    grid-template-columns: 360px 1fr;
+    align-items: start;
+  }
+}
+
+.og-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Card Base */
+.og-card {
+  background: var(--surface-card);
+  border: 1px solid var(--surface-border);
+  border-radius: 22px;
+  padding: 20px;
+}
+
+/* Dual Floating Orbs (MobileDualFloatingOrbs.kt) */
+.og-orbs-row {
+  display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 9999px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-card);
+  gap: 18px;
+  padding: 10px 0;
+}
+
+.og-orb {
+  width: 138px;
+  height: 138px;
+  border-radius: 50%;
+  background: var(--surface-orb);
+  border: 1px solid var(--surface-border);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.og-orb:hover {
+  transform: scale(1.03);
+  border-color: var(--active-status);
+}
+
+.og-orb-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.og-orb-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
+.og-orb-unit {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.og-orb-arrow {
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-primary);
+  transition: transform 0.3s ease;
+}
+
+.og-orb-badge {
+  margin-top: 6px;
+  padding: 3px 10px;
+  border-radius: 12px;
   font-size: 11px;
-  color: var(--text-muted);
-  backdrop-filter: blur(12px);
-  user-select: none;
+  font-weight: 700;
+  background: var(--active-status-bg);
+  color: var(--active-status);
+}
+
+/* Chart Card */
+.og-chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.og-timeframe-pills {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-main);
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid var(--surface-border);
+}
+
+.og-tf-btn {
+  padding: 4px 10px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.og-tf-btn.active {
+  background: var(--surface-orb);
+  color: var(--color-mint);
+}
+
+.og-chart-canvas-wrap {
+  position: relative;
+  width: 100%;
+  height: 210px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 14px;
+  border: 1px solid rgba(45, 55, 72, 0.5);
+  overflow: hidden;
+}
+
+html.light-theme .og-chart-canvas-wrap {
+  background: #F8FAFC;
+}
+
+/* Stats Grid */
+.og-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-top: 12px;
+}
+
+@media (min-width: 500px) {
+  .og-stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.og-stat-box {
+  background: var(--surface-orb);
+  border: 1px solid var(--surface-border);
+  border-radius: 14px;
+  padding: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.og-stat-box:hover {
+  border-color: var(--color-mint);
+}
+
+.og-stat-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 20px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.og-stat-lbl {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+/* Sensor Progress Bar */
+.og-progress-track {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-main);
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 10px 0;
+}
+
+.og-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-mint), var(--color-cyan));
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+/* Wear OS Circular Watch Frame */
+.og-wear-bezel {
+  width: 330px;
+  height: 330px;
+  border-radius: 50%;
+  background: #000000;
+  border: 10px solid #1E2430;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), inset 0 0 18px rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 26px;
+  position: relative;
+  color: #FFFFFF;
+}
+
+/* Android Auto Headunit Frame */
+.og-auto-frame {
+  width: 100%;
+  max-width: 780px;
+  background: #090C10;
+  border: 6px solid #1E232D;
+  border-radius: 28px;
+  padding: 24px 28px;
+  color: #FFFFFF;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75);
+}
+
+/* Modal Overlay */
+.og-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 500;
+}
+
+.og-modal {
+  width: 100%;
+  max-width: 480px;
+  background: var(--surface-orb);
+  border: 1px solid var(--surface-border);
+  border-radius: 22px;
+  padding: 24px;
+  max-height: 88vh;
+  overflow-y: auto;
 }

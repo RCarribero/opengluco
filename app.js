@@ -1,790 +1,1208 @@
-// OpenGluco Interactive 3D Medical DNA & Molecular Physics Engine
-// Optimized Pointer Event Drag Physics & Dynamic Theme Color Shift
+/**
+ * OpenGluco v1.2.2 — Interactive Clinical Web Application
+ * Faithful 1:1 implementation of app-mobile, app-wear, and app-auto
+ */
+(function () {
+  'use strict';
 
-const GLUCOSE_STATES = {
-  in_range: {
-    title: 'En Rango',
-    value: 114,
-    trend: '\u2192',
-    trendLabel: 'Estable',
-    delta: '+0.2 mg/dL/min',
-    darkColor: '#4ADE80',
-    darkSecondary: '#38BDF8',
-    darkRgb: '74, 222, 128',
-    lightColor: '#059669',
-    lightSecondary: '#2563EB',
-    lightRgb: '5, 150, 105',
-    rangeLabel: '70 - 180 mg/dL'
-  },
-  low: {
-    title: 'Nivel Bajo',
-    value: 64,
-    trend: '\u2193',
-    trendLabel: 'Bajando',
-    delta: '-1.6 mg/dL/min',
-    darkColor: '#F87171',
-    darkSecondary: '#FB7185',
-    darkRgb: '248, 113, 113',
-    lightColor: '#dc2626',
-    lightSecondary: '#e11d48',
-    lightRgb: '220, 38, 38',
-    rangeLabel: '56 - 69 mg/dL'
-  },
-  urgent_low: {
-    title: 'Urgente Bajo',
-    value: 48,
-    trend: '\u2193\u2193',
-    trendLabel: 'Caida Rapida',
-    delta: '-3.1 mg/dL/min',
-    darkColor: '#EF4444',
-    darkSecondary: '#F43F5E',
-    darkRgb: '239, 68, 68',
-    lightColor: '#b91c1c',
-    lightSecondary: '#be123c',
-    lightRgb: '185, 28, 28',
-    rangeLabel: '<= 55 mg/dL'
-  },
-  high: {
-    title: 'Nivel Alto',
-    value: 205,
-    trend: '\u2191',
-    trendLabel: 'Subiendo',
-    delta: '+2.0 mg/dL/min',
-    darkColor: '#FBBF24',
-    darkSecondary: '#F59E0B',
-    darkRgb: '251, 191, 36',
-    lightColor: '#d97706',
-    lightSecondary: '#b45309',
-    lightRgb: '217, 119, 6',
-    rangeLabel: '181 - 249 mg/dL'
-  },
-  very_high: {
-    title: 'Muy Alto',
-    value: 270,
-    trend: '\u2191\u2191',
-    trendLabel: 'Subida Rapida',
-    delta: '+4.2 mg/dL/min',
-    darkColor: '#FB923C',
-    darkSecondary: '#EA580C',
-    darkRgb: '251, 146, 60',
-    lightColor: '#ea580c',
-    lightSecondary: '#c2410c',
-    lightRgb: '234, 88, 12',
-    rangeLabel: '>= 250 mg/dL'
-  }
-};
+  const PATIENTS = [
+    {
+      id: 'demo_patient_1',
+      firstName: 'Rubén',
+      lastName: 'Carribero',
+      role: 'Paciente Titular (Tipo 1)',
+      targetLow: 70,
+      targetHigh: 180,
+      sensor: {
+        deviceId: 'DEMO-SENSOR-01',
+        serialNumber: 'MH01DEMO2026',
+        modelName: 'FreeStyle Libre 3 Plus',
+        lifetimeDays: 15,
+        remainingDays: 12,
+        isActive: true
+      },
+      currentMgDl: 114,
+      trendArrow: 3, // 1: ↓, 2: ↘, 3: →, 4: ↗, 5: ↑
+      historyMgDl: [104, 107, 110, 116, 128, 142, 148, 139, 126, 119, 112, 106, 103, 109, 121, 134, 129, 118, 114]
+    },
+    {
+      id: 'demo_patient_2',
+      firstName: 'Elena',
+      lastName: 'Martínez',
+      role: 'Supervisión Clínica ( Monitor Remoto )',
+      targetLow: 75,
+      targetHigh: 170,
+      sensor: {
+        deviceId: 'DEMO-SENSOR-02',
+        serialNumber: 'FS02CLINIC99',
+        modelName: 'FreeStyle Libre 2',
+        lifetimeDays: 14,
+        remainingDays: 9,
+        isActive: true
+      },
+      currentMgDl: 132,
+      trendArrow: 4,
+      historyMgDl: [96, 101, 108, 118, 130, 145, 158, 162, 151, 138, 124, 115, 112, 117, 123, 127, 129, 131, 132]
+    }
+  ];
 
-let currentRangeKey = 'in_range';
-let isLightTheme = false;
+  const state = {
+    isAuthenticated: true,
+    activeDevice: 'mobile', // 'mobile' | 'wear' | 'auto'
+    mobileSubScreen: 'dashboard', // 'dashboard' | 'settings' | 'reports' | 'qr'
+    selectedPatientIdx: 0,
+    unit: 'mg/dL', // 'mg/dL' | 'mmol/L'
+    isDark: true,
+    timeframeHours: 6, // 1, 3, 6, 12, 24
+    statsPeriodDays: 7, // 1, 7, 30, 90
+    alarmTriggered: null,
+    alarms: [
+      { id: 'urgent_low', name: 'Hipoglucemia Urgente', threshold: 55, condition: 'below', enabled: true, repeatMin: 1, sound: 'Urgente Extremo', escalate: true },
+      { id: 'low', name: 'Hipoglucemia', threshold: 70, condition: 'below', enabled: true, repeatMin: 2, sound: 'Alerta Médica', escalate: true },
+      { id: 'high', name: 'Hiperglucemia', threshold: 180, condition: 'above', enabled: true, repeatMin: 4, sound: 'Discreto Clínico', escalate: false }
+    ],
+    scrubIndex: null
+  };
 
-// -----------------------------------------------------------
-// 3D MEDICAL DNA & MOLECULAR SCENE
-// -----------------------------------------------------------
-class InteractiveMedical3DScene {
-  constructor(canvasId) {
-    this.canvas = document.getElementById(canvasId);
-    if (!this.canvas) return;
-    if (typeof THREE === 'undefined') return;
-
-    this.scene = null;
-    this.camera = null;
-    this.renderer = null;
-    this.helixGroup = null;
-    this.moleculeGroup = null;
-    this.nodesA = [];
-    this.nodesB = [];
-    this.rungs = [];
-    this.molecules = [];
-    this.coreLight = null;
-    this.ambientLight = null;
-    this.dirLight1 = null;
-    this.dirLight2 = null;
-    this.particles = null;
-
-    // Rock-solid Drag Physics State (immune to getting stuck)
-    this.isDragging = false;
-    this.prevPointer = { x: 0, y: 0 };
-    this.rotVelocity = { x: 0, y: 0.006 };
-    this.currentRotation = { x: 0.25, y: 0 };
-    this.scrollY = 0;
-
-    this.init();
+  function getPatient() {
+    return PATIENTS[state.selectedPatientIdx];
   }
 
-  init() {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
+  function formatGlucose(mgdl) {
+    if (state.unit === 'mmol/L') {
+      return (mgdl / 18.0182).toFixed(1);
+    }
+    return Math.round(mgdl).toString();
+  }
 
-    this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    this.camera.position.set(0, 0, 9.0);
+  function getTrendMeta(arrowCode) {
+    switch (arrowCode) {
+      case 1: return { symbol: '↓', text: 'Bajando rápido', delta: '-3.2 mg/dL/min' };
+      case 2: return { symbol: '↘', text: 'Bajando', delta: '-1.4 mg/dL/min' };
+      case 4: return { symbol: '↗', text: 'Subiendo', delta: '+1.5 mg/dL/min' };
+      case 5: return { symbol: '↑', text: 'Subiendo rápido', delta: '+3.1 mg/dL/min' };
+      default: return { symbol: '→', text: 'Estable', delta: '+0.1 mg/dL/min' };
+    }
+  }
 
+  function getClinicalStatus(mgdl, targetLow, targetHigh) {
+    if (mgdl <= 55) {
+      return { color: '#EF4444', bg: 'rgba(239, 68, 68, 0.18)', label: 'Urgente Bajo', level: 'URGENT_LOW' };
+    }
+    if (mgdl < targetLow) {
+      return { color: '#F87171', bg: 'rgba(248, 113, 113, 0.18)', label: 'Bajo (Hipoglucemia)', level: 'LOW' };
+    }
+    if (mgdl >= 250) {
+      return { color: '#FB923C', bg: 'rgba(251, 146, 60, 0.18)', label: 'Muy Alto', level: 'VERY_HIGH' };
+    }
+    if (mgdl > targetHigh) {
+      return { color: '#FBBF24', bg: 'rgba(251, 191, 36, 0.18)', label: 'Alto (Hiperglucemia)', level: 'HIGH' };
+    }
+    return { color: '#4ADE80', bg: 'rgba(74, 222, 128, 0.16)', label: 'En Rango Clínico', level: 'IN_RANGE' };
+  }
+
+  function updateCssVariables() {
+    const p = getPatient();
+    const st = getClinicalStatus(p.currentMgDl, p.targetLow, p.targetHigh);
+    document.documentElement.style.setProperty('--active-status', st.color);
+    document.documentElement.style.setProperty('--active-status-bg', st.bg);
+
+    const slider = document.getElementById('og-glucose-slider');
+    const readout = document.getElementById('og-slider-readout');
+    if (slider) slider.value = p.currentMgDl;
+    if (readout) {
+      readout.textContent = formatGlucose(p.currentMgDl) + ' ' + state.unit;
+      readout.style.color = st.color;
+    }
+  }
+
+  function playClinicalTone(isUrgent) {
     try {
-      this.renderer = new THREE.WebGLRenderer({
-        canvas: this.canvas,
-        antialias: true,
-        alpha: true,
-        powerPreference: 'high-performance'
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const freqs = isUrgent ? [880, 1174, 880, 1174] : [659, 784];
+      freqs.forEach((f, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = isUrgent ? 'sawtooth' : 'sine';
+        osc.frequency.value = f;
+        gain.gain.setValueAtTime(0.08, ctx.currentTime + idx * 0.16);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (idx + 1) * 0.15);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + idx * 0.16);
+        osc.stop(ctx.currentTime + (idx + 1) * 0.16);
       });
-      this.renderer.setSize(width, height);
-      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-      this.renderer.setClearColor(0x000000, 0);
-    } catch (e) {
-      console.error(e);
+    } catch (_) {}
+  }
+
+  function evaluateAlarms(mgdl) {
+    const urgent = state.alarms.find(a => a.id === 'urgent_low' && a.enabled);
+    const low = state.alarms.find(a => a.id === 'low' && a.enabled);
+    const high = state.alarms.find(a => a.id === 'high' && a.enabled);
+
+    if (urgent && mgdl <= urgent.threshold) {
+      state.alarmTriggered = { alarm: urgent, value: mgdl };
+      playClinicalTone(true);
+    } else if (low && mgdl < low.threshold) {
+      state.alarmTriggered = { alarm: low, value: mgdl };
+      playClinicalTone(false);
+    } else if (high && mgdl > high.threshold) {
+      state.alarmTriggered = { alarm: high, value: mgdl };
+      playClinicalTone(false);
+    } else {
+      state.alarmTriggered = null;
+    }
+  }
+
+  function setLiveGlucose(mgdl, trendArrow) {
+    const p = getPatient();
+    p.currentMgDl = Math.max(40, Math.min(300, Math.round(mgdl)));
+    if (trendArrow) p.trendArrow = trendArrow;
+    p.historyMgDl.push(p.currentMgDl);
+    if (p.historyMgDl.length > 24) p.historyMgDl.shift();
+    evaluateAlarms(p.currentMgDl);
+    render();
+  }
+
+  /* ==========================================================================
+     RENDERING VIEWS
+     ========================================================================== */
+  function render() {
+    updateCssVariables();
+    const simStrip = document.getElementById('og-sim-strip');
+    if (simStrip) {
+      simStrip.style.display = state.isAuthenticated ? 'flex' : 'none';
+    }
+
+    const root = document.getElementById('og-app-root');
+    if (!root) return;
+
+    if (!state.isAuthenticated) {
+      root.innerHTML = renderLoginScreen();
+      bindLoginEvents();
       return;
     }
 
-    this.ambientLight = new THREE.AmbientLight(0xffffff, 1.2);
-    this.scene.add(this.ambientLight);
-
-    this.dirLight1 = new THREE.DirectionalLight(0xffffff, 2.2);
-    this.dirLight1.position.set(6, 12, 8);
-    this.scene.add(this.dirLight1);
-
-    this.dirLight2 = new THREE.DirectionalLight(0x38bdf8, 1.2);
-    this.dirLight2.position.set(-6, -8, -4);
-    this.scene.add(this.dirLight2);
-
-    this.coreLight = new THREE.PointLight(0x4ade80, 6.0, 30);
-    this.coreLight.position.set(2.0, 0, 3.0);
-    this.scene.add(this.coreLight);
-
-    this.buildDNAHelix();
-    this.buildGlucoseMolecules();
-    this.buildParticles();
-    this.updateLayout();
-    this.setupInteractions();
-
-    this.animate = this.animate.bind(this);
-    requestAnimationFrame(this.animate);
-  }
-
-  buildDNAHelix() {
-    this.helixGroup = new THREE.Group();
-    const pairCount = 36;
-    const heightSpan = 15;
-    const radius = 2.0;
-    const turns = 2.8;
-
-    this.nodeMatA = new THREE.MeshStandardMaterial({
-      color: 0x0f172a,
-      emissive: 0x4ade80,
-      emissiveIntensity: 1.2,
-      roughness: 0.15,
-      metalness: 0.8
-    });
-
-    this.nodeMatB = new THREE.MeshStandardMaterial({
-      color: 0x0f172a,
-      emissive: 0x38bdf8,
-      emissiveIntensity: 1.0,
-      roughness: 0.15,
-      metalness: 0.8
-    });
-
-    this.rungMat = new THREE.MeshStandardMaterial({
-      color: 0x94a3b8,
-      metalness: 0.9,
-      roughness: 0.2,
-      transparent: true,
-      opacity: 0.9
-    });
-
-    const sphereGeo = new THREE.SphereGeometry(0.28, 24, 24);
-    const spinePointsA = [];
-    const spinePointsB = [];
-
-    for (let i = 0; i < pairCount; i++) {
-      const t = i / (pairCount - 1);
-      const y = (t - 0.5) * heightSpan;
-      const angle = t * Math.PI * 2 * turns;
-
-      const x1 = Math.cos(angle) * radius;
-      const z1 = Math.sin(angle) * radius;
-      const x2 = Math.cos(angle + Math.PI) * radius;
-      const z2 = Math.sin(angle + Math.PI) * radius;
-
-      spinePointsA.push(new THREE.Vector3(x1, y, z1));
-      spinePointsB.push(new THREE.Vector3(x2, y, z2));
-
-      const nodeA = new THREE.Mesh(sphereGeo, this.nodeMatA);
-      nodeA.position.set(x1, y, z1);
-      this.helixGroup.add(nodeA);
-      this.nodesA.push(nodeA);
-
-      const nodeB = new THREE.Mesh(sphereGeo, this.nodeMatB);
-      nodeB.position.set(x2, y, z2);
-      this.helixGroup.add(nodeB);
-      this.nodesB.push(nodeB);
-
-      const p1 = new THREE.Vector3(x1, y, z1);
-      const p2 = new THREE.Vector3(x2, y, z2);
-      const dist = p1.distanceTo(p2);
-
-      const rungGeo = new THREE.CylinderGeometry(0.055, 0.055, dist, 12);
-      const rungMesh = new THREE.Mesh(rungGeo, this.rungMat);
-      const mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
-      rungMesh.position.copy(mid);
-      rungMesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), p2.clone().sub(p1).normalize());
-
-      this.helixGroup.add(rungMesh);
-      this.rungs.push(rungMesh);
-    }
-
-    const curveA = new THREE.CatmullRomCurve3(spinePointsA);
-    const tubeGeoA = new THREE.TubeGeometry(curveA, 100, 0.06, 8, false);
-    this.tubeMeshA = new THREE.Mesh(tubeGeoA, this.nodeMatA);
-    this.helixGroup.add(this.tubeMeshA);
-
-    const curveB = new THREE.CatmullRomCurve3(spinePointsB);
-    const tubeGeoB = new THREE.TubeGeometry(curveB, 100, 0.06, 8, false);
-    this.tubeMeshB = new THREE.Mesh(tubeGeoB, this.nodeMatB);
-    this.helixGroup.add(this.tubeMeshB);
-
-    this.helixGroup.rotation.z = -0.22;
-    this.helixGroup.rotation.x = 0.28;
-    this.scene.add(this.helixGroup);
-  }
-
-  buildGlucoseMolecules() {
-    this.moleculeGroup = new THREE.Group();
-    const count = 8;
-
-    this.bondMat = new THREE.MeshStandardMaterial({
-      color: 0xcfd8dc,
-      metalness: 0.8,
-      roughness: 0.2
-    });
-
-    this.atomMat = new THREE.MeshStandardMaterial({
-      color: 0x0f172a,
-      emissive: 0x4ade80,
-      emissiveIntensity: 1.1,
-      metalness: 0.8,
-      roughness: 0.2
-    });
-
-    const atomGeo = new THREE.SphereGeometry(0.16, 16, 16);
-    const bondGeo = new THREE.CylinderGeometry(0.035, 0.035, 0.55, 8);
-
-    for (let m = 0; m < count; m++) {
-      const mol = new THREE.Group();
-      const ringRadius = 0.55;
-
-      for (let i = 0; i < 6; i++) {
-        const ang = (i / 6) * Math.PI * 2;
-        const nextAng = ((i + 1) / 6) * Math.PI * 2;
-
-        const ax = Math.cos(ang) * ringRadius;
-        const ay = Math.sin(ang) * ringRadius;
-        const nx = Math.cos(nextAng) * ringRadius;
-        const ny = Math.sin(nextAng) * ringRadius;
-
-        const atom = new THREE.Mesh(atomGeo, this.atomMat);
-        atom.position.set(ax, ay, 0);
-        mol.add(atom);
-
-        const bond = new THREE.Mesh(bondGeo, this.bondMat);
-        const p1 = new THREE.Vector3(ax, ay, 0);
-        const p2 = new THREE.Vector3(nx, ny, 0);
-        const mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
-        bond.position.copy(mid);
-        bond.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), p2.sub(p1).normalize());
-        mol.add(bond);
-      }
-
-      const theta = (m / count) * Math.PI * 2;
-      const orbitR = 3.2 + Math.random() * 2.0;
-      mol.position.set(
-        Math.cos(theta) * orbitR,
-        (Math.random() - 0.5) * 10.0,
-        Math.sin(theta) * orbitR
-      );
-
-      mol.userData = {
-        orbitSpeed: 0.22 + Math.random() * 0.28,
-        orbitRadius: orbitR,
-        baseTheta: theta,
-        baseY: mol.position.y,
-        rotSpeedX: 0.6 + Math.random() * 0.6,
-        rotSpeedY: 0.6 + Math.random() * 0.6
-      };
-
-      this.molecules.push(mol);
-      this.moleculeGroup.add(mol);
-    }
-
-    this.scene.add(this.moleculeGroup);
-  }
-
-  buildParticles() {
-    const count = 450;
-    const geo = new THREE.BufferGeometry();
-    const positions = new Float32Array(count * 3);
-
-    for (let i = 0; i < count; i++) {
-      const radius = 1.8 + Math.random() * 7.5;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(Math.random() * 2 - 1);
-
-      positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 18;
-      positions[i * 3 + 2] = radius * Math.cos(phi);
-    }
-
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-    this.particleMat = new THREE.PointsMaterial({
-      color: 0x4ade80,
-      size: 0.08,
-      transparent: true,
-      opacity: 0.75,
-      blending: THREE.AdditiveBlending
-    });
-
-    this.particles = new THREE.Points(geo, this.particleMat);
-    this.scene.add(this.particles);
-  }
-
-  updateLayout() {
-    const isWide = window.innerWidth >= 1024;
-    const targetX = isWide ? 2.2 : 0.0;
-    if (this.helixGroup) this.helixGroup.position.x = targetX;
-    if (this.moleculeGroup) this.moleculeGroup.position.x = targetX;
-    if (this.particles) this.particles.position.x = targetX;
-    if (this.coreLight) this.coreLight.position.x = targetX;
-  }
-
-  setupInteractions() {
-    const onStart = (cx, cy) => {
-      this.isDragging = true;
-      this.prevPointer = { x: cx, y: cy };
-      this.rotVelocity = { x: 0, y: 0 };
-    };
-
-    const onMove = (cx, cy, buttons) => {
-      // Safety release check: if mouse buttons are 0, force release drag
-      if (buttons === 0 && this.isDragging) {
-        this.isDragging = false;
-        return;
-      }
-
-      if (this.isDragging) {
-        const dx = cx - this.prevPointer.x;
-        const dy = cy - this.prevPointer.y;
-        this.rotVelocity = { x: dy * 0.004, y: dx * 0.004 };
-        this.currentRotation.y += dx * 0.007;
-        this.currentRotation.x += dy * 0.007;
-        this.prevPointer = { x: cx, y: cy };
-      }
-    };
-
-    const onEnd = () => {
-      this.isDragging = false;
-    };
-
-    // Mouse Listeners
-    window.addEventListener('mousedown', (e) => {
-      if (e.button === 0) onStart(e.clientX, e.clientY);
-    });
-    window.addEventListener('mousemove', (e) => onMove(e.clientX, e.clientY, e.buttons));
-    window.addEventListener('mouseup', onEnd);
-    window.addEventListener('mouseleave', onEnd);
-    window.addEventListener('blur', onEnd);
-
-    // Touch Listeners
-    window.addEventListener('touchstart', (e) => {
-      if (e.touches.length === 1) onStart(e.touches[0].clientX, e.touches[0].clientY);
-    }, { passive: true });
-    window.addEventListener('touchmove', (e) => {
-      if (e.touches.length === 1) onMove(e.touches[0].clientX, e.touches[0].clientY, 1);
-    }, { passive: true });
-    window.addEventListener('touchend', onEnd);
-    window.addEventListener('touchcancel', onEnd);
-
-    window.addEventListener('scroll', () => {
-      this.scrollY = window.scrollY || window.pageYOffset;
-    }, { passive: true });
-
-    window.addEventListener('resize', () => {
-      if (!this.renderer || !this.camera) return;
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      this.camera.aspect = w / h;
-      this.camera.updateProjectionMatrix();
-      this.renderer.setSize(w, h);
-      this.updateLayout();
-    });
-  }
-
-  setTheme(lightMode) {
-    if (lightMode) {
-      // Light Mode Color Palette: Crystal sapphire, gold and emerald
-      this.ambientLight.intensity = 1.4;
-      if (this.dirLight1) this.dirLight1.intensity = 1.8;
-      if (this.dirLight2) this.dirLight2.color.setHex(0x2563eb);
-      this.nodeMatA.color.setHex(0xf1f5f9);
-      this.nodeMatB.color.setHex(0xf1f5f9);
-      this.rungMat.color.setHex(0x64748b);
-      this.atomMat.color.setHex(0xf8fafc);
-      this.particleMat.opacity = 0.55;
+    if (state.activeDevice === 'wear') {
+      root.innerHTML = renderWearOsView();
+      bindWearEvents();
+      drawWearSparkline();
+    } else if (state.activeDevice === 'auto') {
+      root.innerHTML = renderAndroidAutoView();
+      bindAutoEvents();
     } else {
-      // Dark Mode Color Palette: Bioluminescent cyber-glow
-      this.ambientLight.intensity = 1.0;
-      if (this.dirLight1) this.dirLight1.intensity = 2.2;
-      if (this.dirLight2) this.dirLight2.color.setHex(0x38bdf8);
-      this.nodeMatA.color.setHex(0x0f172a);
-      this.nodeMatB.color.setHex(0x0f172a);
-      this.rungMat.color.setHex(0x94a3b8);
-      this.atomMat.color.setHex(0x0f172a);
-      this.particleMat.opacity = 0.75;
-    }
-    this.updateColors();
-  }
-
-  updateColors() {
-    const data = GLUCOSE_STATES[currentRangeKey];
-    const primaryHex = isLightTheme ? data.lightColor : data.darkColor;
-    const secondaryHex = isLightTheme ? data.lightSecondary : data.darkSecondary;
-
-    const c1 = new THREE.Color(primaryHex);
-    const c2 = new THREE.Color(secondaryHex);
-
-    if (this.nodeMatA) {
-      this.nodeMatA.emissive.copy(c1);
-      this.nodeMatA.emissiveIntensity = isLightTheme ? 1.0 : 1.3;
-    }
-    if (this.nodeMatB) {
-      this.nodeMatB.emissive.copy(c2);
-      this.nodeMatB.emissiveIntensity = isLightTheme ? 0.9 : 1.1;
-    }
-    if (this.atomMat) {
-      this.atomMat.emissive.copy(c1);
-      this.atomMat.emissiveIntensity = isLightTheme ? 0.85 : 1.1;
-    }
-    if (this.coreLight) {
-      this.coreLight.color.copy(c1);
-    }
-    if (this.particleMat) {
-      this.particleMat.color.copy(c1);
+      if (state.mobileSubScreen === 'settings') {
+        root.innerHTML = renderMobileSettings();
+        bindSettingsEvents();
+      } else if (state.mobileSubScreen === 'reports') {
+        root.innerHTML = renderMobileReports();
+        bindReportsEvents();
+      } else if (state.mobileSubScreen === 'qr') {
+        root.innerHTML = renderMobileQr();
+        bindQrEvents();
+      } else {
+        root.innerHTML = renderMobileDashboard();
+        bindDashboardEvents();
+        drawBezierChart();
+      }
     }
   }
 
-  animate(time) {
-    requestAnimationFrame(this.animate);
-    const t = time * 0.001;
+  function renderLoginScreen() {
+    return `
+      <div class="og-login-card">
+        <div class="og-login-orb">
+          <img src="logo.png" alt="OpenGluco" />
+        </div>
+        <h1 style="font-size:26px; font-weight:800; margin-bottom:4px;">OpenGluco</h1>
+        <p style="font-size:13px; color:var(--text-secondary); margin-bottom:24px;">
+          Monitor Clínico de Glucosa en Tiempo Real
+        </p>
 
-    if (!this.isDragging) {
-      this.currentRotation.y += 0.004 + this.rotVelocity.y;
-      this.currentRotation.x += this.rotVelocity.x;
-      this.rotVelocity.x *= 0.93;
-      this.rotVelocity.y *= 0.93;
+        <form id="og-login-form">
+          <div class="og-field-group">
+            <label class="og-field-label">Correo electrónico (LibreLinkUp)</label>
+            <input type="email" class="og-input" value="demo@opengluco.org" required />
+          </div>
+          <div class="og-field-group" style="margin-bottom:20px;">
+            <label class="og-field-label">Contraseña</label>
+            <input type="password" class="og-input" value="••••••••••••" required />
+          </div>
+          <button type="submit" class="og-btn-primary">Iniciar Sesión</button>
+        </form>
+
+        <button type="button" id="og-demo-patient-1" class="og-btn-outline">
+          Acceder al Modo Demo Clínico (Rubén Carribero)
+        </button>
+        <button type="button" id="og-demo-patient-2" class="og-btn-outline" style="border-color:var(--color-cyan); color:var(--color-cyan); background:rgba(56,189,248,0.06);">
+          Acceder en Modo Supervisión (Elena Martínez)
+        </button>
+
+        <p style="margin-top:20px; font-size:11.5px; color:var(--text-muted); line-height:1.5;">
+          Cifrado local AES-256-GCM respaldado por Android Keystore. Cumplimiento estricto GDPR Art. 17 y Art. 20.
+        </p>
+      </div>
+    `;
+  }
+
+  function renderMobileDashboard() {
+    const p = getPatient();
+    const st = getClinicalStatus(p.currentMgDl, p.targetLow, p.targetHigh);
+    const trend = getTrendMeta(p.trendArrow);
+
+    const valid = p.historyMgDl;
+    const avg = valid.reduce((a, b) => a + b, 0) / valid.length;
+    const min = Math.min(...valid);
+    const max = Math.max(...valid);
+    const inRange = valid.filter(v => v >= p.targetLow && v <= p.targetHigh).length;
+    const tir = Math.round((inRange / valid.length) * 100);
+    const gmi = (3.31 + 0.02392 * avg).toFixed(1);
+    const sensorPct = Math.round((p.sensor.remainingDays / p.sensor.lifetimeDays) * 100);
+
+    return `
+      <div class="og-mobile-dashboard">
+        <!-- TopAppBar -->
+        <div class="og-top-appbar">
+          <button type="button" class="og-patient-chip" id="og-open-patient-modal" title="Cambiar paciente activo">
+            <span class="og-patient-avatar">${p.firstName[0]}${p.lastName[0]}</span>
+            <div style="text-align:left;">
+              <div style="font-size:13.5px; font-weight:700; line-height:1.1;">${p.firstName} ${p.lastName}</div>
+              <div style="font-size:11px; color:var(--text-secondary);">${p.role}</div>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left:4px; color:var(--text-secondary);">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+
+          <div class="og-appbar-actions">
+            <button type="button" class="og-icon-btn" id="og-btn-refresh" title="Sincronizar telemetría ahora">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+            </button>
+            <button type="button" class="og-icon-btn" id="og-btn-reports" title="Informes Clínicos AGP y Exportación CSV">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+              </svg>
+            </button>
+            <button type="button" class="og-icon-btn" id="og-btn-settings" title="Ajustes Clínicos y Alarmas">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+            </button>
+            <button type="button" class="og-icon-btn" id="og-btn-logout" title="Volver a pantalla de Login">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        ${state.alarmTriggered ? `
+          <div class="og-alarm-banner">
+            <div>
+              <div style="font-size:13px; font-weight:800; color:#EF4444; text-transform:uppercase; letter-spacing:0.5px;">
+                Alerta Clínica Activa: ${state.alarmTriggered.alarm.name}
+              </div>
+              <div style="font-size:12.5px; color:var(--text-primary); margin-top:2px;">
+                Lectura actual: <strong>${formatGlucose(state.alarmTriggered.value)} ${state.unit} (${trend.symbol})</strong> — Sincronizado con reloj Wear OS
+              </div>
+            </div>
+            <button type="button" id="og-dismiss-alarm" class="og-preset-btn" style="background:#EF4444; color:#FFF; border:none; padding:8px 14px;">
+              Silenciar Alarma
+            </button>
+          </div>
+        ` : ''}
+
+        <!-- Dual Column Responsive Layout -->
+        <div class="og-dashboard-grid">
+          <!-- Left Column: Hero Orbs + Sensor Card -->
+          <div class="og-col">
+            <div class="og-card">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <span style="font-size:11.5px; font-weight:700; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.6px;">
+                  Estado Glucémico Actual
+                </span>
+                <span style="font-size:11px; font-weight:700; color:${st.color}; padding:2px 8px; border-radius:99px; background:${st.bg};">
+                  ${st.label}
+                </span>
+              </div>
+
+              <!-- MobileDualFloatingOrbs -->
+              <div class="og-orbs-row">
+                <!-- Left Orb: Glucose Value -->
+                <div class="og-orb" id="og-orb-glucose" title="Pulsar para ver desglose clínico">
+                  <svg class="og-orb-svg" viewBox="0 0 138 138">
+                    <path
+                      d="M 28.5 109.5 A 57 57 0 1 1 109.5 109.5"
+                      fill="none"
+                      stroke="${st.color}"
+                      stroke-width="4.5"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                  <div class="og-orb-value">${formatGlucose(p.currentMgDl)}</div>
+                  <div class="og-orb-unit">${state.unit}</div>
+                </div>
+
+                <!-- Right Orb: Clinical Trend -->
+                <div class="og-orb" id="og-orb-trend" title="Pulsar para ver cinética de tendencia">
+                  <div class="og-orb-arrow">${trend.symbol}</div>
+                  <div class="og-orb-badge" style="color:${st.color}; background:${st.bg};">
+                    ${trend.text}
+                  </div>
+                </div>
+              </div>
+
+              <div style="text-align:center; font-size:11.5px; color:var(--text-muted); margin-top:6px;">
+                Actualizado hace unos segundos · Tasa: ${trend.delta}
+              </div>
+            </div>
+
+            <!-- Dedicated Sensor Info Card -->
+            <div class="og-card" id="og-sensor-card" style="cursor:pointer;" title="Pulsar para configurar duración del sensor (14d / 15d)">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <div style="font-size:11px; font-weight:700; color:var(--text-secondary); text-transform:uppercase;">
+                    Sensor Activo (${p.sensor.lifetimeDays} días)
+                  </div>
+                  <div style="font-size:15px; font-weight:700; margin-top:2px;">
+                    ${p.sensor.modelName}
+                  </div>
+                </div>
+                <span style="font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:700; color:var(--color-mint); background:rgba(74,222,128,0.14); padding:4px 10px; border-radius:10px;">
+                  ${p.sensor.remainingDays}d restantes
+                </span>
+              </div>
+
+              <div class="og-progress-track">
+                <div class="og-progress-fill" style="width:${sensorPct}%;"></div>
+              </div>
+
+              <div style="display:flex; justify-content:space-between; font-size:11.5px; color:var(--text-secondary);">
+                <span>S/N: <strong style="font-family:'JetBrains Mono',monospace;">${p.sensor.serialNumber}</strong></span>
+                <span style="color:var(--color-mint); font-weight:600;">Cambiar 14d / 15d →</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Continuous Bezier Chart + Clinical Stats -->
+          <div class="og-col">
+            <div class="og-card">
+              <div class="og-chart-header">
+                <div>
+                  <div style="font-size:14px; font-weight:700;">Curva Continua de Bézier</div>
+                  <div style="font-size:11.5px; color:var(--text-secondary);" id="og-chart-sub">
+                    Rango objetivo: ${formatGlucose(p.targetLow)} – ${formatGlucose(p.targetHigh)} ${state.unit} (Desliza sobre la gráfica)
+                  </div>
+                </div>
+                <div class="og-timeframe-pills">
+                  ${[1, 3, 6, 12, 24].map(h => `
+                    <button type="button" class="og-tf-btn ${state.timeframeHours === h ? 'active' : ''}" data-tf="${h}">
+                      ${h}H
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+
+              <div class="og-chart-canvas-wrap">
+                <canvas id="og-bezier-canvas" width="600" height="210" style="width:100%; height:210px; display:block;"></canvas>
+              </div>
+            </div>
+
+            <!-- Clinical Statistics Card -->
+            <div class="og-card">
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <div>
+                  <div style="font-size:14px; font-weight:700;">Métricas Estadísticas Clínicas</div>
+                  <div style="font-size:11.5px; color:var(--text-secondary);">GMI estimado: <strong>${gmi}%</strong> · Datos verificados</div>
+                </div>
+                <div class="og-timeframe-pills">
+                  ${[
+                    { d: 1, l: '24H' },
+                    { d: 7, l: '7D' },
+                    { d: 30, l: '30D' },
+                    { d: 90, l: '90D' }
+                  ].map(pItem => `
+                    <button type="button" class="og-tf-btn ${state.statsPeriodDays === pItem.d ? 'active' : ''}" data-period="${pItem.d}">
+                      ${pItem.l}
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+
+              <div class="og-stats-grid">
+                <div class="og-stat-box" data-stat="tir">
+                  <div class="og-stat-lbl">Tiempo en Rango</div>
+                  <div class="og-stat-val" style="color:var(--color-mint);">${tir}%</div>
+                </div>
+                <div class="og-stat-box" data-stat="avg">
+                  <div class="og-stat-lbl">Promedio</div>
+                  <div class="og-stat-val">${formatGlucose(avg)}</div>
+                </div>
+                <div class="og-stat-box" data-stat="min">
+                  <div class="og-stat-lbl">Mínimo</div>
+                  <div class="og-stat-val" style="color:var(--color-low);">${formatGlucose(min)}</div>
+                </div>
+                <div class="og-stat-box" data-stat="max">
+                  <div class="og-stat-lbl">Máximo</div>
+                  <div class="og-stat-val" style="color:var(--color-high);">${formatGlucose(max)}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /* ==========================================================================
+     SETTINGS, ALARMS, REPORTS & QR SCREENS
+     ========================================================================== */
+  function renderMobileSettings() {
+    const p = getPatient();
+    return `
+      <div class="og-mobile-dashboard" style="max-width:680px;">
+        <div class="og-top-appbar">
+          <button type="button" class="og-patient-chip" id="og-back-dashboard">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span style="font-weight:700; font-size:14px;">Volver al Panel Clínico</span>
+          </button>
+          <span style="font-size:13px; font-weight:700; color:var(--color-mint);">Ajustes y Alarmas</span>
+        </div>
+
+        <!-- Clinical Target Range Configuration -->
+        <div class="og-card">
+          <h3 style="font-size:15px; font-weight:700; margin-bottom:4px;">Rango Clínico Objetivo (${state.unit})</h3>
+          <p style="font-size:12px; color:var(--text-secondary); margin-bottom:14px;">
+            Define los umbrales personalizados de hipoglucemia e hiperglucemia para ${p.firstName}.
+          </p>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+            <div>
+              <label class="og-field-label">Umbral Bajo (mg/dL): <strong id="lbl-low">${p.targetLow}</strong></label>
+              <input type="range" id="rng-target-low" min="60" max="95" value="${p.targetLow}" class="og-sim-slider" style="width:100%;" />
+            </div>
+            <div>
+              <label class="og-field-label">Umbral Alto (mg/dL): <strong id="lbl-high">${p.targetHigh}</strong></label>
+              <input type="range" id="rng-target-high" min="140" max="230" value="${p.targetHigh}" class="og-sim-slider" style="width:100%;" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Clinical Alarms Section -->
+        <div class="og-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <div>
+              <h3 style="font-size:15px; font-weight:700;">Alarmas Clínicas Bidireccionales (Móvil + Wear OS)</h3>
+              <p style="font-size:12px; color:var(--text-secondary);">Escalado sonoro progresivo e intervalos de 1 a 4 minutos</p>
+            </div>
+            <button type="button" id="og-test-alarm-btn" class="og-preset-btn" style="border-color:#EF4444; color:#EF4444;">
+              Probar Alarma
+            </button>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            ${state.alarms.map((a, idx) => `
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 14px; background:var(--surface-orb); border:1px solid var(--surface-border); border-radius:14px;">
+                <div>
+                  <div style="font-size:13.5px; font-weight:700;">${a.name} (${a.condition === 'below' ? '≤' : '>'} ${a.threshold} mg/dL)</div>
+                  <div style="font-size:11.5px; color:var(--text-secondary);">
+                    Tono: ${a.sound} · Repetición cada ${a.repeatMin} min ${a.escalate ? '· Escalado sonoro activo' : ''}
+                  </div>
+                </div>
+                <input type="checkbox" class="og-alarm-toggle" data-idx="${idx}" ${a.enabled ? 'checked' : ''} style="width:18px; height:18px; accent-color:var(--color-mint); cursor:pointer;" />
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Sensor Duration & Wear OS Pairing -->
+        <div class="og-card" style="display:flex; flex-wrap:wrap; gap:10px; justify-content:space-between; align-items:center;">
+          <div>
+            <h3 style="font-size:15px; font-weight:700;">Emparejamiento Criptográfico Wear OS (ECDH)</h3>
+            <p style="font-size:12px; color:var(--text-secondary);">Sincroniza el reloj inteligente mediante código QR firmado</p>
+          </div>
+          <button type="button" id="og-open-qr-screen" class="og-preset-btn" style="border-color:var(--color-mint); color:var(--color-mint); padding:8px 14px;">
+            Mostrar QR Wear OS
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderMobileReports() {
+    const p = getPatient();
+    return `
+      <div class="og-mobile-dashboard" style="max-width:680px;">
+        <div class="og-top-appbar">
+          <button type="button" class="og-patient-chip" id="og-back-dashboard-rep">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span style="font-weight:700; font-size:14px;">Volver al Panel Clínico</span>
+          </button>
+          <span style="font-size:13px; font-weight:700; color:var(--color-mint);">Informes AGP y GDPR</span>
+        </div>
+
+        <div class="og-card">
+          <h3 style="font-size:16px; font-weight:700; margin-bottom:6px;">Perfil Glucémico Ambulatorio (AGP) — ${p.firstName} ${p.lastName}</h3>
+          <p style="font-size:12.5px; color:var(--text-secondary); margin-bottom:16px;">
+            Distribución clínica de tiempo en rango según consenso internacional ATTD:
+          </p>
+
+          <div style="display:flex; height:24px; border-radius:12px; overflow:hidden; margin-bottom:12px; font-size:11px; font-weight:700; color:#000;">
+            <div style="width:84%; background:#4ADE80; display:flex; align-items:center; justify-content:center;">84% En Rango (70-180)</div>
+            <div style="width:12%; background:#FBBF24; display:flex; align-items:center; justify-content:center;">12%</div>
+            <div style="width:4%; background:#F87171; display:flex; align-items:center; justify-content:center;">4%</div>
+          </div>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:20px;">
+            <button type="button" id="og-export-csv-btn" class="og-btn-primary" style="flex:1; min-width:220px;">
+              Descargar Historial CSV (GDPR Art. 20)
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderMobileQr() {
+    const p = getPatient();
+    return `
+      <div class="og-mobile-dashboard" style="max-width:480px; text-align:center;">
+        <div class="og-top-appbar">
+          <button type="button" class="og-patient-chip" id="og-back-settings-qr">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="19" y1="12" x2="5" y2="12"></line>
+              <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+            <span style="font-weight:700; font-size:14px;">Volver</span>
+          </button>
+          <span style="font-size:13px; font-weight:700; color:var(--color-mint);">Vinculación Wear OS</span>
+        </div>
+
+        <div class="og-card">
+          <h3 style="font-size:16px; font-weight:700; margin-bottom:6px;">Código QR Criptográfico ECDH P-256</h3>
+          <p style="font-size:12px; color:var(--text-secondary); margin-bottom:18px;">
+            Escanea este código desde la app de OpenGluco en tu reloj Wear OS para transferir la sesión de <strong>${p.firstName}</strong> de forma cifrada.
+          </p>
+
+          <div style="width:190px; height:190px; margin:0 auto 16px; background:#FFF; padding:14px; border-radius:18px; display:flex; align-items:center; justify-content:center;">
+            <svg viewBox="0 0 100 100" width="160" height="160" fill="#000">
+              <rect x="5" y="5" width="28" height="28" fill="none" stroke="#000" stroke-width="6"/>
+              <rect x="13" y="13" width="12" height="12"/>
+              <rect x="67" y="5" width="28" height="28" fill="none" stroke="#000" stroke-width="6"/>
+              <rect x="75" y="13" width="12" height="12"/>
+              <rect x="5" y="67" width="28" height="28" fill="none" stroke="#000" stroke-width="6"/>
+              <rect x="13" y="75" width="12" height="12"/>
+              <rect x="42" y="12" width="8" height="8"/><rect x="54" y="20" width="8" height="16"/>
+              <rect x="42" y="42" width="16" height="16"/><rect x="12" y="42" width="20" height="8"/>
+              <rect x="66" y="46" width="24" height="8"/><rect x="44" y="66" width="12" height="24"/>
+              <rect x="66" y="68" width="22" height="22" fill="none" stroke="#000" stroke-width="5"/>
+            </svg>
+          </div>
+
+          <div style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--color-mint); margin-bottom:14px;">
+            SHA-256 Fingerprint: 8F:3A:91:C4:0E:7B:15:22
+          </div>
+
+          <button type="button" id="og-switch-to-wear" class="og-btn-outline">
+            Abrir Vista de Reloj Wear OS Ahora →
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  /* ==========================================================================
+     WEAR OS SMARTWATCH VIEW (DESIGN_SYSTEM.md Section 3)
+     ========================================================================== */
+  function renderWearOsView() {
+    const p = getPatient();
+    const st = getClinicalStatus(p.currentMgDl, p.targetLow, p.targetHigh);
+    const trend = getTrendMeta(p.trendArrow);
+    const now = new Date();
+    const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+
+    return `
+      <div style="display:flex; flex-direction:column; align-items:center; gap:18px; margin-top:10px;">
+        <div class="og-wear-bezel">
+          <!-- Curved Top TimeText -->
+          <div style="font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:700; color:#94A3B8; letter-spacing:1px;">
+            ${timeStr} · ${p.firstName}
+          </div>
+
+          <!-- DualFloatingOrbs (76dp each) -->
+          <div style="display:flex; gap:12px; align-items:center; justify-content:center;">
+            <div id="wear-orb-left" style="width:94px; height:94px; border-radius:50%; background:#1E232D; border:2px solid ${st.color}; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;">
+              <span style="font-family:'JetBrains Mono',monospace; font-size:28px; font-weight:800; line-height:1;">${formatGlucose(p.currentMgDl)}</span>
+              <span style="font-size:10px; color:#94A3B8; margin-top:3px;">${state.unit}</span>
+            </div>
+
+            <div id="wear-orb-right" style="width:94px; height:94px; border-radius:50%; background:#1E232D; border:1px solid #2D3748; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;">
+              <span style="font-size:26px; font-weight:800; line-height:1;">${trend.symbol}</span>
+              <span style="font-size:9.5px; font-weight:700; color:${st.color}; margin-top:4px;">${trend.text}</span>
+            </div>
+          </div>
+
+          <!-- Bottom Row: Sparkline + Sensor Pill -->
+          <div style="display:flex; align-items:center; gap:8px; width:100%; justify-content:center;">
+            <canvas id="og-wear-sparkline" width="145" height="44" style="width:145px; height:44px; background:#161A22; border-radius:12px; border:1px solid #2D3748;"></canvas>
+            <div style="background:#1E232D; border:1px solid #2D3748; border-radius:12px; padding:6px 10px; text-align:center;">
+              <div style="font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; color:#4ADE80;">${p.sensor.remainingDays}d</div>
+              <div style="font-size:8.5px; color:#94A3B8;">Sensor</div>
+            </div>
+          </div>
+
+          <!-- Bottom Pill Action -->
+          <button type="button" id="wear-trigger-sync" style="background:#1E232D; border:1px solid #2D3748; color:#94A3B8; font-size:10px; font-weight:700; padding:4px 14px; border-radius:99px; cursor:pointer;">
+            Sincronizado BLE
+          </button>
+        </div>
+
+        <p style="font-size:12.5px; color:var(--text-secondary); text-align:center; max-width:400px;">
+          Interfaz circular <strong>Wear OS</strong> con esferas flotantes <code>DualFloatingOrbs</code>. Mueve el control deslizante superior para ver cómo reacciona el reloj en tiempo real.
+        </p>
+      </div>
+    `;
+  }
+
+  /* ==========================================================================
+     ANDROID AUTO HEADUNIT VIEW
+     ========================================================================== */
+  function renderAndroidAutoView() {
+    const p = getPatient();
+    const st = getClinicalStatus(p.currentMgDl, p.targetLow, p.targetHigh);
+    const trend = getTrendMeta(p.trendArrow);
+
+    return `
+      <div class="og-auto-frame">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #2D3748; padding-bottom:14px; margin-bottom:20px;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <img src="logo.png" alt="OpenGluco" style="width:28px; height:28px; border-radius:50%;" />
+            <span style="font-weight:800; font-size:16px;">OpenGluco · Android Auto</span>
+          </div>
+          <span style="font-family:'JetBrains Mono',monospace; font-size:13px; color:#94A3B8;">
+            Modo Conducción Segura · ${p.firstName} ${p.lastName}
+          </span>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:center;">
+          <div style="background:#161A22; border:2px solid ${st.color}; border-radius:22px; padding:26px; text-align:center;">
+            <div style="font-size:13px; color:#94A3B8; font-weight:700; text-transform:uppercase;">Glucosa en Tiempo Real</div>
+            <div style="font-family:'JetBrains Mono',monospace; font-size:64px; font-weight:800; color:${st.color}; line-height:1.05; margin:8px 0;">
+              ${formatGlucose(p.currentMgDl)} <span style="font-size:48px;">${trend.symbol}</span>
+            </div>
+            <div style="font-size:15px; font-weight:700; color:#FFFFFF;">${state.unit} · ${st.label}</div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <div style="background:#161A22; border:1px solid #2D3748; border-radius:18px; padding:18px;">
+              <div style="font-size:12px; color:#94A3B8;">Cinética y Sensor</div>
+              <div style="font-size:18px; font-weight:700; margin-top:4px;">${trend.text} (${trend.delta})</div>
+              <div style="font-size:13px; color:#4ADE80; margin-top:6px;">
+                ${p.sensor.modelName} · ${p.sensor.remainingDays} días restantes
+              </div>
+            </div>
+
+            <button type="button" id="og-auto-tts-btn" class="og-btn-primary" style="height:56px; font-size:16px;">
+              Lectura por Voz en Vehículo (TTS)
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /* ==========================================================================
+     CANVAS CHARTS (Continuous Bezier Curve & Wear Sparkline)
+     ========================================================================== */
+  function drawBezierChart() {
+    const canvas = document.getElementById('og-bezier-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const p = getPatient();
+    const data = p.historyMgDl;
+    if (!data || data.length < 2) return;
+
+    const minY = 40;
+    const maxY = 260;
+    const padX = 28;
+    const padY = 20;
+
+    const mapX = (i) => padX + (i / (data.length - 1)) * (w - padX * 2);
+    const mapY = (val) => h - padY - ((Math.max(minY, Math.min(maxY, val)) - minY) / (maxY - minY)) * (h - padY * 2);
+
+    // Target zone band (targetLow .. targetHigh)
+    const yHigh = mapY(p.targetHigh);
+    const yLow = mapY(p.targetLow);
+    ctx.fillStyle = 'rgba(74, 222, 128, 0.07)';
+    ctx.fillRect(padX, yHigh, w - padX * 2, yLow - yHigh);
+
+    ctx.strokeStyle = 'rgba(74, 222, 128, 0.35)';
+    ctx.setLineDash([5, 5]);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padX, yHigh);
+    ctx.lineTo(w - padX, yHigh);
+    ctx.moveTo(padX, yLow);
+    ctx.lineTo(w - padX, yLow);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Smooth Bezier curve
+    const st = getClinicalStatus(p.currentMgDl, p.targetLow, p.targetHigh);
+    const pts = data.map((v, i) => ({ x: mapX(i), y: mapY(v), v }));
+
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 0; i < pts.length - 1; i++) {
+      const xc = (pts[i].x + pts[i + 1].x) / 2;
+      const yc = (pts[i].y + pts[i + 1].y) / 2;
+      ctx.quadraticCurveTo(pts[i].x, pts[i].y, xc, yc);
     }
+    ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
 
-    const scrollFactor = Math.min(1, this.scrollY / 1200);
-    const scrollOffsetY = -scrollFactor * 2.2;
-    const scrollOffsetZ = scrollFactor * 1.2;
+    ctx.strokeStyle = st.color;
+    ctx.lineWidth = 3;
+    ctx.stroke();
 
-    if (this.helixGroup) {
-      this.helixGroup.rotation.y = this.currentRotation.y;
-      this.helixGroup.rotation.x = this.currentRotation.x;
-      this.helixGroup.position.y = 0.2 + Math.sin(t * 1.2) * 0.15 + scrollOffsetY;
-      this.helixGroup.position.z = scrollOffsetZ;
+    // Area gradient under curve
+    ctx.lineTo(pts[pts.length - 1].x, h - padY);
+    ctx.lineTo(pts[0].x, h - padY);
+    ctx.closePath();
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0, st.bg);
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Draw points
+    pts.forEach((pt, idx) => {
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, idx === pts.length - 1 ? 5 : 3, 0, Math.PI * 2);
+      ctx.fillStyle = idx === pts.length - 1 ? '#FFFFFF' : st.color;
+      ctx.fill();
+    });
+  }
+
+  function drawWearSparkline() {
+    const canvas = document.getElementById('og-wear-sparkline');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const p = getPatient();
+    const data = p.historyMgDl.slice(-10);
+    const st = getClinicalStatus(p.currentMgDl, p.targetLow, p.targetHigh);
+    const pts = data.map((v, i) => ({
+      x: 8 + (i / (data.length - 1)) * (w - 16),
+      y: h - 6 - ((Math.max(50, Math.min(240, v)) - 50) / 190) * (h - 12)
+    }));
+
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+    ctx.strokeStyle = st.color;
+    ctx.lineWidth = 2.2;
+    ctx.stroke();
+  }
+
+  /* ==========================================================================
+     MODALS (Patient Selector & Sensor 14d/15d Selector)
+     ========================================================================== */
+  function showModal(htmlContent) {
+    const modalRoot = document.getElementById('og-modal-root');
+    if (!modalRoot) return;
+    modalRoot.innerHTML = `
+      <div class="og-modal-backdrop" id="og-modal-backdrop">
+        <div class="og-modal" onclick="event.stopPropagation()">
+          ${htmlContent}
+        </div>
+      </div>
+    `;
+    document.getElementById('og-modal-backdrop').addEventListener('click', closeModal);
+  }
+
+  function closeModal() {
+    const modalRoot = document.getElementById('og-modal-root');
+    if (modalRoot) modalRoot.innerHTML = '';
+  }
+
+  function openPatientSelectorModal() {
+    showModal(`
+      <h3 style="font-size:17px; font-weight:800; margin-bottom:6px;">Seleccionar Paciente Conectado</h3>
+      <p style="font-size:12.5px; color:var(--text-secondary); margin-bottom:16px;">
+        Conexiones activas mediante LibreLinkUp Cloud:
+      </p>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        ${PATIENTS.map((pt, i) => `
+          <button type="button" class="og-preset-btn" data-select-pt="${i}" style="display:flex; justify-content:space-between; align-items:center; padding:14px; text-align:left; border-color:${state.selectedPatientIdx === i ? 'var(--color-mint)' : 'var(--surface-border)'};">
+            <div>
+              <div style="font-size:14px; font-weight:700;">${pt.firstName} ${pt.lastName}</div>
+              <div style="font-size:11.5px; color:var(--text-secondary);">${pt.sensor.modelName} · ${pt.role}</div>
+            </div>
+            <span style="font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--color-mint);">
+              ${formatGlucose(pt.currentMgDl)} ${state.unit}
+            </span>
+          </button>
+        `).join('')}
+      </div>
+    `);
+
+    document.querySelectorAll('[data-select-pt]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.selectedPatientIdx = parseInt(btn.getAttribute('data-select-pt'), 10);
+        closeModal();
+        render();
+      });
+    });
+  }
+
+  function openSensorDurationModal() {
+    const p = getPatient();
+    showModal(`
+      <h3 style="font-size:17px; font-weight:800; margin-bottom:6px;">Configuración Clínica del Sensor</h3>
+      <p style="font-size:12.5px; color:var(--text-secondary); margin-bottom:16px;">
+        Selecciona la duración nominal del sensor activo (soporte para sensores de 14 días y nuevos sensores Plus de 15 días):
+      </p>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px;">
+        <button type="button" class="og-preset-btn" id="btn-dur-14" style="padding:14px; border-color:${p.sensor.lifetimeDays === 14 ? 'var(--color-mint)' : 'var(--surface-border)'};">
+          <div style="font-size:15px; font-weight:800;">14 Días</div>
+          <div style="font-size:11px; color:var(--text-secondary);">FreeStyle Libre 2 / 3</div>
+        </button>
+        <button type="button" class="og-preset-btn" id="btn-dur-15" style="padding:14px; border-color:${p.sensor.lifetimeDays === 15 ? 'var(--color-mint)' : 'var(--surface-border)'};">
+          <div style="font-size:15px; font-weight:800;">15 Días (Plus)</div>
+          <div style="font-size:11px; color:var(--text-secondary);">Libre 2 Plus / 3 Plus</div>
+        </button>
+      </div>
+      <div style="font-size:12px; color:var(--text-secondary); margin-bottom:16px;">
+        Número de serie: <strong style="font-family:'JetBrains Mono',monospace;">${p.sensor.serialNumber}</strong>
+      </div>
+      <button type="button" class="og-btn-primary" id="btn-close-sensor-modal">Guardar y Cerrar</button>
+    `);
+
+    document.getElementById('btn-dur-14').addEventListener('click', () => {
+      p.sensor.lifetimeDays = 14;
+      p.sensor.modelName = 'FreeStyle Libre 3 (14d)';
+      p.sensor.remainingDays = Math.min(p.sensor.remainingDays, 14);
+      closeModal();
+      render();
+    });
+    document.getElementById('btn-dur-15').addEventListener('click', () => {
+      p.sensor.lifetimeDays = 15;
+      p.sensor.modelName = 'FreeStyle Libre 3 Plus (15d)';
+      p.sensor.remainingDays = 12;
+      closeModal();
+      render();
+    });
+    document.getElementById('btn-close-sensor-modal').addEventListener('click', closeModal);
+  }
+
+  /* ==========================================================================
+     EVENT BINDINGS
+     ========================================================================== */
+  function bindLoginEvents() {
+    const form = document.getElementById('og-login-form');
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        state.isAuthenticated = true;
+        render();
+      });
     }
+    const btn1 = document.getElementById('og-demo-patient-1');
+    if (btn1) {
+      btn1.addEventListener('click', () => {
+        state.selectedPatientIdx = 0;
+        state.isAuthenticated = true;
+        render();
+      });
+    }
+    const btn2 = document.getElementById('og-demo-patient-2');
+    if (btn2) {
+      btn2.addEventListener('click', () => {
+        state.selectedPatientIdx = 1;
+        state.isAuthenticated = true;
+        render();
+      });
+    }
+  }
 
-    if (this.moleculeGroup) {
-      this.molecules.forEach((mol) => {
-        const speed = mol.userData.orbitSpeed;
-        const angle = mol.userData.baseTheta + t * speed + this.currentRotation.y * 0.4;
-        const r = mol.userData.orbitRadius;
-        mol.position.x = Math.cos(angle) * r;
-        mol.position.z = Math.sin(angle) * r;
-        mol.position.y = mol.userData.baseY + Math.sin(t * 1.5 + mol.userData.baseTheta) * 0.35 + scrollOffsetY;
-        mol.rotation.x += mol.userData.rotSpeedX * 0.02;
-        mol.rotation.y += mol.userData.rotSpeedY * 0.02;
+  function bindDashboardEvents() {
+    const ptBtn = document.getElementById('og-open-patient-modal');
+    if (ptBtn) ptBtn.addEventListener('click', openPatientSelectorModal);
+
+    const sensorCard = document.getElementById('og-sensor-card');
+    if (sensorCard) sensorCard.addEventListener('click', openSensorDurationModal);
+
+    const btnRefresh = document.getElementById('og-btn-refresh');
+    if (btnRefresh) {
+      btnRefresh.addEventListener('click', () => {
+        const p = getPatient();
+        const jitter = (Math.random() > 0.5 ? 1 : -1) * Math.floor(Math.random() * 4);
+        setLiveGlucose(p.currentMgDl + jitter, p.trendArrow);
       });
     }
 
-    if (this.coreLight) {
-      this.coreLight.intensity = (isLightTheme ? 4.5 : 6.0) + Math.sin(t * 2.5) * 1.5;
+    const btnSettings = document.getElementById('og-btn-settings');
+    if (btnSettings) {
+      btnSettings.addEventListener('click', () => {
+        state.mobileSubScreen = 'settings';
+        render();
+      });
     }
 
-    if (this.particles) {
-      this.particles.rotation.y = t * 0.02 + this.currentRotation.y * 0.2;
-      this.particles.rotation.x = t * 0.01;
+    const btnReports = document.getElementById('og-btn-reports');
+    if (btnReports) {
+      btnReports.addEventListener('click', () => {
+        state.mobileSubScreen = 'reports';
+        render();
+      });
     }
 
-    this.renderer.render(this.scene, this.camera);
-  }
-}
-
-let medical3DScene = null;
-
-function setTheme(light) {
-  isLightTheme = light;
-  const html = document.documentElement;
-  const moonIcon = document.getElementById('icon-moon');
-  const sunIcon = document.getElementById('icon-sun');
-
-  if (isLightTheme) {
-    html.classList.add('light');
-    if (moonIcon) moonIcon.classList.remove('hidden');
-    if (sunIcon) sunIcon.classList.add('hidden');
-  } else {
-    html.classList.remove('light');
-    if (moonIcon) moonIcon.classList.add('hidden');
-    if (sunIcon) sunIcon.classList.remove('hidden');
-  }
-
-  if (medical3DScene) {
-    medical3DScene.setTheme(isLightTheme);
-  }
-
-  setRangeState(currentRangeKey);
-}
-
-function toggleTheme() {
-  setTheme(!isLightTheme);
-}
-
-function setRangeState(key) {
-  const data = GLUCOSE_STATES[key];
-  if (!data) return;
-  currentRangeKey = key;
-
-  const activeColor = isLightTheme ? data.lightColor : data.darkColor;
-  const activeRgb = isLightTheme ? data.lightRgb : data.darkRgb;
-
-  document.documentElement.style.setProperty('--theme-glow', activeColor);
-  document.documentElement.style.setProperty('--theme-glow-rgb', activeRgb);
-
-  if (medical3DScene) {
-    medical3DScene.updateColors();
-  }
-
-  const heroVal = document.getElementById('hero-val');
-  const heroTrend = document.getElementById('hero-trend');
-  const heroTitle = document.getElementById('hero-title-state');
-  const heroDelta = document.getElementById('hero-delta');
-  const heroBadge = document.getElementById('hero-badge-range');
-
-  if (heroVal) {
-    heroVal.innerText = data.value;
-    heroVal.style.color = activeColor;
-  }
-  if (heroTrend) {
-    heroTrend.innerText = data.trend;
-    heroTrend.style.color = activeColor;
-  }
-  if (heroTitle) {
-    heroTitle.innerText = data.title;
-    heroTitle.style.color = activeColor;
-  }
-  if (heroDelta) heroDelta.innerText = data.delta;
-  if (heroBadge) {
-    heroBadge.innerText = data.rangeLabel;
-    heroBadge.style.borderColor = activeColor;
-    heroBadge.style.color = activeColor;
-  }
-
-  document.querySelectorAll('.range-pill').forEach((btn) => {
-    if (btn.getAttribute('data-range') === key) {
-      btn.classList.add('active');
-      btn.style.borderColor = activeColor;
-      btn.style.color = activeColor;
-    } else {
-      btn.classList.remove('active');
-      btn.style.borderColor = '';
-      btn.style.color = '';
+    const btnLogout = document.getElementById('og-btn-logout');
+    if (btnLogout) {
+      btnLogout.addEventListener('click', () => {
+        state.isAuthenticated = false;
+        render();
+      });
     }
-  });
 
-  const watchVal = document.getElementById('watch-val');
-  const watchTrend = document.getElementById('watch-trend');
-  if (watchVal) {
-    watchVal.innerText = data.value;
-    watchVal.style.color = activeColor;
-  }
-  if (watchTrend) {
-    watchTrend.innerText = data.trend;
-    watchTrend.style.color = activeColor;
-  }
+    const dismissBtn = document.getElementById('og-dismiss-alarm');
+    if (dismissBtn) {
+      dismissBtn.addEventListener('click', () => {
+        state.alarmTriggered = null;
+        render();
+      });
+    }
 
-  const carVal = document.getElementById('car-val');
-  const carTrend = document.getElementById('car-trend');
-  const carStatus = document.getElementById('car-status');
-  if (carVal) {
-    carVal.innerText = data.value;
-    carVal.style.color = activeColor;
-  }
-  if (carTrend) carTrend.innerText = data.trend;
-  if (carStatus) {
-    carStatus.innerText = data.title;
-    carStatus.style.color = activeColor;
-  }
+    document.querySelectorAll('[data-tf]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.timeframeHours = parseInt(btn.getAttribute('data-tf'), 10);
+        render();
+      });
+    });
 
-  updateGraphPoint(data.value);
-}
-
-function create24hSeries() {
-  const points = [];
-  const now = new Date();
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-
-  let g = 112;
-  for (let i = 0; i < 288; i++) {
-    const d = new Date(startOfDay.getTime() + i * 5 * 60 * 1000);
-    const hour = d.getHours() + d.getMinutes() / 60;
-
-    let target = 115;
-    if (hour >= 8 && hour <= 10) target = 142;
-    if (hour >= 13.5 && hour <= 16) target = 158;
-    if (hour >= 20.5 && hour <= 23) target = 136;
-    if (hour >= 3 && hour <= 5) target = 92;
-
-    g += (target - g) * 0.08 + (Math.random() - 0.5) * 5;
-    g = Math.max(54, Math.min(265, g));
-
-    points.push({
-      timeStr: String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'),
-      value: Math.round(g)
+    document.querySelectorAll('[data-period]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.statsPeriodDays = parseInt(btn.getAttribute('data-period'), 10);
+        render();
+      });
     });
   }
-  return points;
-}
 
-const telemetry24h = create24hSeries();
+  function bindSettingsEvents() {
+    const backBtn = document.getElementById('og-back-dashboard');
+    if (backBtn) {
+      backBtn.addEventListener('click', () => {
+        state.mobileSubScreen = 'dashboard';
+        render();
+      });
+    }
 
-function renderTelemetryGraph() {
-  const svg = document.getElementById('graph-svg');
-  if (!svg) return;
+    const p = getPatient();
+    const rngLow = document.getElementById('rng-target-low');
+    const rngHigh = document.getElementById('rng-target-high');
+    if (rngLow) {
+      rngLow.addEventListener('input', () => {
+        p.targetLow = parseInt(rngLow.value, 10);
+        document.getElementById('lbl-low').textContent = p.targetLow;
+      });
+    }
+    if (rngHigh) {
+      rngHigh.addEventListener('input', () => {
+        p.targetHigh = parseInt(rngHigh.value, 10);
+        document.getElementById('lbl-high').textContent = p.targetHigh;
+      });
+    }
 
-  const w = 800;
-  const h = 240;
-  const pL = 40;
-  const pR = 20;
-  const pT = 20;
-  const pB = 30;
+    document.querySelectorAll('.og-alarm-toggle').forEach(chk => {
+      chk.addEventListener('change', () => {
+        const idx = parseInt(chk.getAttribute('data-idx'), 10);
+        state.alarms[idx].enabled = chk.checked;
+      });
+    });
 
-  const minG = 40;
-  const maxG = 290;
+    const testAlarmBtn = document.getElementById('og-test-alarm-btn');
+    if (testAlarmBtn) {
+      testAlarmBtn.addEventListener('click', () => {
+        state.mobileSubScreen = 'dashboard';
+        setLiveGlucose(52, 1);
+      });
+    }
 
-  const getX = (i) => pL + (i / (telemetry24h.length - 1)) * (w - pL - pR);
-  const getY = (val) => pT + (1 - (val - minG) / (maxG - minG)) * (h - pT - pB);
-
-  let d = 'M ' + getX(0) + ' ' + getY(telemetry24h[0].value);
-  for (let i = 1; i < telemetry24h.length; i++) {
-    d += ' L ' + getX(i).toFixed(1) + ' ' + getY(telemetry24h[i].value).toFixed(1);
+    const openQrBtn = document.getElementById('og-open-qr-screen');
+    if (openQrBtn) {
+      openQrBtn.addEventListener('click', () => {
+        state.mobileSubScreen = 'qr';
+        render();
+      });
+    }
   }
 
-  const path = document.getElementById('graph-path');
-  const area = document.getElementById('graph-area');
+  function bindReportsEvents() {
+    const backBtn = document.getElementById('og-back-dashboard-rep');
+    if (backBtn) {
+      backBtn.addEventListener('click', () => {
+        state.mobileSubScreen = 'dashboard';
+        render();
+      });
+    }
 
-  if (path) path.setAttribute('d', d);
-  if (area) {
-    const areaD = d + ' L ' + getX(telemetry24h.length - 1) + ' ' + (h - pB) + ' L ' + getX(0) + ' ' + (h - pB) + ' Z';
-    area.setAttribute('d', areaD);
+    const csvBtn = document.getElementById('og-export-csv-btn');
+    if (csvBtn) {
+      csvBtn.addEventListener('click', () => {
+        const p = getPatient();
+        const rows = ['Timestamp,Paciente,Glucosa_mg_dL,Tendencia,Sensor_SN'];
+        p.historyMgDl.forEach((v, idx) => {
+          const d = new Date(Date.now() - (p.historyMgDl.length - idx) * 15 * 60000).toISOString();
+          rows.push(`${d},${p.firstName} ${p.lastName},${v},${getTrendMeta(p.trendArrow).symbol},${p.sensor.serialNumber}`);
+        });
+        const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `OpenGluco_${p.firstName}_${p.lastName}_GDPR.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+    }
   }
 
-  const overlay = document.getElementById('graph-overlay');
-  const sLine = document.getElementById('s-line');
-  const sDot = document.getElementById('s-dot');
-  const tip = document.getElementById('s-tooltip');
-  const tipTime = document.getElementById('s-time');
-  const tipVal = document.getElementById('s-val');
-  const tipStatus = document.getElementById('s-status');
+  function bindQrEvents() {
+    const backBtn = document.getElementById('og-back-settings-qr');
+    if (backBtn) {
+      backBtn.addEventListener('click', () => {
+        state.mobileSubScreen = 'settings';
+        render();
+      });
+    }
+    const wearBtn = document.getElementById('og-switch-to-wear');
+    if (wearBtn) {
+      wearBtn.addEventListener('click', () => {
+        setActiveDeviceTab('wear');
+      });
+    }
+  }
 
-  if (overlay) {
-    const onScrub = (clientX) => {
-      const rect = overlay.getBoundingClientRect();
-      const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-      const idx = Math.round(pct * (telemetry24h.length - 1));
-      const pt = telemetry24h[idx];
+  function bindWearEvents() {
+    const syncBtn = document.getElementById('wear-trigger-sync');
+    if (syncBtn) {
+      syncBtn.addEventListener('click', () => {
+        syncBtn.textContent = 'Telemetría Actualizada';
+        setTimeout(() => {
+          if (syncBtn) syncBtn.textContent = 'Sincronizado BLE';
+        }, 1200);
+      });
+    }
+  }
 
-      const sx = getX(idx);
-      const sy = getY(pt.value);
+  function bindAutoEvents() {
+    const ttsBtn = document.getElementById('og-auto-tts-btn');
+    if (ttsBtn) {
+      ttsBtn.addEventListener('click', () => {
+        const p = getPatient();
+        const trend = getTrendMeta(p.trendArrow);
+        const msg = `OpenGluco: Nivel de glucosa de ${p.firstName}, ${formatGlucose(p.currentMgDl)} ${state.unit === 'mg/dL' ? 'miligramos por decilitro' : 'milimoles por litro'}, tendencia ${trend.text}.`;
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          const utter = new SpeechSynthesisUtterance(msg);
+          utter.lang = 'es-ES';
+          window.speechSynthesis.speak(utter);
+        }
+      });
+    }
+  }
 
-      if (sLine) {
-        sLine.setAttribute('x1', sx);
-        sLine.setAttribute('x2', sx);
-        sLine.style.opacity = '1';
-      }
-      if (sDot) {
-        sDot.setAttribute('cx', sx);
-        sDot.setAttribute('cy', sy);
-        sDot.style.opacity = '1';
-      }
-      if (tip) {
-        tip.style.opacity = '1';
-        tip.style.left = ((sx / w) * 100) + '%';
-        tip.style.top = ((sy / h) * 100) + '%';
-      }
-      if (tipTime) tipTime.innerText = pt.timeStr;
-      if (tipVal) tipVal.innerText = pt.value + ' mg/dL';
-      if (tipStatus) {
-        if (pt.value < 56) { tipStatus.innerText = 'Urgente Bajo'; tipStatus.style.color = isLightTheme ? '#b91c1c' : '#EF4444'; }
-        else if (pt.value < 70) { tipStatus.innerText = 'Bajo'; tipStatus.style.color = isLightTheme ? '#dc2626' : '#F87171'; }
-        else if (pt.value <= 180) { tipStatus.innerText = 'En Rango'; tipStatus.style.color = isLightTheme ? '#059669' : '#4ADE80'; }
-        else if (pt.value <= 249) { tipStatus.innerText = 'Alto'; tipStatus.style.color = isLightTheme ? '#d97706' : '#FBBF24'; }
-        else { tipStatus.innerText = 'Muy Alto'; tipStatus.style.color = isLightTheme ? '#ea580c' : '#FB923C'; }
-      }
+  function setActiveDeviceTab(device) {
+    state.activeDevice = device;
+    document.querySelectorAll('.og-device-tab').forEach(t => {
+      t.classList.toggle('active', t.getAttribute('data-device') === device);
+    });
+    render();
+  }
+
+  /* ==========================================================================
+     GLOBAL HEADER & SIMULATOR STRIP EVENTS
+     ========================================================================== */
+  function initGlobalEvents() {
+    document.querySelectorAll('.og-device-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        setActiveDeviceTab(tab.getAttribute('data-device'));
+      });
+    });
+
+    const unitBtn = document.getElementById('og-unit-toggle');
+    if (unitBtn) {
+      unitBtn.addEventListener('click', () => {
+        state.unit = state.unit === 'mg/dL' ? 'mmol/L' : 'mg/dL';
+        unitBtn.textContent = state.unit;
+        render();
+      });
+    }
+
+    const themeBtn = document.getElementById('og-theme-toggle');
+    if (themeBtn) {
+      themeBtn.addEventListener('click', () => {
+        state.isDark = !state.isDark;
+        document.documentElement.classList.toggle('light-theme', !state.isDark);
+        themeBtn.textContent = state.isDark ? 'OLED' : 'Claro';
+        render();
+      });
+    }
+
+    const slider = document.getElementById('og-glucose-slider');
+    if (slider) {
+      slider.addEventListener('input', () => {
+        const val = parseInt(slider.value, 10);
+        const p = getPatient();
+        const diff = val - p.currentMgDl;
+        const arrow = diff > 15 ? 5 : diff > 4 ? 4 : diff < -15 ? 1 : diff < -4 ? 2 : 3;
+        setLiveGlucose(val, arrow);
+      });
+    }
+
+    const presets = {
+      normal: { v: 114, a: 3 },
+      rising: { v: 164, a: 4 },
+      high: { v: 218, a: 5 },
+      low: { v: 63, a: 2 },
+      urgent: { v: 51, a: 1 }
     };
 
-    overlay.addEventListener('mousemove', (e) => onScrub(e.clientX));
-    overlay.addEventListener('touchmove', (e) => {
-      if (e.touches.length > 0) onScrub(e.touches[0].clientX);
-    });
-    overlay.addEventListener('mouseleave', () => {
-      if (sLine) sLine.style.opacity = '0';
-      if (sDot) sDot.style.opacity = '0';
-      if (tip) tip.style.opacity = '0';
+    document.querySelectorAll('[data-preset]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const key = btn.getAttribute('data-preset');
+        if (presets[key]) {
+          setLiveGlucose(presets[key].v, presets[key].a);
+        }
+      });
     });
   }
-}
 
-function updateGraphPoint(val) {
-  if (telemetry24h.length > 0) {
-    telemetry24h[telemetry24h.length - 1].value = val;
-    renderTelemetryGraph();
-  }
-}
-
-function setupCardTiltEffects() {
-  document.querySelectorAll('.glass-card').forEach((card) => {
-    card.addEventListener('mousemove', (e) => {
-      const rect = card.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const centerX = rect.width / 2;
-      const centerY = rect.height / 2;
-
-      const rotateX = ((y - centerY) / centerY) * -4;
-      const rotateY = ((x - centerX) / centerX) * 4;
-
-      card.style.transform = 'perspective(1000px) rotateX(' + rotateX.toFixed(1) + 'deg) rotateY(' + rotateY.toFixed(1) + 'deg) translateY(-2px)';
-    });
-
-    card.addEventListener('mouseleave', () => {
-      card.style.transform = '';
-    });
+  document.addEventListener('DOMContentLoaded', () => {
+    initGlobalEvents();
+    render();
   });
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  medical3DScene = new InteractiveMedical3DScene('canvas-3d-background');
-  setTheme(false);
-  renderTelemetryGraph();
-  setupCardTiltEffects();
-
-  const themeBtn = document.getElementById('btn-theme-toggle');
-  if (themeBtn) {
-    themeBtn.addEventListener('click', toggleTheme);
-  }
-
-  document.querySelectorAll('.range-pill').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      const key = btn.getAttribute('data-range');
-      setRangeState(key);
-    });
-  });
-});
+})();
