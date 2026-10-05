@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.core.network
+package com.example.opengluco.core.network
 
 import com.example.opengluco.core.model.LoginRequest
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
@@ -170,6 +170,36 @@ class OpenGlucoApiServiceContractTest {
     }
 
     @Test
+    fun testGetPatientLogbookContract_success() = runBlocking {
+        val jsonResponse = """
+            {
+                "status": 0,
+                "data": [
+                    {
+                        "ValueInMgPerDl": 115.0,
+                        "TrendArrow": 3,
+                        "Timestamp": "8/27/2026 8:00:00 AM"
+                    }
+                ]
+            }
+        """.trimIndent()
+
+        server.enqueue(MockResponse().setResponseCode(200).setBody(jsonResponse))
+
+        val response = apiService.getPatientLogbook("patient-abc")
+        assertTrue(response.isSuccessful)
+
+        val body = response.body()
+        assertNotNull(body)
+        assertEquals(1, body!!.data?.size)
+        assertEquals(115.0, body.data!![0].numericValue, 0.001)
+
+        val recorded = server.takeRequest()
+        assertEquals("/llu/connections/patient-abc/logbook", recorded.path)
+        assertEquals("GET", recorded.method)
+    }
+
+    @Test
     fun testTermsAcceptContract() = runBlocking {
         val jsonResponse = """
             {
@@ -190,3 +220,4 @@ class OpenGlucoApiServiceContractTest {
         assertEquals("POST", recorded.method)
     }
 }
+

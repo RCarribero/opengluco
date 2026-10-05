@@ -54,10 +54,13 @@ graph TB
 
 ### 1. App Movil (`app-mobile`)
 - **Dashboard Clinico:** Indicador de estado con esferas duales flotantes (`MobileDualFloatingOrbs`) con arco perimetral dinamico.
-- **Grafica de Curvas Bezier Interactiva:** Rango temporal seleccionable (24h, 12h, 6h, 2h, 1h), selector de scrubber tactil continuo con linea guia y tarjeta flotante con valor y hora exacta (`HH:mm`).
+- **Grafica de Curvas Bezier Interactiva:** Rango temporal seleccionable (24h, 12h, 6h, 2h, 1h), eje vertical con niveles de glucosa y unidad, selector de scrubber tactil continuo con linea guia y tarjeta flotante con valor y hora exacta (`HH:mm`).
+- **Calidad de Datos y Sincronizacion:** En Ajustes se muestran la antiguedad de la ultima lectura, la ultima sincronizacion correcta, cadencia observada, huecos y cobertura estimada del tramo con datos.
+- **Marcas Contextuales Locales:** Anotaciones de comida, actividad, malestar o cambio de sensor sobre la grafica, con notas opcionales cifradas localmente.
 - **Analisis Estadistico:** Metricas de Tiempo en Rango (TIR %), promedio, minimo y maximo calculadas sobre 1d, 7d, 30d y hasta 90 dias de datos reales.
 - **Configurador de Alarmas Clinicas:** Hasta 10 alarmas configurables (5 de hipoglucemia, 5 de hiperglucemia) con rangos horarios activos, periodos de enfriamiento (cooldown) y severidad (`URGENT`, `ALERT`, `INFORMATIVE`).
-- **Reportes Clinicos Avanzados:** Metricas estandarizadas ATTD 2019, calculo modal de AGP, eventos de hipoglucemia y estimacion de GMI (%) segun la formula de Bergenstal.
+- **Reportes Clinicos Avanzados:** Metricas estandarizadas ATTD 2019, calculo modal de AGP, eventos de hipoglucemia y estimacion de GMI (%) segun la formula de Bergenstal. El informe indica si la muestra cumple los criterios de calidad; el detalle de cobertura esta en Ajustes.
+- **Informe PDF Compartible:** Resumen local del periodo seleccionado con AGP, tiempo en rango, variabilidad, GMI y calidad de datos, compartido mediante la hoja del sistema.
 - **Emparejamiento QR con Camara:** Enlace instantaneo de relojes y pantallas de coche mediante CameraX y ZXing.
 - **Exportacion de Datos (RGPD Art. 20):** Generacion y comparticion de historial completo en formato CSV estructurado.
 

@@ -188,6 +188,42 @@ class OpenGlucoRepository(
         }
     }
 
+
+    suspend fun getPatientLogbook(patientId: String): Result<List<com.example.opengluco.core.model.GlucoseMeasurement>> = withContext(Dispatchers.IO) {
+        try {
+            val response = apiService.getPatientLogbook(patientId)
+            if (response.isSuccessful) {
+                val body = response.body()
+                val data = body?.data
+                if (body != null && body.status == 0 && data != null) {
+                    Result.success(data)
+                } else if (body?.status == 2) {
+                    Result.failure(AuthExpiredException())
+                } else {
+                    Result.failure(Exception(body?.error?.message ?: "Error al obtener historial de logbook"))
+                }
+            } else if (response.code() == 401) {
+                Result.failure(AuthExpiredException())
+            } else {
+                Result.failure(Exception("HTTP Error ${response.code()}"))
+            }
+        } catch (e: java.io.IOException) {
+            Result.failure(NetworkException("Sin conexión a Internet", e))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun backfillPatientHistoryIfNeeded(
+        patientId: String,
+        currentAvailableDays: Int
+    ): Result<List<com.example.opengluco.core.model.GlucoseMeasurement>> = withContext(Dispatchers.IO) {
+        if (currentAvailableDays < 14) {
+            getPatientLogbook(patientId)
+        } else {
+            Result.success(emptyList())
+        }
+
     private fun getMockConnections(): List<ConnectionItem> {
         val now = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.US).format(java.util.Date())
         val mockMeasurement = GlucoseMeasurement(
@@ -278,8 +314,10 @@ class OpenGlucoRepository(
             connection = conn,
             graphData = points
         )
+
     }
 
     fun getSessionToken(): String? = sessionToken
     fun getUserId(): String? = userId
 }
+

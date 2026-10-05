@@ -84,6 +84,9 @@ fun WearSparklineChart(
             else -> com.example.opengluco.wear.ui.theme.ClinicalMint
         }
 
+        val segmentFill = Path()
+        val segmentStroke = Path()
+
         // Sombreado de area bajo la curva con cortes fijos (sin fusion de color)
         for (i in 0 until points.size - 1) {
             val p0 = points[i]
@@ -94,14 +97,13 @@ fun WearSparklineChart(
             val midVal = (v0 + v1) / 2.0
             val segmentColor = getLevelColor(midVal)
 
-            val segmentFill = Path().apply {
-                moveTo(p0.x, height)
-                lineTo(p0.x, p0.y)
-                val controlPointX = (p0.x + p1.x) / 2f
-                cubicTo(controlPointX, p0.y, controlPointX, p1.y, p1.x, p1.y)
-                lineTo(p1.x, height)
-                close()
-            }
+            segmentFill.reset()
+            segmentFill.moveTo(p0.x, height)
+            segmentFill.lineTo(p0.x, p0.y)
+            val controlPointX = (p0.x + p1.x) / 2f
+            segmentFill.cubicTo(controlPointX, p0.y, controlPointX, p1.y, p1.x, p1.y)
+            segmentFill.lineTo(p1.x, height)
+            segmentFill.close()
 
             val fillBrush = Brush.verticalGradient(
                 colors = listOf(segmentColor.copy(alpha = 0.28f), Color.Transparent),
@@ -125,11 +127,10 @@ fun WearSparklineChart(
             val midVal = (v0 + v1) / 2.0
             val segmentColor = getLevelColor(midVal)
 
-            val segmentStroke = Path().apply {
-                moveTo(p0.x, p0.y)
-                val controlPointX = (p0.x + p1.x) / 2f
-                cubicTo(controlPointX, p0.y, controlPointX, p1.y, p1.x, p1.y)
-            }
+            segmentStroke.reset()
+            segmentStroke.moveTo(p0.x, p0.y)
+            val controlPointX = (p0.x + p1.x) / 2f
+            segmentStroke.cubicTo(controlPointX, p0.y, controlPointX, p1.y, p1.x, p1.y)
 
             drawPath(
                 path = segmentStroke,

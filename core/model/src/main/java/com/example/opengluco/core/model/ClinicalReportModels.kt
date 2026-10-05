@@ -76,6 +76,22 @@ enum class ReportTimeBlock(val label: String, val startHour: Int, val endHour: I
     AFTERNOON("Tarde (12:00 - 18:00)", 12, 17),
     EVENING("Noche (18:00 - 24:00)", 18, 23);
 
+    val displayName: String
+        get() = when (this) {
+            NIGHT -> "Madrugada"
+            MORNING -> "Manana"
+            AFTERNOON -> "Tarde"
+            EVENING -> "Noche"
+        }
+
+    val hourRange: String
+        get() = when (this) {
+            NIGHT -> "00:00 - 06:00"
+            MORNING -> "06:00 - 12:00"
+            AFTERNOON -> "12:00 - 18:00"
+            EVENING -> "18:00 - 24:00"
+        }
+
     companion object {
         fun fromHour(hour: Int): ReportTimeBlock {
             return when (hour) {
@@ -147,5 +163,68 @@ data class SensorUsageReport(
     val sensorModelName: String,
     val sensorSerialNumber: String,
     val daysRemaining: Int,
-    val isActive: Boolean
+    val isActive: Boolean,
+    val daysWithReadings: Int = 0,
+    val samplingIntervalMinutes: Int? = null,
+    val gapCount: Int = 0,
+    val longestGapMinutes: Int = 0
+)
+
+data class DataQualityReport(
+    val periodDays: Int,
+    val totalReadings: Int,
+    val daysWithReadings: Int,
+    val coveragePercentage: Double?,
+    val expectedReadingsInObservedSpan: Int?,
+    val samplingIntervalMinutes: Int?,
+    val gapCount: Int,
+    val longestGapMinutes: Int,
+    val latestReadingEpochMs: Long?,
+    val latestReadingAgeMinutes: Long?,
+    val isSufficientForStandardSummary: Boolean
+)
+
+enum class GlucoseEventType(val label: String) {
+    MEAL("Comida"),
+    ACTIVITY("Actividad"),
+    ILLNESS("Malestar"),
+    SENSOR_CHANGE("Cambio de sensor")
+}
+
+data class GlucoseEventMarker(
+    val id: String,
+    val patientId: String,
+    val timestampMs: Long,
+    val type: GlucoseEventType,
+    val note: String? = null
+)
+
+data class PeriodSummary(
+    val periodDays: Int = 1,
+    val totalCount: Int = 0,
+    val mean: Double = 0.0,
+    val min: Double = 0.0,
+    val max: Double = 0.0,
+    val veryLowCount: Int = 0,
+    val lowCount: Int = 0,
+    val inRangeCount: Int = 0,
+    val highCount: Int = 0,
+    val veryHighCount: Int = 0,
+    val tightRangeCount: Int = 0,
+    val inRangePercent: Double = 0.0,
+    val belowRangePercent: Double = 0.0,
+    val aboveRangePercent: Double = 0.0,
+    val tightRangePercent: Double = 0.0,
+    val veryLowPercent: Double = 0.0,
+    val lowPercent: Double = 0.0,
+    val highPercent: Double = 0.0,
+    val veryHighPercent: Double = 0.0,
+    val gri: Double = 0.0,
+    val griCategory: String = "Zona A (Muy Bajo Riesgo)"
+)
+
+data class BlockMetric(
+    val block: ReportTimeBlock,
+    val averageGlucose: Double = 0.0,
+    val lowEventsCount: Int = 0
 )

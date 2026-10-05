@@ -313,13 +313,20 @@ data class GlucoseMeasurement(
             "MM/dd/yyyy hh:mm:ss a",
             "M/d/yyyy H:mm:ss",
             "M/d/yyyy HH:mm:ss",
+            "M/d/yyyy h:mm a",
             "d/M/yyyy h:mm:ss a",
             "d/M/yyyy HH:mm:ss",
             "dd/MM/yyyy HH:mm:ss",
+            "dd/MM/yyyy HH:mm",
+            "dd-MM-yyyy HH:mm:ss",
+            "dd-MM-yyyy HH:mm",
             "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
             "yyyy-MM-dd'T'HH:mm:ss'Z'",
             "yyyy-MM-dd'T'HH:mm:ss",
-            "yyyy-MM-dd HH:mm:ss"
+            "yyyy-MM-dd HH:mm:ss",
+            "yyyy-MM-dd HH:mm",
+            "yyyy/MM/dd HH:mm:ss",
+            "yyyy/MM/dd HH:mm"
         )
         for (pat in patterns) {
             try {

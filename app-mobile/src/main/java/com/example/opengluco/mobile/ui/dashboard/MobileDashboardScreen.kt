@@ -16,10 +16,12 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -78,6 +80,7 @@ import com.example.opengluco.mobile.ui.dashboard.components.TargetRangeDialog
 import com.example.opengluco.mobile.ui.dashboard.components.SensorDurationDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -87,6 +90,8 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
@@ -116,6 +121,8 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -137,19 +144,26 @@ import com.example.opengluco.core.model.AlarmType
 import com.example.opengluco.core.model.ConnectionItem
 import com.example.opengluco.core.model.GlucoseAlarm
 import com.example.opengluco.core.model.GlucoseMeasurement
+import com.example.opengluco.core.model.GlucoseEventMarker
+import com.example.opengluco.core.model.GlucoseEventType
 import com.example.opengluco.mobile.ui.dashboard.components.DetailModalType
 import com.example.opengluco.mobile.ui.dashboard.components.LegalNoticeDialog
 import com.example.opengluco.mobile.ui.dashboard.components.LegalNoticeType
 import com.example.opengluco.mobile.ui.dashboard.components.MobileDualFloatingOrbs
 import com.example.opengluco.mobile.ui.dashboard.components.MobileStatDetailModal
+import com.example.opengluco.mobile.ui.dashboard.components.DataQualityStatusCard
+import com.example.opengluco.mobile.ui.dashboard.components.GlucoseEventEditorDialog
+import com.example.opengluco.mobile.ui.dashboard.components.GlucoseEventListDialog
+import com.example.opengluco.mobile.ui.dashboard.components.GlucoseEventNotesMenuButton
 import com.example.opengluco.mobile.ui.dashboard.components.PatientHeaderChip
 import com.example.opengluco.mobile.ui.dashboard.components.PatientSelectorModal
 import com.example.opengluco.mobile.ui.reports.ReportsHubScreen
 import com.example.opengluco.mobile.ui.theme.ClinicalTheme
 import com.example.opengluco.mobile.ui.theme.getClinicalStatusColor
-import androidx.compose.material.icons.filled.Assessment
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.flowOf
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 import kotlin.math.roundToInt
@@ -205,6 +219,13 @@ fun MobileDashboardScreen(
     var showDiagnosticsDialog by remember { mutableStateOf(false) }
     val settings by preferencesRepository.userSettingsFlow.collectAsState(initial = null)
     val periodReadings by preferencesRepository.getHistoricalReadings(90).collectAsState(initial = emptyList())
+    val syncPatientId = selectedPatient?.patientId ?: settings?.selectedPatientId.orEmpty()
+    val lastSuccessfulSyncMs by remember(syncPatientId) {
+        if (syncPatientId.isBlank()) flowOf(0L) else preferencesRepository.lastSuccessfulSyncFlow(syncPatientId)
+    }.collectAsState(initial = 0L)
+    val eventMarkers by remember(syncPatientId) {
+        preferencesRepository.getGlucoseEventMarkers(syncPatientId)
+    }.collectAsState(initial = emptyList())
     val alarmRepo = remember { AlarmRepository(context) }
     val configuredAlarms by alarmRepo.alarmsFlow.collectAsState(initial = emptyList())
     val scope = rememberCoroutineScope()
@@ -376,8 +397,22 @@ fun MobileDashboardScreen(
                             allToSave.add(em)
                         }
                     }
+
+                    // Rutina de backfill: si la base de datos local tiene pocos días acumulados (< 14),
+                    // consultar /logbook además de /graph para precargar hasta 30 días de eventos/scans
+                    val currentDays = preferencesRepository.getAvailableDays(patient.patientId)
+                    try {
+                        val logbookRes = repository.backfillPatientHistoryIfNeeded(patient.patientId, currentDays)
+                        val logbookReadings = logbookRes.getOrNull().orEmpty()
+                        if (logbookReadings.isNotEmpty()) {
+                            allToSave.addAll(logbookReadings)
+                        }
+                    } catch (_: Exception) {}
+
                     preferencesRepository.saveHistoricalReadings(allToSave, patient.patientId)
+                    preferencesRepository.recordSuccessfulSync(patient.patientId)
                     val isSensorActive = sensorState is SensorLifecycleState.Active
+
                     com.example.opengluco.mobile.widget.GlucoseWidgetUpdater.updateAllWidgets(
                         context = context,
                         latestMeasurement = patient.effectiveMeasurement,
@@ -453,8 +488,16 @@ fun MobileDashboardScreen(
         }
 
         loadData(silent = false)
+
+        // Escucha reactiva de actualizaciones en la base de datos local
+        launch {
+            preferencesRepository.localDatabase.dbUpdateEvents.collect {
+                evaluateAndNotify(selectedPatient)
+            }
+        }
+
         while (true) {
-            kotlinx.coroutines.delay(60_000)
+            kotlinx.coroutines.delay(120_000)
             loadData(silent = true)
             evaluateAndNotify(selectedPatient)
         }
@@ -505,30 +548,41 @@ fun MobileDashboardScreen(
     val availableDataDays = remember(combinedHistory) {
         ClinicalReportsCalculator.calculateAvailableDays(combinedHistory)
     }
-    val hasSufficientDataForPeriod = availableDataDays >= selectedPeriod.days
     val periodFilteredReadings = remember(combinedHistory, selectedPeriod) {
         ClinicalReportsCalculator.filterReadingsByPeriod(combinedHistory, selectedPeriod.days)
     }
     val validHistory = periodFilteredReadings.map { it.numericValue }.filter { it > 0 }
 
-    val periodLabel = when (selectedPeriod) {
-        MetricPeriod.DAY -> "un día"
-        MetricPeriod.WEEK -> "una semana"
-        MetricPeriod.MONTH -> "un mes"
-        MetricPeriod.THREE_MONTHS -> "tres meses"
+    val calculatedNotice: String? = null
+
+    val periodSummary = remember(combinedHistory, selectedPeriod, selectedPatient?.patientId) {
+        val summary = preferencesRepository.getPeriodSummary(selectedPeriod.days, selectedPatient?.patientId)
+        if (summary.totalCount > 0) summary else null
     }
-    val daysPlural = if (availableDataDays == 1) "1 día" else "$availableDataDays días"
-    val requiredDaysStr = if (selectedPeriod.days == 1) "1 día" else "${selectedPeriod.days} días"
 
-    val calculatedNotice = if (!hasSufficientDataForPeriod) {
-        "No tienes todavía datos suficientes para leer las métricas de $periodLabel. Se requieren al menos $requiredDaysStr de lecturas acumuladas (disponibles actualmente: $daysPlural)."
-    } else null
-
-    val avgVal = if (hasSufficientDataForPeriod && validHistory.isNotEmpty()) validHistory.average() else (currentMeasurement?.numericValue ?: 110.0)
-    val minVal = if (hasSufficientDataForPeriod && validHistory.isNotEmpty()) validHistory.minOrNull() ?: 70.0 else (currentMeasurement?.numericValue ?: 70.0)
-    val maxVal = if (hasSufficientDataForPeriod && validHistory.isNotEmpty()) validHistory.maxOrNull() ?: 180.0 else (currentMeasurement?.numericValue ?: 180.0)
-    val inRangeCount = if (hasSufficientDataForPeriod) validHistory.count { it in targetLow.toDouble()..targetHigh.toDouble() } else 0
-    val tirPercent = if (hasSufficientDataForPeriod && validHistory.isNotEmpty()) ((inRangeCount.toDouble() / validHistory.size) * 100).toInt() else 100
+    val avgVal = periodSummary?.mean ?: if (validHistory.isNotEmpty()) {
+        validHistory.average()
+    } else {
+        currentMeasurement?.numericValue ?: 0.0
+    }
+    val minVal = periodSummary?.min ?: if (validHistory.isNotEmpty()) {
+        validHistory.minOrNull() ?: (currentMeasurement?.numericValue ?: 0.0)
+    } else {
+        currentMeasurement?.numericValue ?: 0.0
+    }
+    val maxVal = periodSummary?.max ?: if (validHistory.isNotEmpty()) {
+        validHistory.maxOrNull() ?: (currentMeasurement?.numericValue ?: 0.0)
+    } else {
+        currentMeasurement?.numericValue ?: 0.0
+    }
+    val inRangeCount = if (validHistory.isNotEmpty()) {
+        validHistory.count { it in targetLow.toDouble()..targetHigh.toDouble() }
+    } else 0
+    val tirPercent = periodSummary?.inRangePercent?.toInt() ?: if (validHistory.isNotEmpty()) {
+        ((inRangeCount.toDouble() / validHistory.size) * 100).toInt()
+    } else {
+        if (currentMeasurement != null && currentMeasurement.numericValue in targetLow.toDouble()..targetHigh.toDouble()) 100 else 0
+    }
 
     val rawSensor = currentSensor ?: selectedPatient?.sensor?.takeIf { it.isValid }
     val customDuration = settings?.sensorDurationDays?.takeIf { it > 0 }
@@ -546,12 +600,16 @@ fun MobileDashboardScreen(
                 patient = selectedPatient,
                 historicalReadings = combinedHistory,
                 unit = settings?.unit ?: GlucoseUnit.MGDL,
+                preferencesRepository = preferencesRepository,
                 onBack = { showReportsScreen = false }
             )
         } else if (showSettingsScreen) {
         MobileSettingsScreen(
             selectedPatient = selectedPatient,
             sensor = sensor,
+            readings = combinedHistory,
+            isDataStale = isStale,
+            lastSuccessfulSyncMs = lastSuccessfulSyncMs,
             isDarkMode = settings?.isDarkMode ?: false,
             onToggleDarkMode = { isDark ->
                 scope.launch {
@@ -732,6 +790,7 @@ fun MobileDashboardScreen(
 
                         DashboardChartCard(
                             chartHistory = chartHistory,
+                            eventMarkers = eventMarkers,
                             selectedChartTimeframe = selectedChartTimeframe,
                             sensorDays = sensorDays,
                             targetLow = targetLow,
@@ -745,6 +804,14 @@ fun MobileDashboardScreen(
                             onSensorClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 activeModal = DetailModalType.SENSOR_INFO
+                            },
+                            onAddEvent = { timestampMs, type, note ->
+                                selectedPatient?.patientId?.let { patientId ->
+                                    scope.launch { preferencesRepository.addGlucoseEventMarker(patientId, timestampMs, type, note) }
+                                }
+                            },
+                            onDeleteEvent = { marker ->
+                                scope.launch { preferencesRepository.removeGlucoseEventMarker(marker.patientId, marker.id) }
                             }
                         )
 
@@ -774,12 +841,12 @@ fun MobileDashboardScreen(
                         .padding(horizontal = responsive.horizontalPadding),
                     verticalArrangement = Arrangement.spacedBy(responsive.cardSpacing)
                 ) {
-                    item {
+                    item(key = "top_spacer") {
                         Spacer(modifier = Modifier.height(4.dp))
                     }
 
                     if (clinicalError !is ClinicalErrorType.None) {
-                        item {
+                        item(key = "clinical_error_banner") {
                             DashboardClinicalErrorBanner(
                                 clinicalError = clinicalError,
                                 onReconnect = {
@@ -794,7 +861,7 @@ fun MobileDashboardScreen(
                     }
 
                     // 1. HERO SECTION: DUAL FLOATING ORBS (GLUCOSA & TENDENCIA)
-                    item {
+                    item(key = "hero_dual_orbs") {
                         DashboardHeroSection(
                             currentMeasurement = currentMeasurement,
                             unit = settings?.unit ?: GlucoseUnit.MGDL,
@@ -807,9 +874,10 @@ fun MobileDashboardScreen(
                     }
 
                     // 2. GRÁFICA CONTINUA DE BÉZIER CON SENSOR COMPACTO Y SCRUBBING TÁCTIL
-                    item {
+                    item(key = "chart_card") {
                         DashboardChartCard(
                             chartHistory = chartHistory,
+                            eventMarkers = eventMarkers,
                             selectedChartTimeframe = selectedChartTimeframe,
                             sensorDays = sensorDays,
                             targetLow = targetLow,
@@ -823,12 +891,20 @@ fun MobileDashboardScreen(
                             onSensorClick = {
                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 activeModal = DetailModalType.SENSOR_INFO
+                            },
+                            onAddEvent = { timestampMs, type, note ->
+                                selectedPatient?.patientId?.let { patientId ->
+                                    scope.launch { preferencesRepository.addGlucoseEventMarker(patientId, timestampMs, type, note) }
+                                }
+                            },
+                            onDeleteEvent = { marker ->
+                                scope.launch { preferencesRepository.removeGlucoseEventMarker(marker.patientId, marker.id) }
                             }
                         )
                     }
 
                     // 3. SECCIÓN DE ESTADÍSTICAS
-                    item {
+                    item(key = "stats_card") {
                         DashboardStatsCard(
                             selectedPeriod = selectedPeriod,
                             availableDataDays = availableDataDays,
@@ -845,7 +921,7 @@ fun MobileDashboardScreen(
                     }
 
                     // 4. TARJETA DEDICADA DE INFORMACIÓN DEL SENSOR
-                    item {
+                    item(key = "sensor_card") {
                         DashboardSensorCard(
                             sensorModel = sensorModel,
                             sensorDays = sensorDays,
@@ -859,7 +935,7 @@ fun MobileDashboardScreen(
                         )
                     }
 
-                    item {
+                    item(key = "bottom_spacer") {
                         Spacer(modifier = Modifier.height(32.dp))
                     }
                 }
@@ -1205,6 +1281,9 @@ fun MobileDashboardScreen(
 private fun MobileSettingsScreen(
     selectedPatient: ConnectionItem?,
     sensor: com.example.opengluco.core.model.SensorInfo?,
+    readings: List<GlucoseMeasurement>,
+    isDataStale: Boolean,
+    lastSuccessfulSyncMs: Long,
     isDarkMode: Boolean,
     onToggleDarkMode: (Boolean) -> Unit,
     currentUnit: GlucoseUnit,
@@ -1335,6 +1414,12 @@ private fun MobileSettingsScreen(
                     }
                 }
             }
+
+            DataQualityStatusCard(
+                readings = readings,
+                isDataStale = isDataStale,
+                lastSuccessfulSyncMs = lastSuccessfulSyncMs
+            )
 
             // 1. PREFERENCIAS CLÍNICAS
             SettingsGroupCard(title = "Preferencias Clínicas") {
@@ -1915,6 +2000,11 @@ fun MobileGlucoseChart(
     targetHigh: Int = 180,
     alarms: List<GlucoseAlarm> = emptyList(),
     unit: GlucoseUnit = GlucoseUnit.MGDL,
+    eventMarkers: List<GlucoseEventMarker> = emptyList(),
+    onAddEvent: (Long, GlucoseEventType, String?) -> Unit = { _, _, _ -> },
+    onDeleteEvent: (GlucoseEventMarker) -> Unit = {},
+    addNoteRequest: Int = 0,
+    viewNotesRequest: Int = 0,
     modifier: Modifier = Modifier
 ) {
     val colors = ClinicalTheme.colors
@@ -1950,11 +2040,57 @@ fun MobileGlucoseChart(
 
     var isInteracting by remember { mutableStateOf(false) }
     var selectedIndex by remember { mutableStateOf<Int?>(null) }
+    var showAddEventDialog by remember { mutableStateOf(false) }
+    var showEventListDialog by remember { mutableStateOf(false) }
+    var pendingDeleteEvent by remember { mutableStateOf<GlucoseEventMarker?>(null) }
+    var selectedEventType by remember { mutableStateOf(GlucoseEventType.MEAL) }
+    var eventNote by remember { mutableStateOf("") }
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val plotLeftPx = with(density) { 42.dp.toPx() }
 
-    val activeIndex = if (isInteracting && selectedIndex != null) {
-        selectedIndex!!.coerceIn(0, validMeasurements.size - 1)
-    } else {
-        validMeasurements.size - 1
+    val reusableSegmentFill = remember { Path() }
+    val reusableSegmentStroke = remember { Path() }
+
+    val axisTextPaint = remember(colors.textMuted, density) {
+        android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            color = colors.textMuted.toArgb()
+            textSize = with(density) { 10.sp.toPx() }
+            textAlign = android.graphics.Paint.Align.LEFT
+        }
+    }
+    val targetLevelPaint = remember(colors.mint, density) {
+        android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            color = colors.mint.toArgb()
+            textSize = with(density) { 10.sp.toPx() }
+            typeface = android.graphics.Typeface.DEFAULT_BOLD
+            textAlign = android.graphics.Paint.Align.LEFT
+        }
+    }
+
+    val splineCache = remember {
+        object {
+            var lastWidth = 0f
+            var lastHeight = 0f
+            var lastMeasurements: List<GlucoseMeasurement>? = null
+            var points: List<Offset> = emptyList()
+            var splineSegments: List<com.example.opengluco.core.model.CgmCurveSmoother.CubicBezierSegment> = emptyList()
+        }
+    }
+
+    LaunchedEffect(addNoteRequest) {
+        if (addNoteRequest > 0) {
+            eventNote = ""
+            showAddEventDialog = true
+        }
+    }
+    LaunchedEffect(viewNotesRequest) {
+        if (viewNotesRequest > 0) showEventListDialog = true
+    }
+
+    val activeIndex = selectedIndex?.coerceIn(0, validMeasurements.size - 1) ?: (validMeasurements.size - 1)
+
+    LaunchedEffect(timeframe, validMeasurements.lastOrNull()?.getEpochMillis()) {
+        selectedIndex = null
     }
 
     val activeMeasurement = validMeasurements[activeIndex]
@@ -1984,6 +2120,9 @@ fun MobileGlucoseChart(
     }
     val timeSpan = remember(maxTime, minTime) {
         (maxTime - minTime).coerceAtLeast(60_000L)
+    }
+    val visibleEventMarkers = remember(eventMarkers, minTime, maxTime) {
+        eventMarkers.filter { it.timestampMs in minTime..maxTime }.sortedBy { it.timestampMs }
     }
 
     val formattedTime = remember(activeMeasurement.timestamp, activeMeasurement.factoryTimestamp) {
@@ -2138,6 +2277,13 @@ fun MobileGlucoseChart(
 
             val canvasHeight = if (responsive.heightClass == com.example.opengluco.mobile.ui.theme.WindowHeightClass.COMPACT) 120.dp else if (responsive.widthClass != com.example.opengluco.mobile.ui.theme.WindowWidthClass.COMPACT) 165.dp else 150.dp
 
+            Text(
+                text = "Glucosa (${unit.label})",
+                fontSize = 10.sp,
+                color = colors.textMuted,
+                modifier = Modifier.padding(start = 42.dp, bottom = 2.dp)
+            )
+
             // Lienzo grafico continuo con interaccion tactil (scrubbing y arrastre)
             Canvas(
                 modifier = Modifier
@@ -2151,10 +2297,11 @@ fun MobileGlucoseChart(
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             val calcIndex = { xPos: Float ->
                                 if (validMeasurements.isNotEmpty()) {
-                                    val targetEpoch = minTime + ((xPos / size.width.toFloat()).coerceIn(0f, 1f) * timeSpan).toLong()
+                                    val plotWidth = (size.width.toFloat() - plotLeftPx).coerceAtLeast(1f)
+                                    val targetEpoch = minTime + (((xPos - plotLeftPx) / plotWidth).coerceIn(0f, 1f) * timeSpan).toLong()
                                     validMeasurements.indices.minByOrNull { i ->
                                         val epoch = validMeasurements[i].getEpochMillis()
-                                        if (epoch > 0) kotlin.math.abs(epoch - targetEpoch) else kotlin.math.abs((i * (size.width.toFloat() / maxOf(1, validMeasurements.size - 1))) - xPos).toLong()
+                                        if (epoch > 0) kotlin.math.abs(epoch - targetEpoch) else kotlin.math.abs((plotLeftPx + (i * (plotWidth / maxOf(1, validMeasurements.size - 1)))) - xPos).toLong()
                                     } ?: (validMeasurements.size - 1)
                                 } else 0
                             }
@@ -2181,24 +2328,52 @@ fun MobileGlucoseChart(
             ) {
                 val width = size.width
                 val height = size.height
+                val plotLeft = plotLeftPx.coerceIn(0f, width * 0.3f)
+                val plotWidth = (width - plotLeft).coerceAtLeast(1f)
                 val totalPoints = validMeasurements.size
-                val stepX = if (totalPoints > 1) width / (totalPoints - 1).toFloat() else 1f
+                val stepX = if (totalPoints > 1) plotWidth / (totalPoints - 1).toFloat() else 1f
 
-                // 1. Linea objetivo superior (targetHigh, ej: 180 mg/dL)
+                val axisStep = if (valRange > 350f) 100f else 50f
+                val axisLevels = mutableListOf<Float>()
+                var axisValue = kotlin.math.ceil(minVal / axisStep) * axisStep
+                while (axisValue <= maxVal && axisLevels.size < 20) {
+                    axisLevels += axisValue
+                    axisValue += axisStep
+                }
+                if (targetLow.toFloat() in minVal..maxVal) axisLevels += targetLow.toFloat()
+                if (targetHigh.toFloat() in minVal..maxVal) axisLevels += targetHigh.toFloat()
+                val uniqueAxisLevels = axisLevels.distinct().sorted()
                 val yTargetHigh = height - ((targetHigh - minVal) / valRange * height).coerceIn(0f, height)
+                val yTargetLow = height - ((targetLow - minVal) / valRange * height).coerceIn(0f, height)
+
+                uniqueAxisLevels.forEach { level ->
+                    val y = height - ((level - minVal) / valRange * height).coerceIn(0f, height)
+                    drawLine(
+                        color = colors.surfaceBorder.copy(alpha = 0.45f),
+                        start = Offset(plotLeft, y),
+                        end = Offset(width, y),
+                        strokeWidth = 0.7.dp.toPx()
+                    )
+                    val isTarget = level == targetLow.toFloat() || level == targetHigh.toFloat()
+                    val levelPaint = if (isTarget) targetLevelPaint else axisTextPaint
+                    val label = if (unit == GlucoseUnit.MMOL) {
+                        String.format(Locale.US, "%.1f", level / 18.0182)
+                    } else {
+                        level.toInt().toString()
+                    }
+                    drawContext.canvas.nativeCanvas.drawText(label, 1.dp.toPx(), y + levelPaint.textSize / 3f, levelPaint)
+                }
+
                 drawLine(
-                    color = colors.mint.copy(alpha = 0.25f),
-                    start = Offset(0f, yTargetHigh),
+                    color = colors.mint.copy(alpha = 0.45f),
+                    start = Offset(plotLeft, yTargetHigh),
                     end = Offset(width, yTargetHigh),
                     strokeWidth = 1.dp.toPx(),
                     pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f), 0f)
                 )
-
-                // 2. Linea objetivo inferior (targetLow, ej: 70 mg/dL)
-                val yTargetLow = height - ((targetLow - minVal) / valRange * height).coerceIn(0f, height)
                 drawLine(
-                    color = colors.mint.copy(alpha = 0.25f),
-                    start = Offset(0f, yTargetLow),
+                    color = colors.mint.copy(alpha = 0.45f),
+                    start = Offset(plotLeft, yTargetLow),
                     end = Offset(width, yTargetLow),
                     strokeWidth = 1.dp.toPx(),
                     pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f), 0f)
@@ -2217,32 +2392,56 @@ fun MobileGlucoseChart(
 
                     drawLine(
                         color = alarmColor.copy(alpha = 0.85f),
-                        start = Offset(0f, yAlarm),
+                        start = Offset(plotLeft, yAlarm),
                         end = Offset(width, yAlarm),
                         strokeWidth = 1.5.dp.toPx(),
                         pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 6f), 0f)
                     )
                 }
 
-                // Calcular posiciones de todos los puntos de medicion usando coordenadas proporcionales de tiempo
-                val points = validMeasurements.mapIndexed { index, measurement ->
-                    val mEpoch = measurement.getEpochMillis()
-                    val x = if (mEpoch > 0) {
-                        val frac = ((mEpoch - minTime).toFloat() / timeSpan.toFloat()).coerceIn(0f, 1f)
-                        frac * width
-                    } else {
-                        if (totalPoints > 1) (index * stepX) else width / 2f
+                // Calcular posiciones de todos los puntos de medicion usando coordenadas proporcionales de tiempo con cache
+                if (splineCache.lastWidth != width || splineCache.lastHeight != height || splineCache.lastMeasurements !== validMeasurements) {
+                    splineCache.lastWidth = width
+                    splineCache.lastHeight = height
+                    splineCache.lastMeasurements = validMeasurements
+                    splineCache.points = validMeasurements.mapIndexed { index, measurement ->
+                        val mEpoch = measurement.getEpochMillis()
+                        val x = if (mEpoch > 0) {
+                            val frac = ((mEpoch - minTime).toFloat() / timeSpan.toFloat()).coerceIn(0f, 1f)
+                            plotLeft + frac * plotWidth
+                        } else {
+                            if (totalPoints > 1) (plotLeft + index * stepX) else plotLeft + plotWidth / 2f
+                        }
+                        val y = height - ((measurement.numericValue.toFloat() - minVal) / valRange * height).coerceIn(0f, height)
+                        Offset(x, y)
                     }
-                    val y = height - ((measurement.numericValue.toFloat() - minVal) / valRange * height).coerceIn(0f, height)
-                    Offset(x, y)
+                    val pointPairs = splineCache.points.map { Pair(it.x, it.y) }
+                    splineCache.splineSegments = com.example.opengluco.core.model.CgmCurveSmoother.computeCatmullRomSpline(pointPairs)
                 }
+                val points = splineCache.points
+                val splineSegments = splineCache.splineSegments
 
                 fun getLevelColor(valMg: Double): Color = com.example.opengluco.mobile.ui.theme.getGlucoseValueColor(valMg, targetLow, targetHigh, alarms, colors)
 
-                val pointPairs = points.map { Pair(it.x, it.y) }
-                val splineSegments = com.example.opengluco.core.model.CgmCurveSmoother.computeCatmullRomSpline(pointPairs)
+                visibleEventMarkers.forEach { marker ->
+                    val x = plotLeft + (((marker.timestampMs - minTime).toFloat() / timeSpan.toFloat()).coerceIn(0f, 1f) * plotWidth)
+                    val markerColor = when (marker.type) {
+                        GlucoseEventType.MEAL -> colors.arcticCyan
+                        GlucoseEventType.ACTIVITY -> colors.mint
+                        GlucoseEventType.ILLNESS -> colors.highAmber
+                        GlucoseEventType.SENSOR_CHANGE -> colors.textSecondary
+                    }
+                    drawLine(
+                        color = markerColor.copy(alpha = 0.75f),
+                        start = Offset(x, 0f),
+                        end = Offset(x, height),
+                        strokeWidth = 1.dp.toPx(),
+                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(3f, 4f), 0f)
+                    )
+                    drawCircle(color = markerColor, radius = 3.dp.toPx(), center = Offset(x, 5.dp.toPx()))
+                }
 
-                // 4. Sombreado de área bajo la curva con segmentos suaves Catmull-Rom
+                // 4. Sombreado de área bajo la curva con segmentos suaves Catmull-Rom reutilizando Path
                 val fillAlpha = if (colors.isDark) 0.30f else 0.20f
                 for (i in splineSegments.indices) {
                     val seg = splineSegments[i]
@@ -2251,13 +2450,12 @@ fun MobileGlucoseChart(
                     val midVal = (v0 + v1) / 2.0
                     val segmentColor = getLevelColor(midVal)
 
-                    val segmentFill = Path().apply {
-                        moveTo(seg.startX, height)
-                        lineTo(seg.startX, seg.startY)
-                        cubicTo(seg.cp1X, seg.cp1Y, seg.cp2X, seg.cp2Y, seg.endX, seg.endY)
-                        lineTo(seg.endX, height)
-                        close()
-                    }
+                    reusableSegmentFill.reset()
+                    reusableSegmentFill.moveTo(seg.startX, height)
+                    reusableSegmentFill.lineTo(seg.startX, seg.startY)
+                    reusableSegmentFill.cubicTo(seg.cp1X, seg.cp1Y, seg.cp2X, seg.cp2Y, seg.endX, seg.endY)
+                    reusableSegmentFill.lineTo(seg.endX, height)
+                    reusableSegmentFill.close()
 
                     val fillBrush = Brush.verticalGradient(
                         colors = listOf(segmentColor.copy(alpha = fillAlpha), Color.Transparent),
@@ -2266,12 +2464,12 @@ fun MobileGlucoseChart(
                     )
 
                     drawPath(
-                        path = segmentFill,
+                        path = reusableSegmentFill,
                         brush = fillBrush
                     )
                 }
 
-                // 5. Trazo de curva Catmull-Rom continua y suave (libre de dientes de sierra)
+                // 5. Trazo de curva Catmull-Rom continua y suave reutilizando Path
                 for (i in splineSegments.indices) {
                     val seg = splineSegments[i]
                     val v0 = validMeasurements[i].numericValue
@@ -2279,13 +2477,12 @@ fun MobileGlucoseChart(
                     val midVal = (v0 + v1) / 2.0
                     val segmentColor = getLevelColor(midVal)
 
-                    val segmentStroke = Path().apply {
-                        moveTo(seg.startX, seg.startY)
-                        cubicTo(seg.cp1X, seg.cp1Y, seg.cp2X, seg.cp2Y, seg.endX, seg.endY)
-                    }
+                    reusableSegmentStroke.reset()
+                    reusableSegmentStroke.moveTo(seg.startX, seg.startY)
+                    reusableSegmentStroke.cubicTo(seg.cp1X, seg.cp1Y, seg.cp2X, seg.cp2Y, seg.endX, seg.endY)
 
                     drawPath(
-                        path = segmentStroke,
+                        path = reusableSegmentStroke,
                         brush = SolidColor(segmentColor),
                         style = Stroke(width = 2.8.dp.toPx(), cap = StrokeCap.Round)
                     )
@@ -2332,7 +2529,7 @@ fun MobileGlucoseChart(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 4.dp),
+                    .padding(start = 46.dp, end = 4.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 val startLabel = when (timeframe) {
@@ -2366,6 +2563,59 @@ fun MobileGlucoseChart(
                     color = colors.mint
                 )
             }
+
+        }
+
+        if (showAddEventDialog) {
+            GlucoseEventEditorDialog(
+                measurementTime = formattedTime,
+                glucoseValue = formattedValue,
+                canSave = activeMeasurement.getEpochMillis() > 0L,
+                selectedType = selectedEventType,
+                note = eventNote,
+                onTypeSelected = { selectedEventType = it },
+                onNoteChanged = { eventNote = it },
+                onSave = {
+                    val epoch = activeMeasurement.getEpochMillis()
+                    if (epoch > 0L) onAddEvent(epoch, selectedEventType, eventNote.trim().takeIf { it.isNotBlank() })
+                    showAddEventDialog = false
+                },
+                onDismiss = { showAddEventDialog = false }
+            )
+        }
+
+        if (showEventListDialog) {
+            GlucoseEventListDialog(
+                markers = eventMarkers,
+                onAddNote = {
+                    showEventListDialog = false
+                    eventNote = ""
+                    showAddEventDialog = true
+                },
+                onDelete = { pendingDeleteEvent = it },
+                onDismiss = { showEventListDialog = false }
+            )
+        }
+
+        pendingDeleteEvent?.let { marker ->
+            val markerTime = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date(marker.timestampMs))
+            AlertDialog(
+                onDismissRequest = { pendingDeleteEvent = null },
+                title = { Text("Eliminar esta nota?") },
+                text = { Text("Se eliminará la marca ${marker.type.label.lowercase(Locale.getDefault())} del $markerTime.") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        onDeleteEvent(marker)
+                        pendingDeleteEvent = null
+                    }) {
+                        Text("Eliminar", color = colors.lowCoral)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { pendingDeleteEvent = null }) { Text("Cancelar") }
+                },
+                containerColor = colors.surfaceCard
+            )
         }
     }
 }
@@ -2693,6 +2943,7 @@ private fun DashboardHeroSection(
 @Composable
 private fun DashboardChartCard(
     chartHistory: List<GlucoseMeasurement>,
+    eventMarkers: List<GlucoseEventMarker>,
     selectedChartTimeframe: DashboardTimeframe,
     sensorDays: Int,
     targetLow: Int,
@@ -2700,9 +2951,13 @@ private fun DashboardChartCard(
     configuredAlarms: List<GlucoseAlarm>,
     unit: GlucoseUnit,
     onCycleTimeframe: () -> Unit,
-    onSensorClick: () -> Unit
+    onSensorClick: () -> Unit,
+    onAddEvent: (Long, GlucoseEventType, String?) -> Unit,
+    onDeleteEvent: (GlucoseEventMarker) -> Unit
 ) {
     val colors = ClinicalTheme.colors
+    var addNoteRequest by remember { mutableIntStateOf(0) }
+    var viewNotesRequest by remember { mutableIntStateOf(0) }
     Card(
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = colors.surfaceCard),
@@ -2735,6 +2990,12 @@ private fun DashboardChartCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    GlucoseEventNotesMenuButton(
+                        markerCount = eventMarkers.size,
+                        onAddNote = { addNoteRequest += 1 },
+                        onViewNotes = { viewNotesRequest += 1 }
+                    )
+
                     // Boton interactivo de ciclo horario: 24h -> 12h -> 6h -> 2h -> 1h -> 24h
                     Box(
                         modifier = Modifier
@@ -2796,7 +3057,12 @@ private fun DashboardChartCard(
                 targetLow = targetLow,
                 targetHigh = targetHigh,
                 alarms = configuredAlarms,
-                unit = unit
+                unit = unit,
+                eventMarkers = eventMarkers,
+                onAddEvent = onAddEvent,
+                onDeleteEvent = onDeleteEvent,
+                addNoteRequest = addNoteRequest,
+                viewNotesRequest = viewNotesRequest
             )
         }
     }
@@ -2922,12 +3188,13 @@ private fun DashboardStatsCard(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // 4 Métricas reales calculadas (o marcador de espera si los datos son insuficientes)
-            val hasData = insufficientDataNotice == null
+            // 4 Métricas reales calculadas (o marcador de espera si no hay datos)
+            val hasData = insufficientDataNotice == null && (avgVal > 0.0 || tirPercent > 0)
             val tirDisplay = if (hasData) "$tirPercent%" else "--"
-            val avgDisplay = if (hasData) "${avgVal.toInt()}" else "--"
-            val minDisplay = if (hasData) "${minVal.toInt()}" else "--"
-            val maxDisplay = if (hasData) "${maxVal.toInt()}" else "--"
+            val avgDisplay = if (hasData && avgVal > 0) "${avgVal.toInt()}" else "--"
+            val minDisplay = if (hasData && minVal > 0) "${minVal.toInt()}" else "--"
+            val maxDisplay = if (hasData && maxVal > 0) "${maxVal.toInt()}" else "--"
+
 
             val responsive = ClinicalTheme.responsive
             val useTwoByTwo = responsive.isLargeFont || responsive.isNarrowPhone

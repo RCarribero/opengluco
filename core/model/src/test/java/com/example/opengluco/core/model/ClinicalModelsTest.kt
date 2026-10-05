@@ -112,6 +112,16 @@ class ClinicalModelsTest {
     }
 
     @Test
+    fun testTimestampParsing_europeanFormats() {
+        val m1 = GlucoseMeasurement(timestamp = "22-09-2026 10:00")
+        val m2 = GlucoseMeasurement(timestamp = "22/09/2026 10:00")
+        val m3 = GlucoseMeasurement(timestamp = "22-09-2026 10:00:30")
+        assertTrue("Epoch should be positive for dd-MM-yyyy HH:mm", m1.getEpochMillis() > 0L)
+        assertTrue("Epoch should be positive for dd/MM/yyyy HH:mm", m2.getEpochMillis() > 0L)
+        assertTrue("Epoch should be positive for dd-MM-yyyy HH:mm:ss", m3.getEpochMillis() > 0L)
+    }
+
+    @Test
     fun testTimestampParsing_invalidOrNullReturnsZero() {
         val m1 = GlucoseMeasurement(timestamp = null, factoryTimestamp = null)
         val m2 = GlucoseMeasurement(timestamp = "invalid-date-string")

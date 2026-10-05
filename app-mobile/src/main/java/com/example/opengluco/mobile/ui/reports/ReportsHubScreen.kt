@@ -25,6 +25,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -42,6 +43,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -55,8 +57,11 @@ import androidx.compose.ui.unit.sp
 import com.example.opengluco.core.data.ClinicalReportsCalculator
 import com.example.opengluco.core.data.GlucoseUnit
 import com.example.opengluco.core.data.HealthDataExporter
+import com.example.opengluco.core.data.UserPreferencesRepository
+import com.example.opengluco.core.model.BlockMetric
 import com.example.opengluco.core.model.ConnectionItem
 import com.example.opengluco.core.model.GlucoseMeasurement
+import com.example.opengluco.core.model.ReportTimeBlock
 import com.example.opengluco.core.model.TirCategory
 import com.example.opengluco.mobile.ui.theme.ClinicalTheme
 import java.util.Locale
@@ -67,6 +72,7 @@ fun ReportsHubScreen(
     patient: ConnectionItem?,
     historicalReadings: List<GlucoseMeasurement>,
     unit: GlucoseUnit,
+    preferencesRepository: UserPreferencesRepository? = null,
     onBack: () -> Unit
 ) {
     val colors = ClinicalTheme.colors
@@ -85,22 +91,61 @@ fun ReportsHubScreen(
         mutableIntStateOf(1)
     }
 
-    val isPeriodSufficient = availableDays >= selectedDays
-
-    val tirReport = remember(historicalReadings, selectedDays) {
-        ClinicalReportsCalculator.calculateTimeInRange(historicalReadings, selectedDays)
+    val tirReport by produceState(
+        initialValue = remember(selectedDays) { ClinicalReportsCalculator.calculateTimeInRange(historicalReadings, selectedDays) },
+        historicalReadings, selectedDays
+    ) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            ClinicalReportsCalculator.calculateTimeInRange(historicalReadings, selectedDays)
+        }
     }
 
-    val a1cReport = remember(historicalReadings, selectedDays) {
-        ClinicalReportsCalculator.calculateEstimatedA1c(historicalReadings, selectedDays)
+    val a1cReport by produceState(
+        initialValue = remember(selectedDays) { ClinicalReportsCalculator.calculateEstimatedA1c(historicalReadings, selectedDays) },
+        historicalReadings, selectedDays
+    ) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            ClinicalReportsCalculator.calculateEstimatedA1c(historicalReadings, selectedDays)
+        }
     }
 
-    val avgReport = remember(historicalReadings, selectedDays) {
-        ClinicalReportsCalculator.calculateAverageGlucose(historicalReadings, selectedDays)
+    val avgReport by produceState(
+        initialValue = remember(selectedDays) { ClinicalReportsCalculator.calculateAverageGlucose(historicalReadings, selectedDays) },
+        historicalReadings, selectedDays
+    ) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            ClinicalReportsCalculator.calculateAverageGlucose(historicalReadings, selectedDays)
+        }
     }
 
-    val dailyPatterns = remember(historicalReadings, selectedDays) {
-        ClinicalReportsCalculator.calculateDailyPatterns(historicalReadings, selectedDays)
+    val dailyPatterns by produceState(
+        initialValue = remember(selectedDays) { ClinicalReportsCalculator.calculateDailyPatterns(historicalReadings, selectedDays) },
+        historicalReadings, selectedDays
+    ) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            ClinicalReportsCalculator.calculateDailyPatterns(historicalReadings, selectedDays)
+        }
+    }
+
+    val timeBlocks by produceState<List<BlockMetric>>(
+        initialValue = emptyList(),
+        historicalReadings, selectedDays, patient?.patientId
+    ) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            if (preferencesRepository != null) {
+                preferencesRepository.getTimeBlockSummary(selectedDays, patient?.patientId)
+            } else {
+                val avg = ClinicalReportsCalculator.calculateAverageGlucose(historicalReadings, selectedDays)
+                val low = ClinicalReportsCalculator.calculateLowGlucoseEvents(historicalReadings, selectedDays)
+                ReportTimeBlock.values().map { block ->
+                    BlockMetric(
+                        block = block,
+                        averageGlucose = avg.averageByBlock[block] ?: 0.0,
+                        lowEventsCount = low.eventsByBlock[block] ?: 0
+                    )
+                }
+            }
+        }
     }
 
     val patientName = patient?.let { "${it.firstName} ${it.lastName}".trim() }.takeIf { !it.isNullOrBlank() } ?: "Paciente"
@@ -208,47 +253,8 @@ fun ReportsHubScreen(
                 }
             }
 
-            if (!isPeriodSufficient) {
-                item {
-                    val daysPlural = if (availableDays == 1) "1 día" else "$availableDays días"
-                    Card(
-                        shape = RoundedCornerShape(14.dp),
-                        colors = CardDefaults.cardColors(containerColor = colors.surfaceOrb),
-                        border = BorderStroke(1.dp, colors.highAmber.copy(alpha = 0.5f)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(14.dp),
-                            verticalAlignment = Alignment.Top
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Info,
-                                contentDescription = "Aviso clínico",
-                                tint = colors.highAmber,
-                                modifier = Modifier.size(20.dp).padding(top = 2.dp)
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
-                                Text(
-                                    text = "Datos insuficientes para este período",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = colors.textPrimary
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "No tienes todavía datos suficientes para leer las métricas completas de un período de $selectedDays días. Se requieren al menos $selectedDays días de lecturas acumuladas (disponibles actualmente: $daysPlural).",
-                                    fontSize = 12.sp,
-                                    color = colors.textSecondary,
-                                    lineHeight = 16.sp
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
             // 2. Tarjeta Tiempo en Rango (TIR)
+
             item {
                 val veryHighPct = veryHighBucket?.percentage?.toInt() ?: 0
                 val highPct = highBucket?.percentage?.toInt() ?: 0
@@ -403,7 +409,90 @@ fun ReportsHubScreen(
                 }
             }
 
-            // 4. Tarjeta Análisis de Patrones Diarios y Curva Anidada (AGP)
+            // 4. Tarjeta Desglose por Bloques Horarios Circadianos
+            item {
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = colors.surfaceOrb),
+                    border = BorderStroke(1.dp, colors.surfaceBorder),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Desglose por Bloques Horarios",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = colors.textPrimary
+                        )
+                        Text(
+                            text = "Ritmo circadiano y recurrencia de eventos hipoglucémicos",
+                            fontSize = 11.5.sp,
+                            color = colors.textSecondary
+                        )
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        timeBlocks.forEach { blockMetric ->
+                            val block = blockMetric.block
+                            val avgFormatted = if (unit == GlucoseUnit.MMOL) {
+                                String.format(Locale.US, "%.1f %s", blockMetric.averageGlucose / 18.0182, unit.label)
+                            } else {
+                                "${blockMetric.averageGlucose.toInt()} ${unit.label}"
+                            }
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 5.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        text = block.displayName,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.5.sp,
+                                        color = colors.textPrimary
+                                    )
+                                    Text(
+                                        text = block.hourRange,
+                                        fontSize = 11.sp,
+                                        color = colors.textSecondary
+                                    )
+                                }
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text(
+                                        text = if (blockMetric.averageGlucose > 0) avgFormatted else "--",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp,
+                                        color = colors.textPrimary
+                                    )
+                                    val eventsText = if (blockMetric.lowEventsCount == 1) {
+                                        "1 evento bajo"
+                                    } else {
+                                        "${blockMetric.lowEventsCount} eventos bajos"
+                                    }
+                                    Text(
+                                        text = eventsText,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = if (blockMetric.lowEventsCount > 0) colors.lowCoral else colors.mint
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        ClinicalExplanationBox(
+                            title = "Criterio Clínico: Bloques Horarios Circadianos",
+                            description = "El análisis por bloques horarios de 6 horas (Noche 00:00-06:00, Mañana 06:00-12:00, Tarde 12:00-18:00, Noche 18:00-24:00) identifica la recurrencia de hipoglucemias nocturnas inadvertidas y las fluctuaciones posprandiales a lo largo del día."
+                        )
+                    }
+                }
+            }
+
+            // 5. Tarjeta Análisis de Patrones Diarios y Curva Anidada (AGP)
             item {
                 Card(
                     shape = RoundedCornerShape(16.dp),
@@ -587,6 +676,17 @@ fun ReportsHubScreen(
                             )
                         }
 
+                        Text(
+                            text = if (a1cReport.isSufficient) {
+                                "La muestra cumple la referencia de calidad para interpretar el GMI."
+                            } else {
+                                "La muestra no alcanza la referencia; consulta Calidad de datos en Ajustes."
+                            },
+                            fontSize = 11.sp,
+                            lineHeight = 14.sp,
+                            color = if (a1cReport.isSufficient) colors.mint else colors.highAmber
+                        )
+
                         Spacer(modifier = Modifier.height(12.dp))
 
                         ClinicalExplanationBox(
@@ -625,7 +725,38 @@ fun ReportsHubScreen(
                 }
             }
 
-            // 7. Botón de Exportación de Datos
+            // 7. Informe PDF para compartir el periodo seleccionado
+            item {
+                Button(
+                    onClick = {
+                        HealthDataExporter.shareClinicalReportPdf(
+                            context = context,
+                            readings = historicalReadings,
+                            patientName = patientName,
+                            periodDays = selectedDays,
+                            unit = unit
+                        )
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = colors.mint,
+                        contentColor = if (colors.isDark) Color.Black else Color.White
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PictureAsPdf,
+                        contentDescription = "PDF",
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Compartir informe PDF", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                }
+            }
+
+            // 8. Exportación de lecturas en CSV
             item {
                 Button(
                     onClick = {

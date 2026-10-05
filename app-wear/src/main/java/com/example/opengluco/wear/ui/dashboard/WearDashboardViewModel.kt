@@ -74,11 +74,18 @@ class WearDashboardViewModel(
             }
         }
 
-        // Bucle de actualización automática periódica cada 60 segundos
+        // Bucle de actualización automática periódica cada 60 segundos con ahorro energético
         viewModelScope.launch {
             while (true) {
                 kotlinx.coroutines.delay(60_000)
-                if (_uiState.value is WearDashboardUiState.Success) {
+                val current = _uiState.value
+                if (current is WearDashboardUiState.Success) {
+                    val m = current.currentMeasurement
+                    val isFresh = m != null && !m.isStale()
+                    // Si los datos están actualizados y se reciben por Bluetooth / DataLayer, evitar activar WiFi/LTE
+                    if (isFresh) {
+                        continue
+                    }
                     loadDashboardDataInternal(isRefreshing = true)
                 }
             }

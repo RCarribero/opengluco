@@ -1,7 +1,8 @@
-﻿package com.example.opengluco.core.network
+package com.example.opengluco.core.network
 
 import com.example.opengluco.core.model.BaseResponse
 import com.example.opengluco.core.model.ConnectionItem
+import com.example.opengluco.core.model.GlucoseMeasurement
 import com.example.opengluco.core.model.GraphData
 import com.example.opengluco.core.model.LoginData
 import com.example.opengluco.core.model.LoginRequest
@@ -26,6 +27,12 @@ interface OpenGlucoApiService {
         @Path("patientId") patientId: String
     ): Response<BaseResponse<GraphData>>
 
+    @GET("llu/connections/{patientId}/logbook")
+    suspend fun getPatientLogbook(
+        @Path("patientId") patientId: String
+    ): Response<BaseResponse<List<GlucoseMeasurement>>>
+
     @POST("llu/auth/terms/accept")
     suspend fun acceptTerms(): Response<BaseResponse<Map<String, String>>>
 }
+

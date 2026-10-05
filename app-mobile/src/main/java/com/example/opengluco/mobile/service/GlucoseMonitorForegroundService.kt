@@ -106,6 +106,9 @@ class GlucoseMonitorForegroundService : Service() {
             ?: patients.first()
 
         val graphRes = openGlucoRepository.getPatientGraph(targetPatient.patientId)
+        if (graphRes.isSuccess) {
+            preferencesRepository.recordSuccessfulSync(targetPatient.patientId)
+        }
         val graphDataObj = graphRes.getOrNull()
         val graphData = graphDataObj?.graphData.orEmpty()
 
@@ -117,8 +120,21 @@ class GlucoseMonitorForegroundService : Service() {
                 allToSave.add(em)
             }
         }
+
+        // Rutina de backfill si hay pocos días en la base de datos local
+        val currentDays = preferencesRepository.getAvailableDays(targetPatient.patientId)
+        try {
+            val logbookRes = openGlucoRepository.backfillPatientHistoryIfNeeded(targetPatient.patientId, currentDays)
+            val logbookReadings = logbookRes.getOrNull().orEmpty()
+            if (logbookReadings.isNotEmpty()) {
+                allToSave.addAll(logbookReadings)
+            }
+        } catch (_: Exception) {}
+        preferencesRepository.saveHistoricalReadings(allToSave, targetPatient.patientId)
+
         val resolvedSensor = if (graphDataObj != null) graphDataObj.resolvedSensor else targetPatient.sensor?.takeIf { it.isValid }
         val isSensorActive = resolvedSensor != null && (resolvedSensor.getRemainingDays() ?: 0) > 0 && resolvedSensor.isSensorActive != false
+
 
         // Notificar alertas de ciclo de vida del sensor si aplica
         com.example.opengluco.core.data.ClinicalReportsCalculator.checkSensorExpirationAlert(resolvedSensor)?.let { alert ->

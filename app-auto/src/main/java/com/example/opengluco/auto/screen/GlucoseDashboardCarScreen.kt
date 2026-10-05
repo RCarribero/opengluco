@@ -33,6 +33,11 @@ class GlucoseDashboardCarScreen(carContext: CarContext) : Screen(carContext) {
     private val ttsAlertManager = com.example.opengluco.auto.AutoTtsAlertManager(carContext)
 
     init {
+        lifecycle.addObserver(object : androidx.lifecycle.DefaultLifecycleObserver {
+            override fun onDestroy(owner: androidx.lifecycle.LifecycleOwner) {
+                ttsAlertManager.shutdown()
+            }
+        })
         loadGlucoseData()
     }
 
