@@ -54,10 +54,11 @@ class MainActivity : ComponentActivity() {
         val preferencesRepository = UserPreferencesRepository(applicationContext)
 
         setContent {
-            val settingsState by preferencesRepository.userSettingsFlow.collectAsState(initial = null)
+            val isDark by preferencesRepository.isDarkModeFlow.collectAsState(initial = true)
+            val hasSession by preferencesRepository.hasSessionFlow.collectAsState(initial = null)
 
             // Esperar a que DataStore cargue para evitar cualquier salto visual al login
-            if (settingsState == null) {
+            if (hasSession == null) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -68,9 +69,6 @@ class MainActivity : ComponentActivity() {
                 }
                 return@setContent
             }
-
-            val settings = settingsState ?: UserSettings()
-            val isDark = settings.isDarkMode
 
             // Solicitar permiso de notificaciones en Android 13+ (API 33+)
             val context = LocalContext.current
@@ -95,7 +93,7 @@ class MainActivity : ComponentActivity() {
                 MobileAppNavigation(
                     repository = repository,
                     preferencesRepository = preferencesRepository,
-                    initialSettings = settings
+                    hasInitialSession = hasSession == true
                 )
             }
         }
@@ -106,15 +104,19 @@ class MainActivity : ComponentActivity() {
 fun MobileAppNavigation(
     repository: OpenGlucoRepository,
     preferencesRepository: UserPreferencesRepository,
-    initialSettings: UserSettings
+    hasInitialSession: Boolean
 ) {
     val navController = rememberNavController()
-    val settings by preferencesRepository.userSettingsFlow.collectAsState(initial = initialSettings)
+    val settings by preferencesRepository.userSettingsFlow.collectAsState(initial = null)
 
-    val startDestination = if (settings.token.isNotBlank()) "dashboard" else "login"
+    val startDestination = if (hasInitialSession) "dashboard" else "login"
 
-    if (settings.token.isNotBlank()) {
-        repository.setSession(settings.token, settings.userId)
+    LaunchedEffect(settings?.token, settings?.userId) {
+        val t = settings?.token.orEmpty()
+        val u = settings?.userId.orEmpty()
+        if (t.isNotBlank()) {
+            repository.setSession(t, u)
+        }
     }
 
     NavHost(navController = navController, startDestination = startDestination) {
@@ -145,9 +147,9 @@ fun MobileAppNavigation(
 
         composable("qr_scanner") {
             QrScannerScreen(
-                userEmail = settings.email,
-                userToken = settings.token,
-                userId = settings.userId,
+                userEmail = settings?.email.orEmpty(),
+                userToken = settings?.token.orEmpty(),
+                userId = settings?.userId.orEmpty(),
                 onNavigateBack = { navController.popBackStack() }
             )
         }

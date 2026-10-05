@@ -784,6 +784,33 @@ class LocalGlucoseDatabase(
      * Devuelve la cantidad de dias distintos disponibles en el historial local para el paciente.
      */
     fun getAvailableDays(patientId: String?): Int {
+        val targetPatientId = patientId?.trim().orEmpty()
+        val db = getSafeReadableDatabase()
+        if (db != null) {
+            val sql = if (targetPatientId.isNotBlank()) {
+                "SELECT MIN($COL_EPOCH_MS), MAX($COL_EPOCH_MS) FROM $TABLE_NAME WHERE $COL_PATIENT_ID = ? AND $COL_VALUE > 0"
+            } else {
+                "SELECT MIN($COL_EPOCH_MS), MAX($COL_EPOCH_MS) FROM $TABLE_NAME WHERE $COL_VALUE > 0"
+            }
+            val args = if (targetPatientId.isNotBlank()) arrayOf(targetPatientId) else null
+            var cursor: android.database.Cursor? = null
+            try {
+                cursor = db.rawQuery(sql, args)
+                if (cursor.moveToFirst() && !cursor.isNull(0) && !cursor.isNull(1)) {
+                    val minEpoch = cursor.getLong(0)
+                    val maxEpoch = cursor.getLong(1)
+                    if (maxEpoch > minEpoch) {
+                        val diffMs = maxEpoch - minEpoch
+                        return maxOf(1, kotlin.math.ceil(diffMs.toDouble() / (24L * 3600L * 1000L)).toInt())
+                    } else if (minEpoch > 0L) {
+                        return 1
+                    }
+                }
+            } catch (_: Exception) {
+            } finally {
+                cursor?.close()
+            }
+        }
         val all = getReadingsBetween(patientId, 0L, Long.MAX_VALUE)
         return ClinicalReportsCalculator.calculateAvailableDays(all)
     }

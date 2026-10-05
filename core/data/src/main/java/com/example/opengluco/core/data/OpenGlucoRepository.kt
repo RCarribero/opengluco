@@ -223,6 +223,7 @@ class OpenGlucoRepository(
         } else {
             Result.success(emptyList())
         }
+    }
 
     private fun getMockConnections(): List<ConnectionItem> {
         val now = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.US).format(java.util.Date())
@@ -293,9 +294,9 @@ class OpenGlucoRepository(
             val rad = ((totalRecentSteps - step).toDouble() / totalRecentSteps) * kotlin.math.PI * 4.0
             val circadian = kotlin.math.sin(rad) * 20.0 + kotlin.math.cos(rad * 2.2) * 10.0
             val mealSpike = when {
-                hoursAgo in 13.0..16.5 -> 36.0 * kotlin.math.exp(-kotlin.math.pow(hoursAgo - 14.5, 2.0) / 1.2)
-                hoursAgo in 6.0..9.5 -> 44.0 * kotlin.math.exp(-kotlin.math.pow(hoursAgo - 7.8, 2.0) / 1.4)
-                hoursAgo in 1.2..3.8 -> 28.0 * kotlin.math.exp(-kotlin.math.pow(hoursAgo - 2.3, 2.0) / 0.8)
+                hoursAgo in 13.0..16.5 -> 36.0 * kotlin.math.exp(-Math.pow(hoursAgo - 14.5, 2.0) / 1.2)
+                hoursAgo in 6.0..9.5 -> 44.0 * kotlin.math.exp(-Math.pow(hoursAgo - 7.8, 2.0) / 1.4)
+                hoursAgo in 1.2..3.8 -> 28.0 * kotlin.math.exp(-Math.pow(hoursAgo - 2.3, 2.0) / 0.8)
                 else -> 0.0
             }
             val rawVal = if (step == 0) 114.0 else (112.0 + circadian + mealSpike).coerceIn(58.0, 245.0)

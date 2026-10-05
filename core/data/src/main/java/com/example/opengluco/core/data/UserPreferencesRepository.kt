@@ -16,9 +16,13 @@ import com.example.opengluco.core.model.GlucoseMeasurement
 import com.example.opengluco.core.model.GlucoseEventMarker
 import com.example.opengluco.core.model.GlucoseEventType
 import com.example.opengluco.core.model.PeriodSummary
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -72,15 +76,17 @@ class UserPreferencesRepository(private val context: Context) {
         encodeDefaults = true
     }
 
+    private val repoScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val _historicalReadingsFlow = MutableStateFlow<List<GlucoseMeasurement>>(emptyList())
     private var currentLoadedPatientId: String? = null
 
     init {
-        migrateLegacyJsonFiles()
-        loadHistoryFromDisk(null)
+        repoScope.launch {
+            migrateLegacyJsonFilesAsync()
+        }
     }
 
-    private fun migrateLegacyJsonFiles() {
+    private fun migrateLegacyJsonFilesAsync() {
         try {
             val jsonFiles = context.filesDir.listFiles { _, name ->
                 name.startsWith("glucose_history") && name.endsWith(".json")
@@ -88,19 +94,23 @@ class UserPreferencesRepository(private val context: Context) {
 
             for (file in jsonFiles) {
                 if (!file.exists()) continue
-                val rawContent = file.readText()
-                if (rawContent.isBlank()) continue
-                val decrypted = KeystoreCryptoHelper.decrypt(rawContent)
-                val contentToParse = if (decrypted.isNotBlank()) decrypted else rawContent
-                val list = json.decodeFromString<List<GlucoseMeasurement>>(contentToParse)
-                if (list.isNotEmpty()) {
-                    val patientId = if (file.name == "glucose_history.json") {
-                        ""
-                    } else {
-                        file.name.removePrefix("glucose_history_").removeSuffix(".json")
+                try {
+                    val rawContent = file.readText()
+                    if (rawContent.isNotBlank()) {
+                        val decrypted = KeystoreCryptoHelper.decrypt(rawContent)
+                        val contentToParse = if (decrypted.isNotBlank()) decrypted else rawContent
+                        val list = json.decodeFromString<List<GlucoseMeasurement>>(contentToParse)
+                        if (list.isNotEmpty()) {
+                            val patientId = if (file.name == "glucose_history.json") {
+                                ""
+                            } else {
+                                file.name.removePrefix("glucose_history_").removeSuffix(".json")
+                            }
+                            localDatabase.insertReadings(list, patientId)
+                        }
                     }
-                    localDatabase.insertReadings(list, patientId)
-                }
+                } catch (_: Exception) {}
+                try { file.delete() } catch (_: Exception) {}
             }
         } catch (_: Exception) {}
     }
@@ -246,7 +256,16 @@ class UserPreferencesRepository(private val context: Context) {
             trustedPhoneMac = getDecryptedMac(rawMac),
             sensorDurationDays = preferences[PreferencesKeys.SENSOR_DURATION_DAYS] ?: 0
         )
-    }
+    }.distinctUntilChanged()
+
+    val isDarkModeFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.IS_DARK_MODE] ?: true
+    }.distinctUntilChanged()
+
+    val hasSessionFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        val token = preferences[PreferencesKeys.TOKEN] ?: ""
+        token.isNotBlank()
+    }.distinctUntilChanged()
 
     suspend fun saveAuthSession(email: String, token: String, userId: String, phoneMac: String? = null) {
         clearDecryptedCache()
@@ -425,29 +444,16 @@ class UserPreferencesRepository(private val context: Context) {
         localDatabase.insertReadings(readings, targetPatientId)
         localDatabase.purgeOldReadings(targetPatientId, 90)
 
-        // 2. Obtener lista completa acumulada de 90 dias
-        val finalList = localDatabase.getHistoricalReadingsList(90, targetPatientId)
-
-        // 3. Persistir copia en JSON cifrado para retrocompatibilidad
-        try {
-            val targetFile = getHistoryFileForPatient(targetPatientId)
-            val jsonStr = json.encodeToString(finalList)
-            val encryptedPayload = KeystoreCryptoHelper.encrypt(jsonStr)
-            targetFile.writeText(encryptedPayload)
-        } catch (_: Exception) {}
-
+        // 2. Notificar flujo local en memoria si aplica
         if (targetPatientId == (currentLoadedPatientId ?: "") || currentLoadedPatientId == null) {
+            val finalList = localDatabase.getHistoricalReadingsList(90, targetPatientId)
             _historicalReadingsFlow.value = finalList
         }
     }
 
     fun getHistoricalReadings(days: Int, patientId: String? = null): Flow<List<GlucoseMeasurement>> {
-        if (!patientId.isNullOrBlank()) {
-            return localDatabase.getReadingsFlow(patientId, days)
-        }
-        return _historicalReadingsFlow.map { allReadings ->
-            filterReadingsByDays(allReadings, days)
-        }
+        val targetPatientId = patientId ?: currentLoadedPatientId
+        return localDatabase.getReadingsFlow(targetPatientId, days)
     }
 
     suspend fun getHistoricalReadingsList(days: Int, patientId: String? = null): List<GlucoseMeasurement> = withContext(Dispatchers.IO) {

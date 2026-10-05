@@ -79,9 +79,25 @@ fun ReportsHubScreen(
     val responsive = ClinicalTheme.responsive
     val context = LocalContext.current
 
+    // Cargar historial clinico de 90 dias en segundo plano sin saturar memoria en el dashboard
+    val effectiveHistoricalReadings by produceState(
+        initialValue = historicalReadings,
+        patient?.patientId, preferencesRepository
+    ) {
+        if (preferencesRepository != null) {
+            val fullList = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                preferencesRepository.getHistoricalReadingsList(90, patient?.patientId)
+            }
+            if (fullList.isNotEmpty()) {
+                value = fullList
+            }
+        }
+    }
+
     // Calcular el rango real de días con datos disponibles
-    val availableDays = remember(historicalReadings) {
-        ClinicalReportsCalculator.calculateAvailableDays(historicalReadings).coerceAtLeast(1)
+    val availableDays = remember(effectiveHistoricalReadings, patient?.patientId) {
+        val repoDays = preferencesRepository?.getAvailableDays(patient?.patientId) ?: 0
+        if (repoDays > 0) repoDays else ClinicalReportsCalculator.calculateAvailableDays(effectiveHistoricalReadings).coerceAtLeast(1)
     }
 
     // Opciones de periodos estándar
@@ -92,51 +108,51 @@ fun ReportsHubScreen(
     }
 
     val tirReport by produceState(
-        initialValue = remember(selectedDays) { ClinicalReportsCalculator.calculateTimeInRange(historicalReadings, selectedDays) },
-        historicalReadings, selectedDays
+        initialValue = remember(selectedDays) { ClinicalReportsCalculator.calculateTimeInRange(effectiveHistoricalReadings, selectedDays) },
+        effectiveHistoricalReadings, selectedDays
     ) {
         value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
-            ClinicalReportsCalculator.calculateTimeInRange(historicalReadings, selectedDays)
+            ClinicalReportsCalculator.calculateTimeInRange(effectiveHistoricalReadings, selectedDays)
         }
     }
 
     val a1cReport by produceState(
-        initialValue = remember(selectedDays) { ClinicalReportsCalculator.calculateEstimatedA1c(historicalReadings, selectedDays) },
-        historicalReadings, selectedDays
+        initialValue = remember(selectedDays) { ClinicalReportsCalculator.calculateEstimatedA1c(effectiveHistoricalReadings, selectedDays) },
+        effectiveHistoricalReadings, selectedDays
     ) {
         value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
-            ClinicalReportsCalculator.calculateEstimatedA1c(historicalReadings, selectedDays)
+            ClinicalReportsCalculator.calculateEstimatedA1c(effectiveHistoricalReadings, selectedDays)
         }
     }
 
     val avgReport by produceState(
-        initialValue = remember(selectedDays) { ClinicalReportsCalculator.calculateAverageGlucose(historicalReadings, selectedDays) },
-        historicalReadings, selectedDays
+        initialValue = remember(selectedDays) { ClinicalReportsCalculator.calculateAverageGlucose(effectiveHistoricalReadings, selectedDays) },
+        effectiveHistoricalReadings, selectedDays
     ) {
         value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
-            ClinicalReportsCalculator.calculateAverageGlucose(historicalReadings, selectedDays)
+            ClinicalReportsCalculator.calculateAverageGlucose(effectiveHistoricalReadings, selectedDays)
         }
     }
 
     val dailyPatterns by produceState(
-        initialValue = remember(selectedDays) { ClinicalReportsCalculator.calculateDailyPatterns(historicalReadings, selectedDays) },
-        historicalReadings, selectedDays
+        initialValue = remember(selectedDays) { ClinicalReportsCalculator.calculateDailyPatterns(effectiveHistoricalReadings, selectedDays) },
+        effectiveHistoricalReadings, selectedDays
     ) {
         value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
-            ClinicalReportsCalculator.calculateDailyPatterns(historicalReadings, selectedDays)
+            ClinicalReportsCalculator.calculateDailyPatterns(effectiveHistoricalReadings, selectedDays)
         }
     }
 
     val timeBlocks by produceState<List<BlockMetric>>(
         initialValue = emptyList(),
-        historicalReadings, selectedDays, patient?.patientId
+        effectiveHistoricalReadings, selectedDays, patient?.patientId
     ) {
         value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             if (preferencesRepository != null) {
                 preferencesRepository.getTimeBlockSummary(selectedDays, patient?.patientId)
             } else {
-                val avg = ClinicalReportsCalculator.calculateAverageGlucose(historicalReadings, selectedDays)
-                val low = ClinicalReportsCalculator.calculateLowGlucoseEvents(historicalReadings, selectedDays)
+                val avg = ClinicalReportsCalculator.calculateAverageGlucose(effectiveHistoricalReadings, selectedDays)
+                val low = ClinicalReportsCalculator.calculateLowGlucoseEvents(effectiveHistoricalReadings, selectedDays)
                 ReportTimeBlock.values().map { block ->
                     BlockMetric(
                         block = block,
@@ -187,7 +203,7 @@ fun ReportsHubScreen(
                 actions = {
                     IconButton(
                         onClick = {
-                            HealthDataExporter.shareCsv(context, historicalReadings, unit, patientName)
+                            HealthDataExporter.shareCsv(context, effectiveHistoricalReadings, unit, patientName)
                         }
                     ) {
                         Icon(
@@ -731,7 +747,7 @@ fun ReportsHubScreen(
                     onClick = {
                         HealthDataExporter.shareClinicalReportPdf(
                             context = context,
-                            readings = historicalReadings,
+                            readings = effectiveHistoricalReadings,
                             patientName = patientName,
                             periodDays = selectedDays,
                             unit = unit
@@ -760,7 +776,7 @@ fun ReportsHubScreen(
             item {
                 Button(
                     onClick = {
-                        HealthDataExporter.shareCsv(context, historicalReadings, unit, patientName)
+                        HealthDataExporter.shareCsv(context, effectiveHistoricalReadings, unit, patientName)
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = colors.mint,

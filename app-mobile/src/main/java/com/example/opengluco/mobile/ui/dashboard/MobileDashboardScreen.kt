@@ -218,8 +218,10 @@ fun MobileDashboardScreen(
     var diagnosticsState by remember { mutableStateOf(SystemDiagnosticsHelper.checkDiagnostics(context)) }
     var showDiagnosticsDialog by remember { mutableStateOf(false) }
     val settings by preferencesRepository.userSettingsFlow.collectAsState(initial = null)
-    val periodReadings by preferencesRepository.getHistoricalReadings(90).collectAsState(initial = emptyList())
     val syncPatientId = selectedPatient?.patientId ?: settings?.selectedPatientId.orEmpty()
+    val periodReadings by remember(syncPatientId) {
+        preferencesRepository.getHistoricalReadings(2, syncPatientId)
+    }.collectAsState(initial = emptyList())
     val lastSuccessfulSyncMs by remember(syncPatientId) {
         if (syncPatientId.isBlank()) flowOf(0L) else preferencesRepository.lastSuccessfulSyncFlow(syncPatientId)
     }.collectAsState(initial = 0L)
@@ -545,44 +547,21 @@ fun MobileDashboardScreen(
     val targetLow = settings?.lowThreshold ?: selectedPatient?.targetLow ?: 70
     val targetHigh = settings?.highThreshold ?: selectedPatient?.targetHigh ?: 180
 
-    val availableDataDays = remember(combinedHistory) {
-        ClinicalReportsCalculator.calculateAvailableDays(combinedHistory)
+    val availableDataDays = remember(syncPatientId, currentMeasurement) {
+        preferencesRepository.getAvailableDays(syncPatientId)
     }
-    val periodFilteredReadings = remember(combinedHistory, selectedPeriod) {
-        ClinicalReportsCalculator.filterReadingsByPeriod(combinedHistory, selectedPeriod.days)
-    }
-    val validHistory = periodFilteredReadings.map { it.numericValue }.filter { it > 0 }
 
     val calculatedNotice: String? = null
 
-    val periodSummary = remember(combinedHistory, selectedPeriod, selectedPatient?.patientId) {
-        val summary = preferencesRepository.getPeriodSummary(selectedPeriod.days, selectedPatient?.patientId)
+    val periodSummary = remember(selectedPeriod, syncPatientId, currentMeasurement) {
+        val summary = preferencesRepository.getPeriodSummary(selectedPeriod.days, syncPatientId)
         if (summary.totalCount > 0) summary else null
     }
 
-    val avgVal = periodSummary?.mean ?: if (validHistory.isNotEmpty()) {
-        validHistory.average()
-    } else {
-        currentMeasurement?.numericValue ?: 0.0
-    }
-    val minVal = periodSummary?.min ?: if (validHistory.isNotEmpty()) {
-        validHistory.minOrNull() ?: (currentMeasurement?.numericValue ?: 0.0)
-    } else {
-        currentMeasurement?.numericValue ?: 0.0
-    }
-    val maxVal = periodSummary?.max ?: if (validHistory.isNotEmpty()) {
-        validHistory.maxOrNull() ?: (currentMeasurement?.numericValue ?: 0.0)
-    } else {
-        currentMeasurement?.numericValue ?: 0.0
-    }
-    val inRangeCount = if (validHistory.isNotEmpty()) {
-        validHistory.count { it in targetLow.toDouble()..targetHigh.toDouble() }
-    } else 0
-    val tirPercent = periodSummary?.inRangePercent?.toInt() ?: if (validHistory.isNotEmpty()) {
-        ((inRangeCount.toDouble() / validHistory.size) * 100).toInt()
-    } else {
-        if (currentMeasurement != null && currentMeasurement.numericValue in targetLow.toDouble()..targetHigh.toDouble()) 100 else 0
-    }
+    val avgVal = periodSummary?.mean ?: (currentMeasurement?.numericValue ?: 0.0)
+    val minVal = periodSummary?.min ?: (currentMeasurement?.numericValue ?: 0.0)
+    val maxVal = periodSummary?.max ?: (currentMeasurement?.numericValue ?: 0.0)
+    val tirPercent = periodSummary?.inRangePercent?.toInt() ?: if (currentMeasurement != null && currentMeasurement.numericValue in targetLow.toDouble()..targetHigh.toDouble()) 100 else 0
 
     val rawSensor = currentSensor ?: selectedPatient?.sensor?.takeIf { it.isValid }
     val customDuration = settings?.sensorDurationDays?.takeIf { it > 0 }
@@ -633,12 +612,18 @@ fun MobileDashboardScreen(
             onOpenReports = { showReportsScreen = true },
             onOpenQrScanner = onOpenQrScanner,
             onExportCsv = {
-                HealthDataExporter.shareCsv(
-                    context,
-                    history,
-                    settings?.unit ?: GlucoseUnit.MGDL,
-                    selectedPatient?.fullName ?: "Paciente"
-                )
+                scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                    val fullList = preferencesRepository.getHistoricalReadingsList(90, selectedPatient?.patientId)
+                    val exportList = if (fullList.isNotEmpty()) fullList else history
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        HealthDataExporter.shareCsv(
+                            context,
+                            exportList,
+                            settings?.unit ?: GlucoseUnit.MGDL,
+                            selectedPatient?.fullName ?: "Paciente"
+                        )
+                    }
+                }
             },
             onRequestDeleteData = {
                 scope.launch {
