@@ -158,7 +158,11 @@ class OpenGlucoRepository(
                 Result.failure(Exception("HTTP Error ${response.code()}"))
             }
         } catch (e: Exception) {
-            Result.success(getMockConnections())
+            if (sessionToken?.startsWith("demo") == true) {
+                Result.success(getMockConnections())
+            } else {
+                Result.failure(e)
+            }
         }
     }
 
@@ -184,7 +188,11 @@ class OpenGlucoRepository(
                 Result.failure(Exception("HTTP Error ${response.code()}"))
             }
         } catch (e: Exception) {
-            Result.success(getMockGraphData())
+            if (sessionToken?.startsWith("demo") == true) {
+                Result.success(getMockGraphData())
+            } else {
+                Result.failure(e)
+            }
         }
     }
 

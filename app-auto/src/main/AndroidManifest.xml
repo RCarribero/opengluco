@@ -1,10 +1,15 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.opengluco.auto">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="androidx.car.app.ACCESS_SURFACE" />
+
+    <queries>
+        <package android:name="com.example.opengluco" />
+        <provider android:authorities="com.example.opengluco.provider" />
+    </queries>
 
     <application
         android:allowBackup="false"

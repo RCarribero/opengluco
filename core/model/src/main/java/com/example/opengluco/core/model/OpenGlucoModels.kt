@@ -305,40 +305,26 @@ data class GlucoseMeasurement(
         }
     }
 
+    @kotlinx.serialization.Transient
+    @Volatile
+    private var cachedEpochMillis: Long? = null
+
+    @kotlinx.serialization.Transient
+    @Volatile
+    private var cachedDisplayTime: String? = null
+
+    fun setCachedTime(epoch: Long, display: String? = null) {
+        if (epoch > 0L) this.cachedEpochMillis = epoch
+        if (!display.isNullOrBlank()) this.cachedDisplayTime = display
+    }
+
     fun getEpochMillis(): Long {
+        val cached = cachedEpochMillis
+        if (cached != null) return cached
         val raw = timestamp ?: factoryTimestamp ?: return 0L
-        val patterns = listOf(
-            "M/d/yyyy h:mm:ss a",
-            "M/d/yyyy hh:mm:ss a",
-            "MM/dd/yyyy hh:mm:ss a",
-            "M/d/yyyy H:mm:ss",
-            "M/d/yyyy HH:mm:ss",
-            "M/d/yyyy h:mm a",
-            "d/M/yyyy h:mm:ss a",
-            "d/M/yyyy HH:mm:ss",
-            "dd/MM/yyyy HH:mm:ss",
-            "dd/MM/yyyy HH:mm",
-            "dd-MM-yyyy HH:mm:ss",
-            "dd-MM-yyyy HH:mm",
-            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
-            "yyyy-MM-dd'T'HH:mm:ss'Z'",
-            "yyyy-MM-dd'T'HH:mm:ss",
-            "yyyy-MM-dd HH:mm:ss",
-            "yyyy-MM-dd HH:mm",
-            "yyyy/MM/dd HH:mm:ss",
-            "yyyy/MM/dd HH:mm"
-        )
-        for (pat in patterns) {
-            try {
-                val sdf = java.text.SimpleDateFormat(pat, java.util.Locale.US)
-                if (pat.endsWith("'Z'")) {
-                    sdf.timeZone = java.util.TimeZone.getTimeZone("UTC")
-                }
-                val date = sdf.parse(raw)
-                if (date != null) return date.time
-            } catch (_: Exception) {}
-        }
-        return 0L
+        val epoch = FastDateParser.parseEpoch(raw)
+        cachedEpochMillis = epoch
+        return epoch
     }
 
     fun isStale(nowMs: Long = System.currentTimeMillis(), thresholdMinutes: Long = 20): Boolean {
@@ -349,12 +335,16 @@ data class GlucoseMeasurement(
     }
 
     fun getDisplayTime(): String {
+        val cached = cachedDisplayTime
+        if (cached != null) return cached
         val epoch = getEpochMillis()
-        if (epoch > 0) {
-            val sdf = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
-            return sdf.format(java.util.Date(epoch))
+        val formatted = if (epoch > 0L) {
+            FastDateParser.formatDisplayTime(epoch)
+        } else {
+            timestamp?.takeLast(11)?.trim() ?: factoryTimestamp ?: "Ahora"
         }
-        return timestamp?.takeLast(11)?.trim() ?: factoryTimestamp ?: "Ahora"
+        cachedDisplayTime = formatted
+        return formatted
     }
 }
 

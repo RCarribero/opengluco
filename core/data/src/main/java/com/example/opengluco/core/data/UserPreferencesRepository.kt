@@ -59,7 +59,7 @@ data class UserSettings(
 
 class UserPreferencesRepository(private val context: Context) {
 
-    val localDatabase: LocalGlucoseDatabase by lazy { LocalGlucoseDatabase(context) }
+    val localDatabase: LocalGlucoseDatabase by lazy { LocalGlucoseDatabase.getInstance(context) }
 
     private fun getHistoryFileForPatient(patientId: String?): File {
         return if (!patientId.isNullOrBlank()) {

@@ -1,57 +1,57 @@
 # Graph Report - librelinkup-ecosystem-master  (2026-10-05)
 
 ## Corpus Check
-- 150 files · ~122,530 words
+- 153 files · ~143,177 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 37 file(s) not represented in the graph (top: .xml 26, .bat 4, (none) 3)
 
 ## Summary
-- 1824 nodes · 4871 edges · 124 communities (60 shown, 64 thin omitted)
+- 1865 nodes · 4976 edges · 137 communities (65 shown, 72 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 91 edges (avg confidence: 0.88)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `8cefe1d6`
+- Built from commit: `61ec7590`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- OpenGlucoRepository.kt
-- OpenGlucoInterceptor
+- .renderSparkline
+- AppUpdateRepository
 - MobileAlarmNotificationHelper
 - UserPreferencesRepository
 - wear/MainActivity.kt
 - WearBluetoothRfcommService.kt
 - MobileDashboardScreen
-- ConfigurationDiagnosticsDialog.kt
-- GlucoseMeasurement
-- AlarmRepository
 - ClinicalReportsCalculatorTest
+- SensorInfo
+- AlarmRepository
+- GlucoseMonitorForegroundService.kt
+- Dossier de Cumplimiento Normativo y Respaldo Legal: OpenGluco Ecosystem
 - OpenGluco Ecosystem
-- GlucoseUnit
 - WearDashboardScreen.kt
 - EmpiricalStressChallengeTest
-- E2ETier2BoundaryCornerCasesTest
-- .renderSparkline
+- E2ETier2BoundaryCornerCasesTest.kt
+- MobileGlucoseChart
 - MobileLegalComplianceTest
 - WearAuthMessageListenerService.kt
-- GlucoseEventMarker
+- ClinicalReportsCalculator
 - mobile/ui/theme/Color.kt
-- QrAuthHelper.kt
+- WearQrLoginScreen
 - SensorDurationDialog
 - Test
-- GlucoseComplicationService.kt
+- dispatchers
 - 2.3. Perfil, Consentimientos y Reglas Regulatorias
-- MobileAlarmSyncHelper.kt
+- UserSettings
 - WearClinicalDesignAndSafetyTest
 - Sistema de Diseno: OpenGluco (Minimalista Clinico)
 - 4.2 Invariantes de Seguridad Implementadas en OpenGluco:
-- AutoManifestAndSecurityTest.kt
+- file
 - LocalGlucoseDatabase
-- DashboardTimeframe
-- AppUpdateRepository
+- GlucoseDashboardCarScreen.kt
+- ConfigurationDiagnosticsDialog.kt
 - LegalNoticeType
-- .generateCsv
+- FastDateParser.kt
 - 2. Test Tiers & Methodology
 - GlucoseTileService.kt
 - Acceptance Criteria
@@ -63,61 +63,72 @@
 - BRIEFING.md
 - WearSettingsAndDashboardContractTest.kt
 - E2ETier1FeatureCoverageTest
-- AlarmSeverity
+- AlarmCooldown
 - Procedimiento Paso a Paso:
 - clinical_design.md
-- locale
+- HealthDataExporter
 - bug_report.md
 - feature_request.md
 - Codigo de Conducta del Contribuyente
 - ConfigurationDiagnosticsDialog
-- WearQrLoginScreen.kt
+- AlarmSeverity
 - QrPairingPayload
 - PULL_REQUEST_TEMPLATE.md
 - TEST_READY.md
-- WearStatDetailModal
+- WearDashboardScreen
 - no_emojis.md
 - PROMPT PARA RETOMAR EL PROYECTO CON AGENTES (ANTIGRAVITY / TEAMWORK)
 - rules/graphify.md
 - workflows/graphify.md
 - DetailModalType
 - ClinicalErrorType
-- launch
+- WearLoginViewModel.kt
 - GlucoseAlarm
-- OpenGlucoRepository
-- wear/ui/theme/Theme.kt
+- ReportTimeBlock
+- QrScannerScreen
 - ClinicalReportsCalculator.kt
-- GlucoseDashboardCarScreen.kt
+- GlucoseUnit
 - GlucoseAlarmWorker.kt
 - MetricPeriod
-- E2ETier4RealWorldScenariosTest.kt
-- MobilePairingHelper.kt
+- log
 - AlarmSerializationSyncTest
 - .decrypt
-- LocalGlucoseDatabaseTest
-- .login
+- DashboardTimeframe
+- OpenGlucoRepository
 - ConnectionItem
-- UserSettings
+- fillmaxwidth
 - GlucoseWidgetUpdater.kt
 - WearBluetoothSecurityTest
-- WearDashboardViewModel
-- WearLegalNoticeType
+- WearDashboardViewModel.kt
 - ReportsHubScreen
-- LocalGlucoseDatabase.kt
+- OpenGlucoRepository.kt
 - AppUpdateInstaller.kt
 - EmpiricalStressChallengeTest.kt
-- E2ETier3CrossFeatureCombinationsTest.kt
-- WearSettingsScreen
-- AlarmDismissReceiver.kt
+- QrAuthHelper.kt
+- WearLegalNoticeType
+- MobileAlarmNotificationHelper.kt
 - first
-- MainActivity
+- LocalGlucoseDatabaseTest
 - app.js
 - AlarmSerializationSyncTest.kt
 - DataQualityStatusCard
 - DualFloatingOrbs
-- Test
-- TirCategory
 - [ADR-0001] Adopcion de Arquitectura Multi-Modulo con Nucleo Limpio Compartido
+- GlucoseMeasurement
+- Test
+- OpenGlucoApiService.kt
+- .login
+- AlarmDismissReceiver.kt
+- MobileDualFloatingOrbs
+- .generateCsv
+- WearSettingsScreen
+- wear/ui/theme/Theme.kt
+- WearAlarmDismissReceiver.kt
+- AlarmSoundType
+- WearGlucoseSyncWorker.kt
+- .onCreate
+- MobileAppNavigation
+- ModelSanityTest.kt
 - OpenGluco | Landing Page Interactiva 3D con Conmutador de Tema
 - [ADR-0002] Persistencia Local Acumulativa de 90 Dias con DataStore y Deduplicacion
 - [ADR-0004] Blindaje Legal, Conformidad MDR/MDDS y Prohibicion Estricta de Emojis
@@ -125,20 +136,18 @@
 - write_adrs.js
 
 ## God Nodes (most connected - your core abstractions)
-1. `GlucoseMeasurement` - 140 edges
-2. `UserPreferencesRepository` - 92 edges
+1. `GlucoseMeasurement` - 146 edges
+2. `UserPreferencesRepository` - 97 edges
 3. `GlucoseAlarm` - 58 edges
-4. `SensorInfo` - 48 edges
-5. `GlucoseUnit` - 47 edges
+4. `GlucoseUnit` - 49 edges
+5. `SensorInfo` - 48 edges
 6. `AlarmRepository` - 44 edges
 7. `ConnectionItem` - 40 edges
 8. `OpenGlucoRepository` - 39 edges
 9. `ClinicalModelsTest` - 37 edges
-10. `MobileDashboardScreen()` - 33 edges
+10. `LocalGlucoseDatabase` - 34 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `1. App Movil (`app-mobile`)` --references--> `MobileDualFloatingOrbs()`  [INFERRED]
-  README.md → app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/components/MobileDualFloatingOrbs.kt
 - `Data Portability CSV Contract (`HealthDataExporter`)` --references--> `HealthDataExporter`  [INFERRED]
   PROJECT.md → core/data/src/main/java/com/example/opengluco/core/data/HealthDataExporter.kt
 - `Cryptographic Contract (`KeystoreCryptoHelper`)` --references--> `KeystoreCryptoHelper`  [INFERRED]
@@ -147,55 +156,49 @@
   AGENTS.md → core/data/src/main/java/com/example/opengluco/core/data/UserPreferencesRepository.kt
 - `4. Persistencia y Telemetria Historica (`core:data` & `core:model`)` --references--> `UserPreferencesRepository`  [INFERRED]
   .agents/rules/clinical_design.md → core/data/src/main/java/com/example/opengluco/core/data/UserPreferencesRepository.kt
+- `4. Decision Elegida` --references--> `CgmCurveSmoother`  [INFERRED]
+  docs/adr/0001-arquitectura-modular-compartida.md → core/model/src/main/java/com/example/opengluco/core/model/CgmCurveSmoother.kt
 
 ## Import Cycles
 - None detected.
 
-## Communities (124 total, 64 thin omitted)
+## Communities (137 total, 72 thin omitted)
 
-### Community 5 - "wear/MainActivity.kt"
-Cohesion: 0.18
-Nodes (3): WearAppNavigation(), WearLoginScreen(), WearDashboardScreen()
-
-### Community 7 - "WearBluetoothRfcommService.kt"
-Cohesion: 0.11
-Nodes (5): WearBluetoothRfcommService, 1. Contexto y Declaracion del Problema, 2. Factores Decisivos (Decision Drivers), 3. Decision Elegida, [ADR-0003] Sincronizacion Dual Bluetooth RFCOMM y Google Play Services DataLayer
-
-### Community 8 - "MobileDashboardScreen"
-Cohesion: 0.17
-Nodes (16): DailyStatItem(), DashboardChartCard(), DashboardClinicalErrorBanner(), DashboardHeroSection(), DashboardSensorCard(), DashboardStatsCard(), formatChartTime(), MobileDashboardScreen() (+8 more)
-
-### Community 10 - "GlucoseMeasurement"
-Cohesion: 0.10
-Nodes (5): ClinicalSparklineWithSensor(), Success, GlucoseMeasurement, SensorInfo, ClinicalModelsTest
-
-### Community 14 - "OpenGluco Ecosystem"
-Cohesion: 0.06
-Nodes (34): 1. Resumen Ejecutivo del Dictamen Legal, 2.1 Permisos del Sistema Declarados en Manifiesto, 2.2 Auditoría de Almacenamiento y Cero Telemetría de Terceros, 2. Auditoría Técnica de Permisos, Accesos y Datos Registrados, 3.1 Derecho de Interoperabilidad e Ingeniería Inversa, 3.2 Titularidad del Paciente sobre sus Datos Biológicos y de Salud, 3.3 Reglamento Europeo de Datos (Data Act - Reglamento UE 2023/2854), 3.4 Derecho a la Portabilidad y Exención Doméstica (RGPD) (+26 more)
-
-### Community 15 - "GlucoseUnit"
-Cohesion: 0.16
-Nodes (10): AlarmCard(), AlarmConfigSection(), AlarmCreationDialog(), AlarmSubsection(), ClinicalRangeVisualCard(), copyCustomAudioToInternalStorage(), getFileNameFromUri(), GlucoseUnit (+2 more)
-
-### Community 16 - "WearDashboardScreen.kt"
-Cohesion: 0.15
-Nodes (3): PatientSelectorChip(), WearSparklineChart(), WearLegalTexts
-
-### Community 19 - ".renderSparkline"
+### Community 0 - ".renderSparkline"
 Cohesion: 0.17
 Nodes (4): WidgetChartRenderer, CgmCurveSmoother, CubicBezierSegment, CgmCurveSmootherTest
 
-### Community 21 - "WearAuthMessageListenerService.kt"
-Cohesion: 0.19
-Nodes (3): WearAlarmNotificationHelper, WearAuthMessageListenerService, WearGlucoseSyncWorker
+### Community 1 - "AppUpdateRepository"
+Cohesion: 0.09
+Nodes (4): AppUpdateRepository, AppReleaseInfo, OpenGlucoInterceptor, OpenGlucoInterceptorTest
 
-### Community 22 - "GlucoseEventMarker"
-Cohesion: 0.17
-Nodes (14): DialogHeader(), EmptyNotesState(), eventColor(), eventIcon(), EventNoteCard(), GlucoseEventEditorDialog(), GlucoseEventListDialog(), GlucoseEventNotesMenuButton() (+6 more)
+### Community 5 - "wear/MainActivity.kt"
+Cohesion: 0.16
+Nodes (3): MainActivity, WearAppNavigation(), WearLoginScreen()
+
+### Community 7 - "WearBluetoothRfcommService.kt"
+Cohesion: 0.12
+Nodes (5): WearBluetoothRfcommService, 1. Contexto y Declaracion del Problema, 2. Factores Decisivos (Decision Drivers), 3. Decision Elegida, [ADR-0003] Sincronizacion Dual Bluetooth RFCOMM y Google Play Services DataLayer
+
+### Community 8 - "MobileDashboardScreen"
+Cohesion: 0.23
+Nodes (13): DailyStatItem(), DashboardChartCard(), DashboardClinicalErrorBanner(), DashboardHeroSection(), DashboardSensorCard(), DashboardStatsCard(), MobileDashboardScreen(), MobileSettingsScreen() (+5 more)
+
+### Community 14 - "Dossier de Cumplimiento Normativo y Respaldo Legal: OpenGluco Ecosystem"
+Cohesion: 0.13
+Nodes (13): 1. Resumen Ejecutivo del Dictamen Legal, 2.1 Permisos del Sistema Declarados en Manifiesto, 2.2 Auditoría de Almacenamiento y Cero Telemetría de Terceros, 2. Auditoría Técnica de Permisos, Accesos y Datos Registrados, 3.1 Derecho de Interoperabilidad e Ingeniería Inversa, 3.2 Titularidad del Paciente sobre sus Datos Biológicos y de Salud, 3.3 Reglamento Europeo de Datos (Data Act - Reglamento UE 2023/2854), 3.4 Derecho a la Portabilidad y Exención Doméstica (RGPD) (+5 more)
+
+### Community 15 - "OpenGluco Ecosystem"
+Cohesion: 0.12
+Nodes (17): 1. Exencion de Dispositivo Medico (MDR UE 2017/745 y FDA MDDS 21 CFR 880.6310), 2. Aviso de Marcas y No Afiliacion, 3. Dossier de Conformidad Legal y Respaldo Normativo, Comandos Principales, Criptografia Hardware-Backed (AES-256-GCM), Descargos Legales y Regulatorios, Licencia, Modulos del Ecosistema (+9 more)
+
+### Community 19 - "MobileGlucoseChart"
+Cohesion: 0.13
+Nodes (17): DialogHeader(), EmptyNotesState(), eventColor(), eventIcon(), EventNoteCard(), GlucoseEventEditorDialog(), GlucoseEventListDialog(), GlucoseEventNotesMenuButton() (+9 more)
 
 ### Community 23 - "mobile/ui/theme/Color.kt"
-Cohesion: 0.16
-Nodes (7): MobileDualFloatingOrbs(), PatientHeaderChip(), PatientSelectorModal(), ClinicalColorScheme, getClinicalStatusColor(), getGlucoseStatusColor(), getGlucoseValueColor()
+Cohesion: 0.20
+Nodes (6): PatientHeaderChip(), PatientSelectorModal(), ClinicalColorScheme, getClinicalStatusColor(), getGlucoseStatusColor(), getGlucoseValueColor()
 
 ### Community 25 - "SensorDurationDialog"
 Cohesion: 0.83
@@ -213,9 +216,13 @@ Nodes (9): 1. Filosofia y Estilo Visual, 2. Paleta de Colores Oficial, 4. Intera
 Cohesion: 0.32
 Nodes (4): AutoClinicalSafetyTest, 4.1 Análisis bajo la Guía MDCG 2019-11 (Regla 11 del Anexo VIII MDR), 4.2 Invariantes de Seguridad Implementadas en OpenGluco:, 4. Clasificación Regulatoria de Dispositivos Médicos (MDR UE 2017/745 y FDA MDDS)
 
-### Community 35 - "DashboardTimeframe"
-Cohesion: 0.29
-Nodes (6): DashboardTimeframe, H1, H12, H2, H24, H6
+### Community 34 - "LocalGlucoseDatabase"
+Cohesion: 0.07
+Nodes (3): OpenGlucoProvider, LocalGlucoseDatabase, PeriodSummary
+
+### Community 35 - "GlucoseDashboardCarScreen.kt"
+Cohesion: 0.06
+Nodes (9): AutoMobileSyncHelper, AutoTtsAlertManager, GlucoseCarSession, GlucoseDashboardCarScreen, onDestroy(), onStart(), onStop(), PatientListCarScreen (+1 more)
 
 ### Community 45 - "LegalNoticeType"
 Cohesion: 0.25
@@ -239,7 +246,7 @@ Nodes (9): Acceptance Criteria, Initial Request — 2026-08-27T10:10:46Z, Parida
 
 ### Community 53 - ".purgeAllLocalData"
 Cohesion: 0.15
-Nodes (10): Code Layout, Cryptographic Contract (`KeystoreCryptoHelper`), Data Portability CSV Contract (`HealthDataExporter`), Feature Inventory, Interface Contracts, Legal & Regulatory String Constants, Milestones, 1. Arquitectura de Seguridad y Privacidad (+2 more)
+Nodes (11): Architecture, Code Layout, Cryptographic Contract (`KeystoreCryptoHelper`), Data Portability CSV Contract (`HealthDataExporter`), Feature Inventory, Interface Contracts, Legal & Regulatory String Constants, Milestones (+3 more)
 
 ### Community 54 - "Reglas de Proyecto: OpenGluco Ecosystem"
 Cohesion: 0.22
@@ -253,9 +260,9 @@ Nodes (7): Artifact Index, Key Constraints, Mission, My Identity, Project Status
 Cohesion: 0.21
 Nodes (4): WearGlucoseGauge(), getClinicalStatusColor(), getGlucoseStatusColor(), WearSettingsAndDashboardContractTest
 
-### Community 58 - "AlarmSeverity"
-Cohesion: 0.06
-Nodes (26): AlarmCooldown, MIN_1, MIN_10, MIN_15, MIN_2, MIN_3, MIN_30, MIN_4 (+18 more)
+### Community 58 - "AlarmCooldown"
+Cohesion: 0.20
+Nodes (10): AlarmCooldown, MIN_1, MIN_10, MIN_15, MIN_2, MIN_3, MIN_30, MIN_4 (+2 more)
 
 ### Community 59 - "Procedimiento Paso a Paso:"
 Cohesion: 0.18
@@ -281,9 +288,13 @@ Nodes (5): Atribucion, Codigo de Conducta del Contribuyente, Nuestro Compromiso,
 Cohesion: 0.31
 Nodes (4): ConfigurationDiagnosticsDialog(), DiagnosticItemCard(), SystemDiagnosticsHelper, SystemDiagnosticsState
 
+### Community 66 - "AlarmSeverity"
+Cohesion: 0.15
+Nodes (10): MobileAlarmSyncHelper, AlarmEvaluationResult, AlarmSeverity, ALERT, INFORMATIVE, URGENT, AlarmTriggerPayload, AlarmType (+2 more)
+
 ### Community 67 - "QrPairingPayload"
-Cohesion: 0.24
-Nodes (7): QrDeviceType, ANDROID_AUTO, WEAR_OS, QrEncryptedPayload, QrPairingPayload, QrSessionExchange, QrAuthModelsTest
+Cohesion: 0.32
+Nodes (4): QrEncryptedPayload, QrPairingPayload, QrSessionExchange, QrAuthModelsTest
 
 ### Community 68 - "PULL_REQUEST_TEMPLATE.md"
 Cohesion: 0.40
@@ -293,9 +304,9 @@ Nodes (4): Descripcion del Cambio, Lista de Verificacion de Calidad y Cumplimien
 Cohesion: 0.40
 Nodes (4): 1. Executive Summary, 2. Test Suite Breakdown by Module, 3. Tier Coverage Matrix, 4. How to Run the Tests
 
-### Community 70 - "WearStatDetailModal"
-Cohesion: 0.22
-Nodes (7): DetailModalType, GLUCOSE_STATS, NONE, SENSOR_INFO, TREND_INFO, StatRow(), WearStatDetailModal()
+### Community 70 - "WearDashboardScreen"
+Cohesion: 0.17
+Nodes (8): DetailModalType, GLUCOSE_STATS, NONE, SENSOR_INFO, TREND_INFO, StatRow(), WearStatDetailModal(), WearDashboardScreen()
 
 ### Community 75 - "DetailModalType"
 Cohesion: 0.25
@@ -305,89 +316,109 @@ Nodes (7): DetailModalType, GLUCOSE_STATS, NONE, SENSOR_INFO, TREND_INFO, Mobile
 Cohesion: 0.15
 Nodes (14): Active, AuthExpired, ClinicalErrorType, Expired, Generic, lifecycleState(), NetworkError, None (+6 more)
 
-### Community 77 - "launch"
-Cohesion: 0.16
+### Community 77 - "WearLoginViewModel.kt"
+Cohesion: 0.27
 Nodes (6): Error, Idle, Loading, Success, WearLoginUiState, WearLoginViewModel
 
 ### Community 78 - "GlucoseAlarm"
-Cohesion: 0.25
-Nodes (4): AlarmEvaluator, AlarmEvaluatorTest, AlarmEvaluationResult, GlucoseAlarm
+Cohesion: 0.27
+Nodes (3): AlarmEvaluator, AlarmEvaluatorTest, GlucoseAlarm
 
-### Community 79 - "OpenGlucoRepository"
-Cohesion: 0.16
-Nodes (8): OpenGlucoRegion, AP, DE, EU, FR, JP, US, OpenGlucoRepository
+### Community 79 - "ReportTimeBlock"
+Cohesion: 0.23
+Nodes (9): AverageGlucoseReport, BlockMetric, LowGlucoseEvent, LowGlucoseEventsReport, ReportTimeBlock, AFTERNOON, EVENING, MORNING (+1 more)
+
+### Community 80 - "QrScannerScreen"
+Cohesion: 0.19
+Nodes (7): CameraPreview(), decodeQrFromImage(), QrScannerScreen(), rotateYUV420Degree180(), rotateYUV420Degree270(), rotateYUV420Degree90(), transferSessionToDevice()
 
 ### Community 85 - "ClinicalReportsCalculator.kt"
-Cohesion: 0.14
-Nodes (16): AverageGlucoseReport, BlockMetric, DailyGraphDaySummary, DailyGraphReport, DailyPatternsReport, DataQualityReport, EstimatedA1cReport, HourlyPercentile (+8 more)
+Cohesion: 0.13
+Nodes (15): DailyGraphDaySummary, DailyGraphReport, DailyPatternsReport, DataQualityReport, EstimatedA1cReport, HourlyPercentile, SensorUsageReport, TimeInRangeReport (+7 more)
 
-### Community 86 - "GlucoseDashboardCarScreen.kt"
-Cohesion: 0.06
-Nodes (6): AutoTtsAlertManager, GlucoseCarSession, GlucoseDashboardCarScreen, onDestroy(), PatientListCarScreen, QrLoginCarScreen
+### Community 86 - "GlucoseUnit"
+Cohesion: 0.18
+Nodes (10): AlarmCard(), AlarmConfigSection(), AlarmCreationDialog(), AlarmSubsection(), ClinicalRangeVisualCard(), copyCustomAudioToInternalStorage(), getFileNameFromUri(), GlucoseUnit (+2 more)
 
 ### Community 88 - "MetricPeriod"
 Cohesion: 0.40
 Nodes (5): MetricPeriod, DAY, MONTH, THREE_MONTHS, WEEK
 
+### Community 93 - "DashboardTimeframe"
+Cohesion: 0.29
+Nodes (6): DashboardTimeframe, H1, H12, H2, H24, H6
+
+### Community 94 - "OpenGlucoRepository"
+Cohesion: 0.13
+Nodes (9): OpenGlucoRegion, AP, DE, EU, FR, JP, US, OpenGlucoRepository (+1 more)
+
 ### Community 95 - "ConnectionItem"
-Cohesion: 0.24
-Nodes (11): ActiveSensorEntry, AuthTicket, BaseResponse, ConnectionItem, DeviceInfo, GraphData, LoginData, LoginRequest (+3 more)
+Cohesion: 0.46
+Nodes (9): ActiveSensorEntry, AuthTicket, BaseResponse, ConnectionItem, DeviceInfo, GraphData, LoginData, ResponseError (+1 more)
 
 ### Community 97 - "GlucoseWidgetUpdater.kt"
-Cohesion: 0.09
-Nodes (4): GlucoseCarAppService, GlucoseChartWidgetProvider, GlucoseCompactWidgetProvider, GlucoseWidgetUpdater
+Cohesion: 0.13
+Nodes (3): GlucoseChartWidgetProvider, GlucoseCompactWidgetProvider, GlucoseWidgetUpdater
 
-### Community 99 - "WearDashboardViewModel"
-Cohesion: 0.27
-Nodes (5): Error, Loading, NeedsLogin, WearDashboardUiState, WearDashboardViewModel
+### Community 99 - "WearDashboardViewModel.kt"
+Cohesion: 0.18
+Nodes (6): Error, Loading, NeedsLogin, Success, WearDashboardUiState, WearDashboardViewModel
 
-### Community 101 - "WearLegalNoticeType"
-Cohesion: 0.33
-Nodes (6): WearLegalNoticeType, DELETE_CONFIRMATION, MEDICAL_DISCLAIMER, NONE, PRIVACY_GDPR, TRADEMARKS
+### Community 101 - "ReportsHubScreen"
+Cohesion: 0.39
+Nodes (4): ClinicalExplanationBox(), MetricColumn(), ReportsHubScreen(), TirCategoryRow()
 
-### Community 102 - "ReportsHubScreen"
-Cohesion: 0.21
-Nodes (7): ClinicalExplanationBox(), MetricColumn(), ReportsHubScreen(), TirCategoryRow(), ClinicalReportsCalculator, TimeInRangeReport, TirBucket
+### Community 106 - "QrAuthHelper.kt"
+Cohesion: 0.13
+Nodes (4): E2ETier3CrossFeatureCombinationsTest, QrDeviceType, ANDROID_AUTO, WEAR_OS
 
-### Community 107 - "WearSettingsScreen"
-Cohesion: 0.33
-Nodes (6): WearLegalNoticeDialog(), WearLegalSectionBox(), WearPassiveLegalFooter(), CompactActionRow(), CompactSettingsRow(), WearSettingsScreen()
+### Community 107 - "WearLegalNoticeType"
+Cohesion: 0.22
+Nodes (9): WearLegalNoticeDialog(), WearLegalNoticeType, DELETE_CONFIRMATION, MEDICAL_DISCLAIMER, NONE, PRIVACY_GDPR, TRADEMARKS, WearLegalSectionBox() (+1 more)
 
 ### Community 111 - "app.js"
 Cohesion: 0.17
 Nodes (35): bindAutoEvents(), bindDashboardEvents(), bindLoginEvents(), bindQrEvents(), bindReportsEvents(), bindSettingsEvents(), bindWearEvents(), closeModal() (+27 more)
 
-### Community 112 - "AlarmSerializationSyncTest.kt"
-Cohesion: 0.14
-Nodes (3): GlucoseDashboardLegalTest, AppUpdateRepositoryTest, ModelSanityTest
-
 ### Community 114 - "DualFloatingOrbs"
 Cohesion: 0.29
 Nodes (5): DualFloatingOrbs(), 3. Jerarquia y Distribucion Espacial en Wear OS, A. Esferas Flotantes Superiores (`DualFloatingOrbs`), B. Grafica Sparkline + Badge de Sensor, Especificaciones de Componentes:
 
-### Community 117 - "TirCategory"
-Cohesion: 0.33
-Nodes (6): TirCategory, HIGH, IN_RANGE, LOW, VERY_HIGH, VERY_LOW
-
-### Community 141 - "[ADR-0001] Adopcion de Arquitectura Multi-Modulo con Nucleo Limpio Compartido"
+### Community 115 - "[ADR-0001] Adopcion de Arquitectura Multi-Modulo con Nucleo Limpio Compartido"
 Cohesion: 0.20
 Nodes (9): 1. Contexto y Declaracion del Problema, 2. Factores Decisivos (Decision Drivers), 3. Opciones Consideradas, 4. Decision Elegida, 5. Consecuencias y Compromisos (Trade-offs), 6. Reglas de Validacion y Cumplimiento (Enforcement), [ADR-0001] Adopcion de Arquitectura Multi-Modulo con Nucleo Limpio Compartido, Consecuencias Negativas / Riesgos Asumidos: (+1 more)
+
+### Community 116 - "GlucoseMeasurement"
+Cohesion: 0.18
+Nodes (3): ClinicalSparklineWithSensor(), E2ETier4RealWorldScenariosTest, GlucoseMeasurement
+
+### Community 122 - "MobileDualFloatingOrbs"
+Cohesion: 0.29
+Nodes (5): MobileDualFloatingOrbs(), 1. App Movil (`app-mobile`), 2. App Reloj (`app-wear`), 3. App Coche (`app-auto`), Caracteristicas Principales
+
+### Community 124 - "WearSettingsScreen"
+Cohesion: 0.67
+Nodes (3): CompactActionRow(), CompactSettingsRow(), WearSettingsScreen()
+
+### Community 127 - "AlarmSoundType"
+Cohesion: 0.25
+Nodes (8): AlarmSoundType, ALERT_STANDARD, CUSTOM, DEFAULT, DISCRETE_CHIME, SILENT, URGENT_EXTREME, URGENT_MEDICAL
 
 ### Community 148 - "OpenGluco | Landing Page Interactiva 3D con Conmutador de Tema"
 Cohesion: 0.40
 Nodes (4): Archivos, Novedades Principales, OpenGluco | Landing Page Interactiva 3D con Conmutador de Tema, Visualización
 
 ### Community 159 - "[ADR-0002] Persistencia Local Acumulativa de 90 Dias con DataStore y Deduplicacion"
-Cohesion: 0.33
-Nodes (5): 1. Contexto y Declaracion del Problema, 2. Factores Decisivos (Decision Drivers), 3. Opciones Consideradas, 5. Consecuencias y Compromisos (Trade-offs), [ADR-0002] Persistencia Local Acumulativa de 90 Dias con DataStore y Deduplicacion
+Cohesion: 0.29
+Nodes (6): 1. Contexto y Declaracion del Problema, 2. Factores Decisivos (Decision Drivers), 3. Opciones Consideradas, 4. Decision Elegida, 5. Consecuencias y Compromisos (Trade-offs), [ADR-0002] Persistencia Local Acumulativa de 90 Dias con DataStore y Deduplicacion
 
 ### Community 168 - "[ADR-0004] Blindaje Legal, Conformidad MDR/MDDS y Prohibicion Estricta de Emojis"
 Cohesion: 0.50
 Nodes (3): 1. Contexto y Declaracion del Problema, 2. Reglas Deterministas Forzadas, [ADR-0004] Blindaje Legal, Conformidad MDR/MDDS y Prohibicion Estricta de Emojis
 
 ### Community 169 - "ResponsiveLayout.kt"
-Cohesion: 0.05
-Nodes (21): MainActivity, MobileAppNavigation(), MobileLoginScreen(), CameraPreview(), decodeQrFromImage(), QrScannerScreen(), rotateYUV420Degree180(), rotateYUV420Degree270() (+13 more)
+Cohesion: 0.10
+Nodes (11): rememberResponsiveDimensions(), ResponsiveDimensions, WindowHeightClass, COMPACT, EXPANDED, MEDIUM, WindowWidthClass, COMPACT (+3 more)
 
 ### Community 174 - "write_adrs.js"
 Cohesion: 0.33
@@ -395,18 +426,18 @@ Nodes (3): docsDir, fs, path
 
 ## Knowledge Gaps
 - **248 isolated node(s):** `H24`, `H12`, `H6`, `H2`, `H1` (+243 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 497 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **64 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 506 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **72 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `GlucoseMeasurement` connect `GlucoseMeasurement` to `OpenGlucoRepository.kt`, `UserPreferencesRepository`, `QrScannerScreen.kt`, `WearBluetoothRfcommService.kt`, `MobileDashboardScreen`, `AlarmRepository`, `ClinicalReportsCalculatorTest`, `WearDashboardScreen.kt`, `EmpiricalStressChallengeTest`, `E2ETier2BoundaryCornerCasesTest`, `.renderSparkline`, `mobile/ui/theme/Color.kt`, `LocalGlucoseDatabase`, `.generateCsv`, `QrAuthHelper`, `WearSettingsAndDashboardContractTest.kt`, `E2ETier1FeatureCoverageTest`, `locale`, `launch`, `MobileDashboardScreen.kt`, `ClinicalReportsCalculator.kt`, `GlucoseDashboardCarScreen.kt`, `E2ETier4RealWorldScenariosTest.kt`, `LocalGlucoseDatabaseTest`, `.login`, `ConnectionItem`, `UserSettings`, `GlucoseWidgetUpdater.kt`, `WearBluetoothSecurityTest`, `UserPreferencesRepository.kt`, `ReportsHubScreen`, `LocalGlucoseDatabase.kt`, `EmpiricalStressChallengeTest.kt`, `E2ETier3CrossFeatureCombinationsTest.kt`, `AlarmSerializationSyncTest.kt`, `DataQualityStatusCard`, `DualFloatingOrbs`, `.getHistoricalReadingsList`?**
-  _High betweenness centrality (0.198) - this node is a cross-community bridge._
-- **Why does `UserPreferencesRepository` connect `UserPreferencesRepository` to `wear/MainActivity.kt`, `WearBluetoothRfcommService.kt`, `MobileDashboardScreen`, `MobileLoginScreen.kt`, `AlarmRepository`, `GlucoseUnit`, `WearDashboardScreen.kt`, `WearAuthMessageListenerService.kt`, `GlucoseEventMarker`, `QrAuthHelper.kt`, `GlucoseComplicationService.kt`, `LocalGlucoseDatabase`, `ResponsiveLayout.kt`, `GlucoseTileService.kt`, `.purgeAllLocalData`, `Reglas de Proyecto: OpenGluco Ecosystem`, `clinical_design.md`, `WearQrLoginScreen.kt`, `launch`, `MobileDashboardScreen.kt`, `ClinicalReportsCalculator.kt`, `GlucoseDashboardCarScreen.kt`, `GlucoseAlarmWorker.kt`, `.decrypt`, `UserSettings`, `GlucoseWidgetUpdater.kt`, `WearDashboardViewModel`, `UserPreferencesRepository.kt`, `ReportsHubScreen`, `LocalGlucoseDatabase.kt`, `WearSettingsScreen`, `first`, `.getHistoricalReadingsList`?**
-  _High betweenness centrality (0.134) - this node is a cross-community bridge._
-- **Why does `OpenGlucoRepository` connect `OpenGlucoRepository` to `OpenGlucoRepository.kt`, `OpenGlucoInterceptor`, `WearDashboardViewModel`, `wear/MainActivity.kt`, `MobileDashboardScreen`, `ResponsiveLayout.kt`, `MobileLoginScreen.kt`, `AlarmRepository`, `launch`, `MobileDashboardScreen.kt`, `Test`, `WearAuthMessageListenerService.kt`, `GlucoseDashboardCarScreen.kt`, `GlucoseAlarmWorker.kt`, `.login`, `ConnectionItem`?**
-  _High betweenness centrality (0.036) - this node is a cross-community bridge._
+- **Why does `GlucoseMeasurement` connect `GlucoseMeasurement` to `.renderSparkline`, `UserPreferencesRepository`, `ModelSanityTest.kt`, `AlarmConfigSection.kt`, `WearBluetoothRfcommService.kt`, `MobileDashboardScreen`, `ClinicalReportsCalculatorTest`, `SensorInfo`, `GlucoseMonitorForegroundService.kt`, `WearDashboardScreen.kt`, `EmpiricalStressChallengeTest`, `E2ETier2BoundaryCornerCasesTest.kt`, `MobileGlucoseChart`, `ClinicalReportsCalculator`, `UserSettings`, `LocalGlucoseDatabase`, `GlucoseDashboardCarScreen.kt`, `FastDateParser.kt`, `QrAuthHelper`, `.purgeAllLocalData`, `WearSettingsAndDashboardContractTest.kt`, `E2ETier1FeatureCoverageTest`, `HealthDataExporter`, `ReportTimeBlock`, `MobileDashboardScreen.kt`, `ClinicalReportsCalculator.kt`, `ConnectionItem`, `fillmaxwidth`, `GlucoseWidgetUpdater.kt`, `WearBluetoothSecurityTest`, `WearDashboardViewModel.kt`, `UserPreferencesRepository.kt`, `ReportsHubScreen`, `OpenGlucoRepository.kt`, `EmpiricalStressChallengeTest.kt`, `QrAuthHelper.kt`, `LocalGlucoseDatabaseTest`, `AlarmSerializationSyncTest.kt`, `DataQualityStatusCard`, `DualFloatingOrbs`, `OpenGlucoApiService.kt`, `MobileDualFloatingOrbs`, `.generateCsv`?**
+  _High betweenness centrality (0.194) - this node is a cross-community bridge._
+- **Why does `UserPreferencesRepository` connect `UserPreferencesRepository` to `WearGlucoseSyncWorker.kt`, `MobileAppNavigation`, `QrScannerScreen.kt`, `wear/MainActivity.kt`, `WearBluetoothRfcommService.kt`, `MobileDashboardScreen`, `WearQrLoginScreen.kt`, `GlucoseMonitorForegroundService.kt`, `WearDashboardScreen.kt`, `MobileGlucoseChart`, `WearAuthMessageListenerService.kt`, `WearQrLoginScreen`, `dispatchers`, `UserSettings`, `LocalGlucoseDatabase`, `GlucoseDashboardCarScreen.kt`, `GlucoseTileService.kt`, `.purgeAllLocalData`, `Reglas de Proyecto: OpenGluco Ecosystem`, `clinical_design.md`, `WearLoginViewModel.kt`, `MobileDashboardScreen.kt`, `ClinicalReportsCalculator.kt`, `GlucoseUnit`, `GlucoseAlarmWorker.kt`, `.decrypt`, `GlucoseWidgetUpdater.kt`, `WearDashboardViewModel.kt`, `UserPreferencesRepository.kt`, `ReportsHubScreen`, `EmpiricalStressChallengeTest.kt`, `first`, `WearSettingsScreen`?**
+  _High betweenness centrality (0.115) - this node is a cross-community bridge._
+- **Why does `OpenGlucoRepository` connect `OpenGlucoRepository` to `WearGlucoseSyncWorker.kt`, `AppUpdateRepository`, `MobileAppNavigation`, `GlucoseDashboardCarScreen.kt`, `QrScannerScreen.kt`, `wear/MainActivity.kt`, `WearDashboardViewModel.kt`, `OpenGlucoRepository.kt`, `MobileDashboardScreen`, `WearQrLoginScreen.kt`, `GlucoseMonitorForegroundService.kt`, `WearLoginViewModel.kt`, `MobileDashboardScreen.kt`, `.login`, `GlucoseMeasurement`, `OpenGlucoApiService.kt`, `GlucoseAlarmWorker.kt`?**
+  _High betweenness centrality (0.052) - this node is a cross-community bridge._
 - **Are the 23 inferred relationships involving `GlucoseMeasurement` (e.g. with `.testSubsampleOneOfThree_eliminatesMicroOscillationSpikes()` and `.testSubsampleOneOfThree_preservesExactLiveMeasurementAtTheTip()`) actually correct?**
   _`GlucoseMeasurement` has 23 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 2 inferred relationships involving `UserPreferencesRepository` (e.g. with `4. Persistencia y Datos (`core:data`)` and `4. Persistencia y Telemetria Historica (`core:data` & `core:model`)`) actually correct?**

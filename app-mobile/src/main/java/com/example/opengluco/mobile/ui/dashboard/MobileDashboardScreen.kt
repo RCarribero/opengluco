@@ -108,6 +108,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -160,7 +161,9 @@ import com.example.opengluco.mobile.ui.dashboard.components.PatientSelectorModal
 import com.example.opengluco.mobile.ui.reports.ReportsHubScreen
 import com.example.opengluco.mobile.ui.theme.ClinicalTheme
 import com.example.opengluco.mobile.ui.theme.getClinicalStatusColor
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.flowOf
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -547,15 +550,24 @@ fun MobileDashboardScreen(
     val targetLow = settings?.lowThreshold ?: selectedPatient?.targetLow ?: 70
     val targetHigh = settings?.highThreshold ?: selectedPatient?.targetHigh ?: 180
 
-    val availableDataDays = remember(syncPatientId, currentMeasurement) {
-        preferencesRepository.getAvailableDays(syncPatientId)
+    val availableDataDays by produceState(initialValue = 1, syncPatientId, currentMeasurement) {
+        value = withContext(Dispatchers.IO) {
+            preferencesRepository.getAvailableDays(syncPatientId)
+        }
     }
 
     val calculatedNotice: String? = null
 
-    val periodSummary = remember(selectedPeriod, syncPatientId, currentMeasurement) {
-        val summary = preferencesRepository.getPeriodSummary(selectedPeriod.days, syncPatientId)
-        if (summary.totalCount > 0) summary else null
+    val periodSummary by produceState<com.example.opengluco.core.model.PeriodSummary?>(
+        initialValue = null,
+        selectedPeriod,
+        syncPatientId,
+        currentMeasurement
+    ) {
+        value = withContext(Dispatchers.IO) {
+            val summary = preferencesRepository.getPeriodSummary(selectedPeriod.days, syncPatientId)
+            if (summary.totalCount > 0) summary else null
+        }
     }
 
     val avgVal = periodSummary?.mean ?: (currentMeasurement?.numericValue ?: 0.0)

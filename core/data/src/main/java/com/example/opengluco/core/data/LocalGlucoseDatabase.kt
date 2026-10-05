@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -37,10 +38,24 @@ class LocalGlucoseDatabase(
     dbName: String = DATABASE_NAME
 ) : SQLiteOpenHelper(context, dbName, null, DATABASE_VERSION) {
 
+    init {
+        try {
+            setWriteAheadLoggingEnabled(true)
+        } catch (_: Exception) {}
+    }
 
     companion object {
         const val DATABASE_NAME = "opengluco_glucose.db"
         const val DATABASE_VERSION = 3
+
+        @Volatile
+        private var INSTANCE: LocalGlucoseDatabase? = null
+
+        fun getInstance(context: Context): LocalGlucoseDatabase {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: LocalGlucoseDatabase(context.applicationContext).also { INSTANCE = it }
+            }
+        }
 
         const val TABLE_NAME = "glucose_measurements"
         const val COL_PATIENT_ID = "patient_id"
@@ -116,7 +131,9 @@ class LocalGlucoseDatabase(
     override fun onConfigure(db: SQLiteDatabase) {
         super.onConfigure(db)
         try {
-            db.enableWriteAheadLogging()
+            if (!db.isWriteAheadLoggingEnabled) {
+                db.enableWriteAheadLogging()
+            }
         } catch (_: Exception) {}
     }
 
@@ -315,6 +332,72 @@ class LocalGlucoseDatabase(
 
         _dbUpdateEvents.tryEmit(patientId.orEmpty())
         return deletedCount
+    }
+
+    /**
+     * Obtiene la lectura mas reciente registrada en la base de datos local en complejidad O(1).
+     */
+    fun getLatestReading(patientId: String? = null): GlucoseMeasurement? {
+        val targetPatientId = patientId?.trim().orEmpty()
+        val db = getSafeReadableDatabase()
+        if (db != null) {
+            val query = if (targetPatientId.isNotBlank()) {
+                """
+                    SELECT $COL_PATIENT_ID, $COL_EPOCH_MS, $COL_VALUE, $COL_TREND_ARROW,
+                           $COL_TREND_MESSAGE, $COL_COLOR, $COL_UNITS, $COL_TIMESTAMP,
+                           $COL_FACTORY_TIMESTAMP, $COL_IS_HIGH, $COL_IS_LOW
+                    FROM $TABLE_NAME
+                    WHERE $COL_PATIENT_ID = ?
+                    ORDER BY $COL_EPOCH_MS DESC LIMIT 1
+                """.trimIndent()
+            } else {
+                """
+                    SELECT $COL_PATIENT_ID, $COL_EPOCH_MS, $COL_VALUE, $COL_TREND_ARROW,
+                           $COL_TREND_MESSAGE, $COL_COLOR, $COL_UNITS, $COL_TIMESTAMP,
+                           $COL_FACTORY_TIMESTAMP, $COL_IS_HIGH, $COL_IS_LOW
+                    FROM $TABLE_NAME
+                    ORDER BY $COL_EPOCH_MS DESC LIMIT 1
+                """.trimIndent()
+            }
+            val args = if (targetPatientId.isNotBlank()) arrayOf(targetPatientId) else null
+            var cursor: Cursor? = null
+            try {
+                cursor = db.rawQuery(query, args)
+                if (cursor.moveToFirst()) {
+                    val idxVal = cursor.getColumnIndexOrThrow(COL_VALUE)
+                    val idxArrow = cursor.getColumnIndexOrThrow(COL_TREND_ARROW)
+                    val idxMsg = cursor.getColumnIndexOrThrow(COL_TREND_MESSAGE)
+                    val idxColor = cursor.getColumnIndexOrThrow(COL_COLOR)
+                    val idxUnits = cursor.getColumnIndexOrThrow(COL_UNITS)
+                    val idxTs = cursor.getColumnIndexOrThrow(COL_TIMESTAMP)
+                    val idxFts = cursor.getColumnIndexOrThrow(COL_FACTORY_TIMESTAMP)
+                    val idxHigh = cursor.getColumnIndexOrThrow(COL_IS_HIGH)
+                    val idxLow = cursor.getColumnIndexOrThrow(COL_IS_LOW)
+
+                    return GlucoseMeasurement(
+                        factoryTimestamp = cursor.getString(idxFts),
+                        timestamp = cursor.getString(idxTs),
+                        valueInMgPerDl = cursor.getDouble(idxVal),
+                        value = cursor.getDouble(idxVal),
+                        trendArrow = cursor.getInt(idxArrow),
+                        trendMessage = cursor.getString(idxMsg),
+                        measurementColor = cursor.getInt(idxColor),
+                        glucoseUnits = cursor.getInt(idxUnits),
+                        isHigh = cursor.getInt(idxHigh) == 1,
+                        isLow = cursor.getInt(idxLow) == 1
+                    )
+                }
+            } catch (_: Exception) {
+            } finally {
+                cursor?.close()
+            }
+        }
+        val targetMap = if (targetPatientId.isNotBlank()) {
+            inMemoryStorage[targetPatientId]
+        } else {
+            inMemoryStorage.values.firstOrNull()
+        }
+        return targetMap?.lastEntry()?.value
     }
 
     /**
@@ -765,7 +848,7 @@ class LocalGlucoseDatabase(
                 emit(getHistoricalReadingsList(days, targetPatientId))
             }
         }
-    }
+    }.flowOn(Dispatchers.IO)
 
     /**
      * Obtiene el listado completo de lecturas para los ultimos `days` dias de forma sincrona.
@@ -905,7 +988,7 @@ class LocalGlucoseDatabase(
         _dbUpdateEvents.collect { updatedId ->
             if (updatedId == targetPatientId) emit(getEventMarkers(targetPatientId))
         }
-    }
+    }.flowOn(Dispatchers.IO)
 
     fun deleteEventMarker(patientId: String, markerId: String): Boolean {
         val targetPatientId = patientId.trim()

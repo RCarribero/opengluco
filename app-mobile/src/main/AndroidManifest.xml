@@ -18,6 +18,10 @@
 
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
+    <queries>
+        <package android:name="com.example.opengluco.auto" />
+    </queries>
+
     <application
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
@@ -68,6 +72,12 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- ContentProvider para sincronización directa con OpenGluco Auto en el mismo dispositivo -->
+        <provider
+            android:name=".provider.OpenGlucoProvider"
+            android:authorities="com.example.opengluco.provider"
+            android:exported="true" />
 
         <!-- BroadcastReceiver para la accion Silenciar de notificaciones de alarmas -->
         <receiver
