@@ -1,7 +1,7 @@
 # Graph Report - librelinkup-ecosystem-master  (2026-10-08)
 
 ## Corpus Check
-- 153 files · ~124,737 words
+- 153 files · ~124,808 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 37 file(s) not represented in the graph (top: .xml 26, .bat 4, (none) 3)
 
