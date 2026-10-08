@@ -259,9 +259,15 @@ class GlucoseDashboardCarScreen(
         val isStale = measurement == null || measurement.isStale() || !isSensorActive
 
         val isMmol = currentSettings.unit == GlucoseUnit.MMOL
-        val displayValue = if (isStale) "--" else (measurement?.getFormattedValue(isMmol = isMmol) ?: "--")
+        val displayValue = measurement?.getFormattedValue(isMmol = isMmol) ?: "--"
         val trendSymbol = if (isStale) "--" else (measurement?.trendSymbol ?: "--")
-        val trendText = if (isStale) "Desconectado" else (measurement?.trendText ?: "Desconectado")
+        val trendText = if (measurement == null) {
+            "Desconectado"
+        } else if (isStale) {
+            "Desactualizado"
+        } else {
+            measurement.trendText ?: "Estable"
+        }
         val unitLabel = currentSettings.unit.label
         val lowThreshold = currentSettings.lowThreshold
         val highThreshold = currentSettings.highThreshold
@@ -293,7 +299,7 @@ class GlucoseDashboardCarScreen(
                 if (!isSensorActive) {
                     "[Desconectado] Sensor inactivo o expirado"
                 } else {
-                    "[Desconectado] Telemetria desactualizada (> 20 min)"
+                    "[Desactualizado] Telemetria anterior (> 20 min)"
                 }
             } else {
                 val mgdl = measurement?.numericValue ?: 0.0

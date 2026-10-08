@@ -141,7 +141,11 @@ fun WearDashboardScreen(
                         Spacer(modifier = Modifier.height(18.dp))
                     }
 
-                    val isSensorActive = state.sensor != null && (state.sensor.getRemainingDays() ?: 0) > 0 && state.sensor.isSensorActive != false
+                    val isSensorActive = if (state.sensor != null) {
+                        (state.sensor.getRemainingDays() ?: 0) > 0 && state.sensor.isSensorActive != false
+                    } else {
+                        state.currentMeasurement != null
+                    }
                     val isStale = state.currentMeasurement == null || state.currentMeasurement.isStale() || !isSensorActive
 
                     // 1. FILA SUPERIOR: 2 ESFERAS FLOTANTES (GLUCOSA + TENDENCIA)

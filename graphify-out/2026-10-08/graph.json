@@ -576,17 +576,17 @@
       "source_location": "L14"
     },
     {
-      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_mobileglucosechart_object_object_l2091_l2091",
-      "label": "object@L2091",
+      "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_mobileglucosechart_object_object_l2068_l2068",
+      "label": "object@L2068",
       "_callable": true,
       "_callable_class": true,
       "_origin": "ast",
       "community": 19,
       "community_name": "MobileGlucoseChart",
       "file_type": "code",
-      "norm_label": "object@l2091",
+      "norm_label": "object@l2068",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2091"
+      "source_location": "L2068"
     },
     {
       "id": "core_model_src_main_java_com_example_opengluco_core_model_clinicalreportmodels_glucoseeventmarker",
@@ -5145,7 +5145,7 @@
       "file_type": "code",
       "norm_label": "formatcharttime()",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1981"
+      "source_location": "L1958"
     },
     {
       "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_mobileglucosechart",
@@ -5157,7 +5157,7 @@
       "file_type": "code",
       "norm_label": "mobileglucosechart()",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2015"
+      "source_location": "L1992"
     },
     {
       "id": "core_data_src_main_java_com_example_opengluco_core_data_localglucosedatabase_localglucosedatabase_inserteventmarker",
@@ -8409,7 +8409,7 @@
       "file_type": "code",
       "norm_label": "dailystatitem()",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1924"
+      "source_location": "L1901"
     },
     {
       "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_dashboardchartcard",
@@ -8421,7 +8421,7 @@
       "file_type": "code",
       "norm_label": "dashboardchartcard()",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2964"
+      "source_location": "L2940"
     },
     {
       "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_dashboardclinicalerrorbanner",
@@ -8433,7 +8433,7 @@
       "file_type": "code",
       "norm_label": "dashboardclinicalerrorbanner()",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2647"
+      "source_location": "L2624"
     },
     {
       "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_dashboardherosection",
@@ -8445,7 +8445,7 @@
       "file_type": "code",
       "norm_label": "dashboardherosection()",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2914"
+      "source_location": "L2891"
     },
     {
       "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_dashboardsensorcard",
@@ -8457,7 +8457,7 @@
       "file_type": "code",
       "norm_label": "dashboardsensorcard()",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L3305"
+      "source_location": "L3281"
     },
     {
       "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_dashboardstatscard",
@@ -8469,7 +8469,7 @@
       "file_type": "code",
       "norm_label": "dashboardstatscard()",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L3092"
+      "source_location": "L3068"
     },
     {
       "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_mobiledashboardscreen",
@@ -8493,7 +8493,7 @@
       "file_type": "code",
       "norm_label": "mobilesettingsscreen()",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1299"
+      "source_location": "L1276"
     },
     {
       "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_settingsdivider",
@@ -8505,7 +8505,7 @@
       "file_type": "code",
       "norm_label": "settingsdivider()",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1913"
+      "source_location": "L1890"
     },
     {
       "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_settingsgroupcard",
@@ -8517,7 +8517,7 @@
       "file_type": "code",
       "norm_label": "settingsgroupcard()",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1683"
+      "source_location": "L1660"
     },
     {
       "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_settingsnavigationrow",
@@ -8529,7 +8529,7 @@
       "file_type": "code",
       "norm_label": "settingsnavigationrow()",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1838"
+      "source_location": "L1815"
     },
     {
       "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_settingsswitchrow",
@@ -8541,7 +8541,7 @@
       "file_type": "code",
       "norm_label": "settingsswitchrow()",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1710"
+      "source_location": "L1687"
     },
     {
       "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_settingsvaluerow",
@@ -8553,7 +8553,7 @@
       "file_type": "code",
       "norm_label": "settingsvaluerow()",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1768"
+      "source_location": "L1745"
     },
     {
       "id": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_qr_qrscannerscreen_camerapreview",
@@ -22494,7 +22494,7 @@
       "confidence_score": 1.0,
       "context": "attribute",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1924",
+      "source_location": "L1901",
       "weight": 1.0
     },
     {
@@ -22506,7 +22506,7 @@
       "confidence_score": 1.0,
       "context": "attribute",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2964",
+      "source_location": "L2940",
       "weight": 1.0
     },
     {
@@ -22518,7 +22518,7 @@
       "confidence_score": 1.0,
       "context": "attribute",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2647",
+      "source_location": "L2624",
       "weight": 1.0
     },
     {
@@ -22530,7 +22530,7 @@
       "confidence_score": 1.0,
       "context": "attribute",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2914",
+      "source_location": "L2891",
       "weight": 1.0
     },
     {
@@ -22542,7 +22542,7 @@
       "confidence_score": 1.0,
       "context": "attribute",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L3305",
+      "source_location": "L3281",
       "weight": 1.0
     },
     {
@@ -22554,7 +22554,7 @@
       "confidence_score": 1.0,
       "context": "attribute",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L3092",
+      "source_location": "L3068",
       "weight": 1.0
     },
     {
@@ -22590,7 +22590,7 @@
       "confidence_score": 1.0,
       "context": "attribute",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2015",
+      "source_location": "L1992",
       "weight": 1.0
     },
     {
@@ -22602,7 +22602,7 @@
       "confidence_score": 1.0,
       "context": "attribute",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1299",
+      "source_location": "L1276",
       "weight": 1.0
     },
     {
@@ -22614,7 +22614,7 @@
       "confidence_score": 1.0,
       "context": "attribute",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1299",
+      "source_location": "L1276",
       "weight": 1.0
     },
     {
@@ -22626,7 +22626,7 @@
       "confidence_score": 1.0,
       "context": "attribute",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1913",
+      "source_location": "L1890",
       "weight": 1.0
     },
     {
@@ -22638,7 +22638,7 @@
       "confidence_score": 1.0,
       "context": "attribute",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1683",
+      "source_location": "L1660",
       "weight": 1.0
     },
     {
@@ -22650,7 +22650,7 @@
       "confidence_score": 1.0,
       "context": "attribute",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1838",
+      "source_location": "L1815",
       "weight": 1.0
     },
     {
@@ -22662,7 +22662,7 @@
       "confidence_score": 1.0,
       "context": "attribute",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1710",
+      "source_location": "L1687",
       "weight": 1.0
     },
     {
@@ -22674,7 +22674,7 @@
       "confidence_score": 1.0,
       "context": "attribute",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1768",
+      "source_location": "L1745",
       "weight": 1.0
     },
     {
@@ -27366,7 +27366,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L3014",
+      "source_location": "L2990",
       "weight": 1.0
     },
     {
@@ -27378,7 +27378,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L3075",
+      "source_location": "L3051",
       "weight": 1.0
     },
     {
@@ -27390,7 +27390,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2942",
+      "source_location": "L2918",
       "weight": 1.0
     },
     {
@@ -27402,31 +27402,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L3231",
-      "weight": 1.0
-    },
-    {
-      "source": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_mobiledashboardscreen",
-      "target": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_components_legalcompliancecomponents_legalnoticedialog",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1006",
-      "weight": 1.0
-    },
-    {
-      "source": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_mobiledashboardscreen",
-      "target": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_components_updateavailabledialog_updateavailabledialog",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1020",
+      "source_location": "L3207",
       "weight": 1.0
     },
     {
@@ -27438,7 +27414,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1112",
+      "source_location": "L1089",
       "weight": 1.0
     },
     {
@@ -27450,7 +27426,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1240",
+      "source_location": "L1217",
       "weight": 1.0
     },
     {
@@ -27462,7 +27438,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1257",
+      "source_location": "L1234",
       "weight": 1.0
     },
     {
@@ -27474,7 +27450,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1273",
+      "source_location": "L1250",
       "weight": 1.0
     },
     {
@@ -27486,7 +27462,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1284",
+      "source_location": "L1261",
       "weight": 1.0
     },
     {
@@ -27582,7 +27558,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L613",
+      "source_location": "L590",
       "weight": 1.0
     },
     {
@@ -27594,7 +27570,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L621",
+      "source_location": "L598",
       "weight": 1.0
     },
     {
@@ -27606,7 +27582,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L654",
+      "source_location": "L631",
       "weight": 1.0
     },
     {
@@ -27618,7 +27594,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L684",
+      "source_location": "L661",
       "weight": 1.0
     },
     {
@@ -27630,7 +27606,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L765",
+      "source_location": "L742",
       "weight": 1.0
     },
     {
@@ -27642,7 +27618,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L777",
+      "source_location": "L754",
       "weight": 1.0
     },
     {
@@ -27654,7 +27630,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L787",
+      "source_location": "L764",
       "weight": 1.0
     },
     {
@@ -27666,7 +27642,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L811",
+      "source_location": "L788",
       "weight": 1.0
     },
     {
@@ -27678,7 +27654,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L838",
+      "source_location": "L815",
       "weight": 1.0
     },
     {
@@ -27690,7 +27666,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L969",
+      "source_location": "L946",
       "weight": 1.0
     },
     {
@@ -27702,7 +27678,31 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L993",
+      "source_location": "L970",
+      "weight": 1.0
+    },
+    {
+      "source": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_mobiledashboardscreen",
+      "target": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_components_legalcompliancecomponents_legalnoticedialog",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
+      "source_location": "L983",
+      "weight": 1.0
+    },
+    {
+      "source": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_mobiledashboardscreen",
+      "target": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_components_updateavailabledialog_updateavailabledialog",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
+      "source_location": "L997",
       "weight": 1.0
     },
     {
@@ -27714,7 +27714,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2038",
+      "source_location": "L2015",
       "weight": 1.0
     },
     {
@@ -27726,7 +27726,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2039",
+      "source_location": "L2016",
       "weight": 1.0
     },
     {
@@ -27738,7 +27738,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2040",
+      "source_location": "L2017",
       "weight": 1.0
     },
     {
@@ -27750,7 +27750,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2118",
+      "source_location": "L2095",
       "weight": 1.0
     },
     {
@@ -27762,7 +27762,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2151",
+      "source_location": "L2128",
       "weight": 1.0
     },
     {
@@ -27774,7 +27774,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2439",
+      "source_location": "L2416",
       "weight": 1.0
     },
     {
@@ -27786,7 +27786,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2590",
+      "source_location": "L2567",
       "weight": 1.0
     },
     {
@@ -27798,7 +27798,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2608",
+      "source_location": "L2585",
       "weight": 1.0
     },
     {
@@ -27810,7 +27810,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1438",
+      "source_location": "L1415",
       "weight": 1.0
     },
     {
@@ -27822,7 +27822,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1445",
+      "source_location": "L1422",
       "weight": 1.0
     },
     {
@@ -27834,7 +27834,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1447",
+      "source_location": "L1424",
       "weight": 1.0
     },
     {
@@ -27846,7 +27846,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1455",
+      "source_location": "L1432",
       "weight": 1.0
     },
     {
@@ -27858,7 +27858,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1458",
+      "source_location": "L1435",
       "weight": 1.0
     },
     {
@@ -27870,7 +27870,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1515",
+      "source_location": "L1492",
       "weight": 1.0
     },
     {
@@ -27882,7 +27882,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1672",
+      "source_location": "L1649",
       "weight": 1.0
     },
     {
@@ -29322,7 +29322,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/dashboard/WearDashboardScreen.kt",
-      "source_location": "L153",
+      "source_location": "L149",
       "weight": 1.0
     },
     {
@@ -29334,7 +29334,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/dashboard/WearDashboardScreen.kt",
-      "source_location": "L171",
+      "source_location": "L167",
       "weight": 1.0
     },
     {
@@ -29346,7 +29346,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/dashboard/WearDashboardScreen.kt",
-      "source_location": "L187",
+      "source_location": "L183",
       "weight": 1.0
     },
     {
@@ -29358,7 +29358,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/dashboard/WearDashboardScreen.kt",
-      "source_location": "L269",
+      "source_location": "L265",
       "weight": 1.0
     },
     {
@@ -29370,7 +29370,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-wear/src/main/java/com/example/opengluco/wear/ui/dashboard/WearDashboardScreen.kt",
-      "source_location": "L279",
+      "source_location": "L275",
       "weight": 1.0
     },
     {
@@ -35682,7 +35682,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2964",
+      "source_location": "L2940",
       "weight": 1.0
     },
     {
@@ -35694,7 +35694,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2964",
+      "source_location": "L2940",
       "weight": 1.0
     },
     {
@@ -35706,7 +35706,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2964",
+      "source_location": "L2940",
       "weight": 1.0
     },
     {
@@ -35718,7 +35718,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2914",
+      "source_location": "L2891",
       "weight": 1.0
     },
     {
@@ -35730,7 +35730,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2015",
+      "source_location": "L1992",
       "weight": 1.0
     },
     {
@@ -35742,7 +35742,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2015",
+      "source_location": "L1992",
       "weight": 1.0
     },
     {
@@ -35754,11 +35754,11 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2015",
+      "source_location": "L1992",
       "weight": 1.0
     },
     {
-      "source": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_mobileglucosechart_object_object_l2091_l2091",
+      "source": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_mobileglucosechart_object_object_l2068_l2068",
       "target": "core_model_src_main_java_com_example_opengluco_core_model_openglucomodels_glucosemeasurement",
       "relation": "references",
       "_origin": "ast",
@@ -35766,11 +35766,11 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2094",
+      "source_location": "L2071",
       "weight": 1.0
     },
     {
-      "source": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_mobileglucosechart_object_object_l2091_l2091",
+      "source": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_mobileglucosechart_object_object_l2068_l2068",
       "target": "offset",
       "relation": "references",
       "_origin": "ast",
@@ -35778,11 +35778,11 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2095",
+      "source_location": "L2072",
       "weight": 1.0
     },
     {
-      "source": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_mobileglucosechart_object_object_l2091_l2091",
+      "source": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_mobileglucosechart_object_object_l2068_l2068",
       "target": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_kt_com",
       "relation": "references",
       "_origin": "ast",
@@ -35790,7 +35790,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2096",
+      "source_location": "L2073",
       "weight": 1.0
     },
     {
@@ -35802,7 +35802,7 @@
       "confidence_score": 1.0,
       "context": "generic_arg",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1299",
+      "source_location": "L1276",
       "weight": 1.0
     },
     {
@@ -71124,7 +71124,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1924",
+      "source_location": "L1901",
       "weight": 1.0
     },
     {
@@ -71136,7 +71136,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1924",
+      "source_location": "L1901",
       "weight": 1.0
     },
     {
@@ -71148,7 +71148,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2964",
+      "source_location": "L2940",
       "weight": 1.0
     },
     {
@@ -71160,7 +71160,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2964",
+      "source_location": "L2940",
       "weight": 1.0
     },
     {
@@ -71172,7 +71172,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2647",
+      "source_location": "L2624",
       "weight": 1.0
     },
     {
@@ -71184,7 +71184,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2914",
+      "source_location": "L2891",
       "weight": 1.0
     },
     {
@@ -71196,7 +71196,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2914",
+      "source_location": "L2891",
       "weight": 1.0
     },
     {
@@ -71208,7 +71208,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L3305",
+      "source_location": "L3281",
       "weight": 1.0
     },
     {
@@ -71220,7 +71220,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L3092",
+      "source_location": "L3068",
       "weight": 1.0
     },
     {
@@ -71268,7 +71268,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2015",
+      "source_location": "L1992",
       "weight": 1.0
     },
     {
@@ -71280,7 +71280,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2015",
+      "source_location": "L1992",
       "weight": 1.0
     },
     {
@@ -71292,7 +71292,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2015",
+      "source_location": "L1992",
       "weight": 1.0
     },
     {
@@ -71304,7 +71304,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1299",
+      "source_location": "L1276",
       "weight": 1.0
     },
     {
@@ -71316,7 +71316,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1299",
+      "source_location": "L1276",
       "weight": 1.0
     },
     {
@@ -71328,7 +71328,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1299",
+      "source_location": "L1276",
       "weight": 1.0
     },
     {
@@ -71340,7 +71340,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1838",
+      "source_location": "L1815",
       "weight": 1.0
     },
     {
@@ -71352,7 +71352,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1838",
+      "source_location": "L1815",
       "weight": 1.0
     },
     {
@@ -71364,7 +71364,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1710",
+      "source_location": "L1687",
       "weight": 1.0
     },
     {
@@ -71376,7 +71376,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1768",
+      "source_location": "L1745",
       "weight": 1.0
     },
     {
@@ -71388,7 +71388,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1768",
+      "source_location": "L1745",
       "weight": 1.0
     },
     {
@@ -76169,7 +76169,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1299",
+      "source_location": "L1276",
       "weight": 1.0
     },
     {
@@ -76180,7 +76180,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1683",
+      "source_location": "L1660",
       "weight": 1.0
     },
     {
@@ -76191,7 +76191,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1710",
+      "source_location": "L1687",
       "weight": 1.0
     },
     {
@@ -76213,7 +76213,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1768",
+      "source_location": "L1745",
       "weight": 1.0
     },
     {
@@ -76224,7 +76224,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1838",
+      "source_location": "L1815",
       "weight": 1.0
     },
     {
@@ -76246,7 +76246,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1913",
+      "source_location": "L1890",
       "weight": 1.0
     },
     {
@@ -76257,7 +76257,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1924",
+      "source_location": "L1901",
       "weight": 1.0
     },
     {
@@ -76279,7 +76279,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L1981",
+      "source_location": "L1958",
       "weight": 1.0
     },
     {
@@ -76290,7 +76290,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2015",
+      "source_location": "L1992",
       "weight": 1.0
     },
     {
@@ -76301,7 +76301,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2647",
+      "source_location": "L2624",
       "weight": 1.0
     },
     {
@@ -76312,7 +76312,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2914",
+      "source_location": "L2891",
       "weight": 1.0
     },
     {
@@ -76323,7 +76323,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2964",
+      "source_location": "L2940",
       "weight": 1.0
     },
     {
@@ -76334,7 +76334,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L3092",
+      "source_location": "L3068",
       "weight": 1.0
     },
     {
@@ -76345,18 +76345,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L3305",
+      "source_location": "L3281",
       "weight": 1.0
     },
     {
       "source": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_mobileglucosechart",
-      "target": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_mobileglucosechart_object_object_l2091_l2091",
+      "target": "app_mobile_src_main_java_com_example_opengluco_mobile_ui_dashboard_mobiledashboardscreen_mobileglucosechart_object_object_l2068_l2068",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/ui/dashboard/MobileDashboardScreen.kt",
-      "source_location": "L2091",
+      "source_location": "L2068",
       "weight": 1.0
     },
     {

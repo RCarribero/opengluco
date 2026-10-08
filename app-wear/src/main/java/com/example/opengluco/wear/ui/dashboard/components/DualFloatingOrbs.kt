@@ -59,12 +59,13 @@ fun DualFloatingOrbs(
         Color(0xFF64748B)
     }
 
-    val displayValue = if (effectiveStale) "--" else (measurement?.getFormattedValue(isMmol = unit == GlucoseUnit.MMOL) ?: "--")
-    val trendSymbol = if (effectiveStale) "--" else (measurement?.trendSymbol ?: "→")
-    val trendText = if (effectiveStale) {
-        if (!isSensorActive) "Sin sensor" else "Desconectado"
-    } else {
-        measurement?.trendText ?: "Estable"
+    val displayValue = measurement?.getFormattedValue(isMmol = unit == GlucoseUnit.MMOL) ?: "--"
+    val trendSymbol = measurement?.trendSymbol ?: "--"
+    val trendText = when {
+        measurement == null -> "Sin datos"
+        !isSensorActive -> "Sin sensor"
+        effectiveStale -> "Desactualizado"
+        else -> measurement.trendText ?: "Estable"
     }
 
     Row(

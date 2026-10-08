@@ -62,13 +62,14 @@ fun MobileDualFloatingOrbs(
         colors.textMuted
     }
 
-    val formattedVal = if (effectiveStale) "--" else (measurement?.getFormattedValue(isMmol = unit == GlucoseUnit.MMOL) ?: "--")
-    val glucoseDesc = if (effectiveStale) "Glucosa desactualizada o desconectada" else "Nivel de glucosa actual: $formattedVal ${unit.label}"
-    val effectiveTrendSymbol = if (effectiveStale) "--" else (measurement?.trendSymbol ?: "→")
-    val effectiveTrendText = if (effectiveStale) {
-        if (!isSensorActive) "Sin sensor" else "Desconectado"
-    } else {
-        measurement?.trendText ?: "Estable"
+    val formattedVal = measurement?.getFormattedValue(isMmol = unit == GlucoseUnit.MMOL) ?: "--"
+    val glucoseDesc = if (effectiveStale) "Glucosa desactualizada: $formattedVal ${unit.label}" else "Nivel de glucosa actual: $formattedVal ${unit.label}"
+    val effectiveTrendSymbol = measurement?.trendSymbol ?: "--"
+    val effectiveTrendText = when {
+        measurement == null -> "Sin datos"
+        !isSensorActive -> "Sin sensor"
+        effectiveStale -> "Desactualizado"
+        else -> measurement.trendText ?: "Estable"
     }
     val trendDesc = "Tendencia: $effectiveTrendText, direccion $effectiveTrendSymbol"
 

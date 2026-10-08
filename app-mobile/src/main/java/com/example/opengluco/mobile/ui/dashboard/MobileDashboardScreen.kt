@@ -508,7 +508,26 @@ fun MobileDashboardScreen(
         }
     }
 
-    val currentMeasurement = selectedPatient?.effectiveMeasurement ?: history.lastOrNull()
+    // Lectura local instantanea O(1) de SQLite al iniciar la pantalla (< 1 ms)
+    val localLatestReading by produceState<GlucoseMeasurement?>(
+        initialValue = remember(syncPatientId) {
+            preferencesRepository.localDatabase.getLatestReading(syncPatientId.ifBlank { null })
+        },
+        syncPatientId
+    ) {
+        preferencesRepository.localDatabase.dbUpdateEvents.collect {
+            value = preferencesRepository.localDatabase.getLatestReading(syncPatientId.ifBlank { null })
+        }
+    }
+
+    val currentMeasurement = remember(selectedPatient, history, periodReadings, localLatestReading) {
+        listOfNotNull(
+            selectedPatient?.effectiveMeasurement,
+            history.lastOrNull(),
+            periodReadings.lastOrNull(),
+            localLatestReading
+        ).maxByOrNull { it.getEpochMillis() }
+    }
 
     // Unificación y deduplicación completa de historial (caché persistente + datos API en vivo + última medición)
     val combinedHistory = remember(history, periodReadings, currentMeasurement) {
@@ -582,7 +601,11 @@ fun MobileDashboardScreen(
     val sensorDays = sensor?.getRemainingDays() ?: 0
     val sensorSerial = sensor?.serialNumber ?: selectedPatient?.sensor?.serialNumber ?: "Sin Sensor"
     val sensorModel = sensor?.sensorModelName ?: "FreeStyle Libre"
-    val isSensorActive = sensorState is SensorLifecycleState.Active
+    val isSensorActive = if (sensor != null) {
+        sensorState is SensorLifecycleState.Active
+    } else {
+        currentMeasurement != null
+    }
     val isStale = (currentMeasurement?.isStale() ?: true) || !isSensorActive
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -2906,8 +2929,9 @@ private fun DashboardHeroSection(
     } ?: currentMeasurement?.timestamp?.takeLast(5) ?: "--:--"
 
     val statusText = when {
+        currentMeasurement == null -> "Sin datos registrados • --:--"
         !isSensorActive -> "Sin sensor activo • $formattedTime"
-        effectiveStale -> "Desconectado • $formattedTime"
+        effectiveStale -> "Desactualizado • $formattedTime"
         else -> "Última medición: $formattedTime"
     }
 
