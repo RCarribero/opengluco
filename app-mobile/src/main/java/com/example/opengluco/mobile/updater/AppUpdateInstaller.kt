@@ -36,9 +36,9 @@ object AppUpdateInstaller {
     fun installApk(context: Context, apkFile: File) {
         if (!apkFile.exists() || apkFile.length() == 0L) return
 
-        // Validar integridad estructural del paquete APK antes de invocar el instalador del sistema
+        // Validar integridad estructural y coincidencia del paquete APK antes de invocar el instalador del sistema
         val archiveInfo = context.packageManager.getPackageArchiveInfo(apkFile.absolutePath, 0)
-        if (archiveInfo == null) {
+        if (archiveInfo == null || archiveInfo.packageName != context.packageName) {
             apkFile.delete()
             return
         }

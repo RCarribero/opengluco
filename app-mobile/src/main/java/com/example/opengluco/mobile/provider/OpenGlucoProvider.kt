@@ -41,6 +41,19 @@ class OpenGlucoProvider : ContentProvider() {
         sortOrder: String?
     ): Cursor? {
         val ctx = context ?: return null
+
+        val callerUid = android.os.Binder.getCallingUid()
+        val myUid = android.os.Process.myUid()
+        if (callerUid != myUid) {
+            val permissionCheck = ctx.checkCallingOrSelfPermission(
+                "com.example.opengluco.permission.READ_GLUCOSE_DATA"
+            )
+            if (permissionCheck != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                Log.e("OpenGlucoProvider", "Acceso denegado: llamador (UID $callerUid, paquete $callingPackage) no autorizado")
+                throw SecurityException("Acceso no autorizado a OpenGlucoProvider")
+            }
+        }
+
         return when (uriMatcher.match(uri)) {
             CODE_SESSION -> {
                 val cursor = MatrixCursor(arrayOf(

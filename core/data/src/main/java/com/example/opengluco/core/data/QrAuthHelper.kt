@@ -172,18 +172,18 @@ object QrAuthHelper {
         nonceHex: String? = null,
         sessionId: String = UUID.randomUUID().toString()
     ): Boolean = withContext(Dispatchers.IO) {
+        if (secretKeyHex.isNullOrBlank() || nonceHex.isNullOrBlank()) {
+            // Rechazo estricto: prohibido transmitir credenciales en texto plano por la red local
+            return@withContext false
+        }
         try {
-            val bodyPayload = if (!secretKeyHex.isNullOrBlank() && !nonceHex.isNullOrBlank()) {
-                val encryptedDataHex = encryptAesGcm(sessionJson, secretKeyHex, nonceHex)
-                val encryptedModel = com.example.opengluco.core.model.QrEncryptedPayload(
-                    sessionId = sessionId,
-                    encryptedDataHex = encryptedDataHex,
-                    ivHex = nonceHex
-                )
-                json.encodeToString(encryptedModel)
-            } else {
-                sessionJson
-            }
+            val encryptedDataHex = encryptAesGcm(sessionJson, secretKeyHex, nonceHex)
+            val encryptedModel = com.example.opengluco.core.model.QrEncryptedPayload(
+                sessionId = sessionId,
+                encryptedDataHex = encryptedDataHex,
+                ivHex = nonceHex
+            )
+            val bodyPayload = json.encodeToString(encryptedModel)
 
             val mediaType = "application/json; charset=utf-8".toMediaType()
             val body = bodyPayload.toRequestBody(mediaType)
@@ -238,8 +238,6 @@ object QrAuthHelper {
                                         } catch (_: Exception) {
                                             session = null
                                         }
-                                    } else {
-                                        session = parseSessionExchange(rawBody)
                                     }
 
                                     if (session != null) {

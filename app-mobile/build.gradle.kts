@@ -13,8 +13,8 @@ android {
         applicationId = "com.example.opengluco"
         minSdk = 29
         targetSdk = 34
-        versionCode = 19
-        versionName = "1.2.7"
+        versionCode = 20
+        versionName = "1.2.8"
         vectorDrawables {
             useSupportLibrary = true
         }

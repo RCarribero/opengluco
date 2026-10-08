@@ -1,7 +1,7 @@
 # Graph Report - librelinkup-ecosystem-master  (2026-10-08)
 
 ## Corpus Check
-- 153 files · ~125,294 words
+- 153 files · ~125,347 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 37 file(s) not represented in the graph (top: .xml 26, .bat 4, (none) 3)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `4108bcf9`
+- Built from commit: `0e805e14`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -422,11 +422,11 @@ Nodes (3): docsDir, fs, path
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `GlucoseMeasurement` connect `GlucoseMeasurement` to `GlucoseDashboardCarScreen.kt`, `UserPreferencesRepository`, `QrScannerScreen.kt`, `ModelSanityTest.kt`, `WearBluetoothRfcommService.kt`, `MobileDashboardScreen`, `ClinicalReportsCalculatorTest`, `SensorInfo`, `GlucoseMonitorForegroundService.kt`, `WearDashboardScreen.kt`, `EmpiricalStressChallengeTest`, `E2ETier2BoundaryCornerCasesTest.kt`, `MobileGlucoseChart`, `ClinicalReportsCalculator`, `TirCategory`, `LocalGlucoseDatabase`, `GlucoseTileService.kt`, `QrAuthHelper`, `.purgeAllLocalData`, `WearSettingsAndDashboardContractTest.kt`, `E2ETier1FeatureCoverageTest`, `HealthDataExporter.kt`, `MobileDashboardScreen.kt`, `ClinicalReportsCalculator.kt`, `GlucoseUnit`, `ConnectionItem`, `.updateAllWidgets`, `WearBluetoothSecurityTest`, `UserPreferencesRepository.kt`, `ReportsHubScreen`, `OpenGlucoRepository.kt`, `EmpiricalStressChallengeTest.kt`, `QrAuthHelper.kt`, `dispatchers`, `LocalGlucoseDatabaseTest`, `AlarmSerializationSyncTest.kt`, `DataQualityStatusCard`?**
-  _High betweenness centrality (0.189) - this node is a cross-community bridge._
+  _High betweenness centrality (0.199) - this node is a cross-community bridge._
 - **Why does `UserPreferencesRepository` connect `UserPreferencesRepository` to `GlucoseDashboardCarScreen.kt`, `mobile/MainActivity.kt`, `QrScannerScreen.kt`, `wear/MainActivity.kt`, `WearBluetoothRfcommService.kt`, `MobileDashboardScreen`, `MobileLoginScreen.kt`, `GlucoseMonitorForegroundService.kt`, `WearDashboardScreen.kt`, `MobileGlucoseChart`, `first`, `WearQrLoginScreen`, `GlucoseComplicationService.kt`, `WearQrLoginScreen.kt`, `LocalGlucoseDatabase`, `QrLoginCarScreen.kt`, `GlucoseTileService.kt`, `.purgeAllLocalData`, `Reglas de Proyecto: OpenGluco Ecosystem`, `WearSettingsAndDashboardContractTest.kt`, `WearLoginViewModel.kt`, `MobileDashboardScreen.kt`, `ClinicalReportsCalculator.kt`, `GlucoseUnit`, `GlucoseAlarmWorker.kt`, `.decrypt`, `.updateAllWidgets`, `UserPreferencesRepository.kt`, `ReportsHubScreen`, `dispatchers`, `WearSettingsScreen`?**
   _High betweenness centrality (0.109) - this node is a cross-community bridge._
 - **Why does `OpenGlucoRepository` connect `OpenGlucoRepository` to `GlucoseDashboardCarScreen.kt`, `AppUpdateRepository`, `mobile/MainActivity.kt`, `Test`, `wear/MainActivity.kt`, `OpenGlucoRepository.kt`, `MobileDashboardScreen`, `MobileLoginScreen.kt`, `GlucoseMonitorForegroundService.kt`, `WearLoginViewModel.kt`, `GlucoseTileService.kt`, `MobileDashboardScreen.kt`, `GlucoseMeasurement`, `first`, `GlucoseAlarmWorker.kt`, `OpenGlucoRegion`, `ConnectionItem`?**
-  _High betweenness centrality (0.042) - this node is a cross-community bridge._
+  _High betweenness centrality (0.045) - this node is a cross-community bridge._
 - **Are the 23 inferred relationships involving `GlucoseMeasurement` (e.g. with `.testSubsampleOneOfThree_eliminatesMicroOscillationSpikes()` and `.testSubsampleOneOfThree_preservesExactLiveMeasurementAtTheTip()`) actually correct?**
   _`GlucoseMeasurement` has 23 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 2 inferred relationships involving `UserPreferencesRepository` (e.g. with `4. Persistencia y Datos (`core:data`)` and `4. Persistencia y Telemetria Historica (`core:data` & `core:model`)`) actually correct?**

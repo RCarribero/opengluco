@@ -5793,7 +5793,7 @@
       "file_type": "code",
       "norm_label": ".generateqrbitmap()",
       "source_file": "core/data/src/main/java/com/example/opengluco/core/data/QrAuthHelper.kt",
-      "source_location": "L272"
+      "source_location": "L270"
     },
     {
       "id": "core_data_src_main_java_com_example_opengluco_core_data_qrauthhelper_qrauthhelper_serializepairingpayload",
@@ -6393,7 +6393,7 @@
       "file_type": "code",
       "norm_label": ".delete()",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/provider/OpenGlucoProvider.kt",
-      "source_location": "L134"
+      "source_location": "L147"
     },
     {
       "id": "app_mobile_src_main_java_com_example_opengluco_mobile_provider_openglucoprovider_openglucoprovider_gettype",
@@ -6405,7 +6405,7 @@
       "file_type": "code",
       "norm_label": ".gettype()",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/provider/OpenGlucoProvider.kt",
-      "source_location": "L127"
+      "source_location": "L140"
     },
     {
       "id": "app_mobile_src_main_java_com_example_opengluco_mobile_provider_openglucoprovider_openglucoprovider_insert",
@@ -6417,7 +6417,7 @@
       "file_type": "code",
       "norm_label": ".insert()",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/provider/OpenGlucoProvider.kt",
-      "source_location": "L133"
+      "source_location": "L146"
     },
     {
       "id": "app_mobile_src_main_java_com_example_opengluco_mobile_provider_openglucoprovider_openglucoprovider_oncreate",
@@ -6453,7 +6453,7 @@
       "file_type": "code",
       "norm_label": ".update()",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/provider/OpenGlucoProvider.kt",
-      "source_location": "L135"
+      "source_location": "L148"
     },
     {
       "id": "core_data_src_main_java_com_example_opengluco_core_data_localglucosedatabase_localglucosedatabase_buildperiodsummary",
@@ -26742,7 +26742,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/provider/OpenGlucoProvider.kt",
-      "source_location": "L51",
+      "source_location": "L64",
       "weight": 1.0
     },
     {
@@ -26754,7 +26754,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/provider/OpenGlucoProvider.kt",
-      "source_location": "L80",
+      "source_location": "L93",
       "weight": 1.0
     },
     {
@@ -31266,7 +31266,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "core/data/src/main/java/com/example/opengluco/core/data/QrAuthHelper.kt",
-      "source_location": "L177",
+      "source_location": "L180",
       "weight": 1.0
     },
     {
@@ -31278,7 +31278,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "core/data/src/main/java/com/example/opengluco/core/data/QrAuthHelper.kt",
-      "source_location": "L178",
+      "source_location": "L181",
       "weight": 1.0
     },
     {
@@ -70560,7 +70560,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/provider/OpenGlucoProvider.kt",
-      "source_location": "L134",
+      "source_location": "L147",
       "weight": 1.0
     },
     {
@@ -70572,7 +70572,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/provider/OpenGlucoProvider.kt",
-      "source_location": "L127",
+      "source_location": "L140",
       "weight": 1.0
     },
     {
@@ -70584,7 +70584,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/provider/OpenGlucoProvider.kt",
-      "source_location": "L133",
+      "source_location": "L146",
       "weight": 1.0
     },
     {
@@ -70608,7 +70608,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/provider/OpenGlucoProvider.kt",
-      "source_location": "L135",
+      "source_location": "L148",
       "weight": 1.0
     },
     {
@@ -70620,7 +70620,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/provider/OpenGlucoProvider.kt",
-      "source_location": "L135",
+      "source_location": "L148",
       "weight": 1.0
     },
     {
@@ -73284,7 +73284,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/provider/OpenGlucoProvider.kt",
-      "source_location": "L133",
+      "source_location": "L146",
       "weight": 1.0
     },
     {
@@ -74076,7 +74076,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "core/data/src/main/java/com/example/opengluco/core/data/QrAuthHelper.kt",
-      "source_location": "L272",
+      "source_location": "L270",
       "weight": 1.0
     },
     {
@@ -81401,7 +81401,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/provider/OpenGlucoProvider.kt",
-      "source_location": "L127",
+      "source_location": "L140",
       "weight": 1.0
     },
     {
@@ -81412,7 +81412,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/provider/OpenGlucoProvider.kt",
-      "source_location": "L133",
+      "source_location": "L146",
       "weight": 1.0
     },
     {
@@ -81423,7 +81423,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/provider/OpenGlucoProvider.kt",
-      "source_location": "L134",
+      "source_location": "L147",
       "weight": 1.0
     },
     {
@@ -81434,7 +81434,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "app-mobile/src/main/java/com/example/opengluco/mobile/provider/OpenGlucoProvider.kt",
-      "source_location": "L135",
+      "source_location": "L148",
       "weight": 1.0
     },
     {
@@ -83722,7 +83722,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "core/data/src/main/java/com/example/opengluco/core/data/QrAuthHelper.kt",
-      "source_location": "L272",
+      "source_location": "L270",
       "weight": 1.0
     },
     {
@@ -87492,5 +87492,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "4108bcf9afd0f9896693479298974b8e947f20f4"
+  "built_at_commit": "0e805e141612a2ac90f43d8a6fbb65c06f614945"
 }
