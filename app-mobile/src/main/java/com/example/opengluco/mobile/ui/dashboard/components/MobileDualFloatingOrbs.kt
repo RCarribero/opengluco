@@ -18,9 +18,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -82,6 +84,11 @@ fun MobileDualFloatingOrbs(
     val trendFontSize = responsive.clampedSp(if (responsive.isNarrowPhone) 9.5f else 11f, maxScale = 1.30f)
     val orbSpacing = if (responsive.isNarrowPhone) 10.dp else 16.dp
 
+    val density = LocalDensity.current
+    val ringStroke = remember(density) {
+        Stroke(width = with(density) { 3.5.dp.toPx() }, cap = StrokeCap.Round)
+    }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -108,7 +115,7 @@ fun MobileDualFloatingOrbs(
                     startAngle = 135f,
                     sweepAngle = 270f,
                     useCenter = false,
-                    style = Stroke(width = 3.5.dp.toPx(), cap = StrokeCap.Round)
+                    style = ringStroke
                 )
             }
 

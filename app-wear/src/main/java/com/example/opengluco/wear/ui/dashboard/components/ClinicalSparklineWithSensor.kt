@@ -18,9 +18,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -72,16 +74,58 @@ fun ClinicalSparklineWithSensor(
                 .border(1.dp, ClinicalSurfaceBorder, RoundedCornerShape(12.dp))
                 .padding(horizontal = 6.dp, vertical = 4.dp)
         ) {
-            val validPoints = history.map { it.numericValue }.filter { it > 0 }
+            val validPoints = remember(history) {
+                val list = ArrayList<Double>(history.size)
+                for (i in history.indices) {
+                    val v = history[i].numericValue
+                    if (v > 0.0) list.add(v)
+                }
+                list
+            }
 
             if (validPoints.size >= 2) {
+                val minVal = remember(validPoints) {
+                    var min = 70.0
+                    for (i in validPoints.indices) {
+                        val v = validPoints[i]
+                        if (v < min) min = v
+                    }
+                    min.coerceAtMost(60.0).toFloat()
+                }
+                val maxVal = remember(validPoints) {
+                    var max = 180.0
+                    for (i in validPoints.indices) {
+                        val v = validPoints[i]
+                        if (v > max) max = v
+                    }
+                    max.coerceAtLeast(200.0).toFloat()
+                }
+                val valRange = remember(minVal, maxVal) {
+                    (maxVal - minVal).coerceAtLeast(40f)
+                }
+
+                val density = LocalDensity.current
+                val curveStroke = remember(density) {
+                    Stroke(width = with(density) { 2.dp.toPx() }, cap = StrokeCap.Round)
+                }
+                val targetDashEffect = remember {
+                    PathEffect.dashPathEffect(floatArrayOf(4f, 4f), 0f)
+                }
+                val path = remember { Path() }
+                val fillPath = remember { Path() }
+                val mintGradColors = remember { listOf(ClinicalMint.copy(alpha = 0.25f), Color.Transparent) }
+                val pointsCache = remember {
+                    object {
+                        var lastWidth = 0f
+                        var lastHeight = 0f
+                        var lastValidPoints: List<Double>? = null
+                        var points: List<Offset> = emptyList()
+                    }
+                }
+
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     val width = size.width
                     val height = size.height
-
-                    val minVal = (validPoints.minOrNull() ?: 70.0).coerceAtMost(60.0).toFloat()
-                    val maxVal = (validPoints.maxOrNull() ?: 180.0).coerceAtLeast(200.0).toFloat()
-                    val valRange = (maxVal - minVal).coerceAtLeast(40f)
 
                     // Línea objetivo superior (180 mg/dL)
                     val yTargetHigh = height - ((targetHigh - minVal) / valRange * height).coerceIn(0f, height)
@@ -90,7 +134,7 @@ fun ClinicalSparklineWithSensor(
                         start = Offset(0f, yTargetHigh),
                         end = Offset(width, yTargetHigh),
                         strokeWidth = 1.dp.toPx(),
-                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f, 4f), 0f)
+                        pathEffect = targetDashEffect
                     )
 
                     // Línea objetivo inferior (70 mg/dL)
@@ -100,18 +144,26 @@ fun ClinicalSparklineWithSensor(
                         start = Offset(0f, yTargetLow),
                         end = Offset(width, yTargetLow),
                         strokeWidth = 1.dp.toPx(),
-                        pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f, 4f), 0f)
+                        pathEffect = targetDashEffect
                     )
 
-                    val stepX = width / (validPoints.size - 1)
-                    val path = Path()
-                    val fillPath = Path()
-
-                    val points = validPoints.mapIndexed { index, value ->
-                        val x = index * stepX
-                        val y = height - ((value.toFloat() - minVal) / valRange * height).coerceIn(0f, height)
-                        Offset(x, y)
+                    if (pointsCache.lastWidth != width || pointsCache.lastHeight != height || pointsCache.lastValidPoints !== validPoints) {
+                        pointsCache.lastWidth = width
+                        pointsCache.lastHeight = height
+                        pointsCache.lastValidPoints = validPoints
+                        val stepX = width / (validPoints.size - 1)
+                        val pts = ArrayList<Offset>(validPoints.size)
+                        for (index in validPoints.indices) {
+                            val x = index * stepX
+                            val y = height - ((validPoints[index].toFloat() - minVal) / valRange * height).coerceIn(0f, height)
+                            pts.add(Offset(x, y))
+                        }
+                        pointsCache.points = pts
                     }
+                    val points = pointsCache.points
+
+                    path.reset()
+                    fillPath.reset()
 
                     path.moveTo(points.first().x, points.first().y)
                     fillPath.moveTo(points.first().x, height)
@@ -132,7 +184,7 @@ fun ClinicalSparklineWithSensor(
                     drawPath(
                         path = fillPath,
                         brush = Brush.verticalGradient(
-                            colors = listOf(ClinicalMint.copy(alpha = 0.25f), Color.Transparent),
+                            colors = mintGradColors,
                             startY = 0f,
                             endY = height
                         )
@@ -142,7 +194,7 @@ fun ClinicalSparklineWithSensor(
                     drawPath(
                         path = path,
                         color = ClinicalMint,
-                        style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
+                        style = curveStroke
                     )
                 }
             } else {

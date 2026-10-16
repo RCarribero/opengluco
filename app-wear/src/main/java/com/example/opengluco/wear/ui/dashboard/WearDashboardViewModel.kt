@@ -9,11 +9,13 @@ import com.example.opengluco.core.data.GlucoseUnit
 import com.example.opengluco.core.data.OpenGlucoRepository
 import com.example.opengluco.core.data.UserPreferencesRepository
 import com.example.opengluco.core.data.UserSettings
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 sealed interface WearDashboardUiState {
     object Loading : WearDashboardUiState
@@ -115,13 +117,18 @@ class WearDashboardViewModel(
             preferencesRepository.localDatabase.dbUpdateEvents.collect {
                 val current = _uiState.value as? WearDashboardUiState.Success ?: return@collect
                 val targetPatientId = current.selectedPatient.patientId.ifBlank { null }
-                val localLatest = preferencesRepository.localDatabase.getLatestReading(targetPatientId)
-                    ?: preferencesRepository.localDatabase.getLatestReading(null)
+                val (localLatest, localHistory) = withContext(Dispatchers.IO) {
+                    val latest = preferencesRepository.localDatabase.getLatestReading(targetPatientId)
+                        ?: preferencesRepository.localDatabase.getLatestReading(null)
+                    val history = if (latest != null) {
+                        preferencesRepository.localDatabase.getHistoricalReadingsList(1, targetPatientId)
+                            .ifEmpty { preferencesRepository.localDatabase.getHistoricalReadingsList(1, null) }
+                    } else emptyList()
+                    Pair(latest, history)
+                }
                 if (localLatest != null) {
                     val currentEpoch = current.currentMeasurement?.getEpochMillis() ?: 0L
                     if (localLatest.getEpochMillis() >= currentEpoch) {
-                        val localHistory = preferencesRepository.localDatabase.getHistoricalReadingsList(1, targetPatientId)
-                            .ifEmpty { preferencesRepository.localDatabase.getHistoricalReadingsList(1, null) }
                         val isSensorActive = current.sensor == null || ((current.sensor.getRemainingDays() ?: 1) > 0 && current.sensor.isSensorActive != false)
                         val isStale = localLatest.isStale() || !isSensorActive
                         val updatedText = if (isStale) "Desactualizado • ${localLatest.getDisplayTime()}" else localLatest.getDisplayTime()

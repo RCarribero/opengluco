@@ -3,6 +3,7 @@ package com.example.opengluco.core.data
 import com.example.opengluco.core.model.GlucoseMeasurement
 import com.example.opengluco.core.model.ReportTimeBlock
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -279,6 +280,42 @@ class LocalGlucoseDatabaseTest {
         val emitted = flow.first()
         assertEquals(1, emitted.size)
         assertEquals(125.0, emitted[0].numericValue, 0.1)
+    }
+
+    @Test
+    fun testInsertDuplicateReadings_doesNotEmitDbUpdateEvents() = runBlocking {
+        val r = createReading(110.0, 10, 0, 0, "p-guard")
+        val insertedFirst = db.insertReadings(listOf(r), "p-guard")
+        assertEquals(1, insertedFirst)
+
+        // Escuchar eventos posteriores
+        var eventEmitted = false
+        val job = launch {
+            db.dbUpdateEvents.collect {
+                eventEmitted = true
+            }
+        }
+        eventEmitted = false
+
+        // Insertar exactamente la misma lectura (duplicada)
+        val insertedDuplicate = db.insertReadings(listOf(r), "p-guard")
+        assertEquals(0, insertedDuplicate)
+        assertFalse("dbUpdateEvents no debe emitir cuando insertedCount es 0", eventEmitted)
+        job.cancel()
+    }
+
+    @Test
+    fun testGetReadingsBetweenAndLatest_haveCachedEpoch() {
+        val r = createReading(118.0, 10, 0, 0, "p-epoch")
+        db.insertReadings(listOf(r), "p-epoch")
+
+        val latest = db.getLatestReading("p-epoch")
+        assertNotNull(latest)
+        assertTrue("Latest reading must have cached positive epoch", latest!!.getEpochMillis() > 0L)
+
+        val list = db.getReadingsBetween("p-epoch", 0L, Long.MAX_VALUE)
+        assertEquals(1, list.size)
+        assertTrue("Between readings must have cached positive epoch", list[0].getEpochMillis() > 0L)
     }
 }
 

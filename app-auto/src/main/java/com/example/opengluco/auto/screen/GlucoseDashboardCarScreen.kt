@@ -112,9 +112,12 @@ class GlucoseDashboardCarScreen(
                 return@launch
             }
 
-            // 2. Fallback a base de datos SQLite local
-            val localHistory = preferencesRepository.getHistoricalReadings(1).first()
-            val lastM = localHistory.lastOrNull()
+            // 2. Fallback a base de datos SQLite local en O(1)
+            val targetPatientId = currentPatient?.patientId ?: settings.selectedPatientId.ifBlank { null }
+            val lastM = kotlinx.coroutines.withContext(Dispatchers.IO) {
+                preferencesRepository.localDatabase.getLatestReading(targetPatientId)
+                    ?: preferencesRepository.localDatabase.getLatestReading(null)
+            }
             if (lastM != null) {
                 lastMeasurement = lastM
                 lastUpdated = lastM.getDisplayTime()
@@ -191,11 +194,13 @@ class GlucoseDashboardCarScreen(
                     onFailure = { error ->
                         Log.w(TAG, "loadGlucoseData: Network fetch failed, falling back to local storage", error)
                         if (lastMeasurement == null) {
-                            val localHistory = preferencesRepository.getHistoricalReadings(1, targetPatientId).first()
-                            if (localHistory.isNotEmpty()) {
-                                val lastM = localHistory.lastOrNull()
+                            val lastM = kotlinx.coroutines.withContext(Dispatchers.IO) {
+                                preferencesRepository.localDatabase.getLatestReading(targetPatientId)
+                                    ?: preferencesRepository.localDatabase.getLatestReading(null)
+                            }
+                            if (lastM != null) {
                                 lastMeasurement = lastM
-                                lastUpdated = "Sin red • ${lastM?.getDisplayTime() ?: "Local"}"
+                                lastUpdated = "Sin red • ${lastM.getDisplayTime()}"
                             } else {
                                 lastUpdated = if (error is NetworkException) "Sin conexion a Internet" else "Error al conectar"
                             }

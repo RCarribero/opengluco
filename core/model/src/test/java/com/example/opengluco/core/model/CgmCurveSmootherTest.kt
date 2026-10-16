@@ -1,4 +1,4 @@
-﻿package com.example.opengluco.core.model
+package com.example.opengluco.core.model
 
 import org.junit.Assert.*
 import org.junit.Test
@@ -103,6 +103,33 @@ class CgmCurveSmootherTest {
             assertTrue(seg.startY.isFinite())
             assertTrue(seg.endX.isFinite())
             assertTrue(seg.endY.isFinite())
+        }
+    }
+
+    @Test
+    fun testCatmullRomSpline_floatArrayProducesIdenticalOutput() {
+        val points = listOf(
+            Pair(0f, 100f),
+            Pair(50f, 110f),
+            Pair(100f, 120f),
+            Pair(150f, 105f)
+        )
+        val xs = floatArrayOf(0f, 50f, 100f, 150f)
+        val ys = floatArrayOf(100f, 110f, 120f, 105f)
+
+        val pairSegments = CgmCurveSmoother.computeCatmullRomSpline(points)
+        val arraySegments = CgmCurveSmoother.computeCatmullRomSpline(xs, ys)
+
+        assertEquals(pairSegments.size, arraySegments.size)
+        for (i in pairSegments.indices) {
+            assertEquals(pairSegments[i].startX, arraySegments[i].startX, 0.0001f)
+            assertEquals(pairSegments[i].startY, arraySegments[i].startY, 0.0001f)
+            assertEquals(pairSegments[i].cp1X, arraySegments[i].cp1X, 0.0001f)
+            assertEquals(pairSegments[i].cp1Y, arraySegments[i].cp1Y, 0.0001f)
+            assertEquals(pairSegments[i].cp2X, arraySegments[i].cp2X, 0.0001f)
+            assertEquals(pairSegments[i].cp2Y, arraySegments[i].cp2Y, 0.0001f)
+            assertEquals(pairSegments[i].endX, arraySegments[i].endX, 0.0001f)
+            assertEquals(pairSegments[i].endY, arraySegments[i].endY, 0.0001f)
         }
     }
 }

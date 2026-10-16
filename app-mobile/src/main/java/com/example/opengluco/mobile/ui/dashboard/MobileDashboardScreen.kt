@@ -508,15 +508,18 @@ fun MobileDashboardScreen(
         }
     }
 
-    // Lectura local instantanea O(1) de SQLite al iniciar la pantalla (< 1 ms)
+    // Lectura local instantanea O(1) de SQLite al iniciar la pantalla (< 1 ms) en Dispatchers.IO
     val localLatestReading by produceState<GlucoseMeasurement?>(
-        initialValue = remember(syncPatientId) {
-            preferencesRepository.localDatabase.getLatestReading(syncPatientId.ifBlank { null })
-        },
+        initialValue = null,
         syncPatientId
     ) {
+        value = withContext(Dispatchers.IO) {
+            preferencesRepository.localDatabase.getLatestReading(syncPatientId.ifBlank { null })
+        }
         preferencesRepository.localDatabase.dbUpdateEvents.collect {
-            value = preferencesRepository.localDatabase.getLatestReading(syncPatientId.ifBlank { null })
+            value = withContext(Dispatchers.IO) {
+                preferencesRepository.localDatabase.getLatestReading(syncPatientId.ifBlank { null })
+            }
         }
     }
 
@@ -529,37 +532,52 @@ fun MobileDashboardScreen(
         ).maxByOrNull { it.getEpochMillis() }
     }
 
-    // Unificación y deduplicación completa de historial (caché persistente + datos API en vivo + última medición)
+    // Unificación y deduplicación completa de historial por epochMs sin alocación de strings (Regla 5 de telemetría)
     val combinedHistory = remember(history, periodReadings, currentMeasurement) {
-        val map = LinkedHashMap<String, GlucoseMeasurement>()
-        for (item in periodReadings) {
-            val key = item.timestamp?.takeIf { it.isNotBlank() }
-                ?: item.factoryTimestamp?.takeIf { it.isNotBlank() }
-                ?: "${item.numericValue}_${item.trendArrow}_${item.hashCode()}"
-            map[key] = item
+        val totalEstimate = periodReadings.size + history.size + 1
+        val map = LinkedHashMap<Long, GlucoseMeasurement>(totalEstimate)
+        for (i in periodReadings.indices) {
+            val item = periodReadings[i]
+            if (item.numericValue > 0.0) {
+                val ep = item.getEpochMillis()
+                if (ep > 0L) map[ep] = item
+            }
         }
-        for (item in history) {
-            val key = item.timestamp?.takeIf { it.isNotBlank() }
-                ?: item.factoryTimestamp?.takeIf { it.isNotBlank() }
-                ?: "${item.numericValue}_${item.trendArrow}_${item.hashCode()}"
-            map[key] = item
+        for (i in history.indices) {
+            val item = history[i]
+            if (item.numericValue > 0.0) {
+                val ep = item.getEpochMillis()
+                if (ep > 0L) map[ep] = item
+            }
         }
-        if (currentMeasurement != null) {
-            val key = currentMeasurement.timestamp?.takeIf { it.isNotBlank() }
-                ?: currentMeasurement.factoryTimestamp?.takeIf { it.isNotBlank() }
-                ?: "${currentMeasurement.numericValue}_${currentMeasurement.trendArrow}_${currentMeasurement.hashCode()}"
-            map[key] = currentMeasurement
+        if (currentMeasurement != null && currentMeasurement.numericValue > 0.0) {
+            val ep = currentMeasurement.getEpochMillis()
+            if (ep > 0L) map[ep] = currentMeasurement
         }
-        map.values.filter { it.numericValue > 0 }.sortedBy { it.getEpochMillis() }
+        val result = ArrayList<GlucoseMeasurement>(map.values)
+        result.sortBy { it.getEpochMillis() }
+        result
     }
 
-    // Filtrado de historial según el intervalo temporal seleccionado (1h, 2h, 6h, 12h, 24h)
+    // Filtrado de historial según el intervalo temporal seleccionado (1h, 2h, 6h, 12h, 24h) en O(log N)
     val chartHistory = remember(combinedHistory, selectedChartTimeframe) {
-        val maxEpoch = maxOf(System.currentTimeMillis(), combinedHistory.lastOrNull()?.getEpochMillis() ?: 0L)
+        if (combinedHistory.isEmpty()) return@remember emptyList()
+        val maxEpoch = maxOf(System.currentTimeMillis(), combinedHistory.last().getEpochMillis())
         val cutoff = maxEpoch - (selectedChartTimeframe.hours * 3600 * 1000L)
-        val filtered = combinedHistory.filter { it.getEpochMillis() >= cutoff }
-        if (filtered.isNotEmpty()) {
-            filtered
+        var low = 0
+        var high = combinedHistory.size - 1
+        var startIdx = combinedHistory.size
+        while (low <= high) {
+            val mid = (low + high) ushr 1
+            if (combinedHistory[mid].getEpochMillis() >= cutoff) {
+                startIdx = mid
+                high = mid - 1
+            } else {
+                low = mid + 1
+            }
+        }
+        if (startIdx < combinedHistory.size) {
+            combinedHistory.subList(startIdx, combinedHistory.size)
         } else {
             combinedHistory.takeLast(maxOf(2, selectedChartTimeframe.hours * 4))
         }
@@ -1980,24 +1998,9 @@ fun DailyStatItem(
 
 private fun formatChartTime(raw: String?): String {
     if (raw.isNullOrBlank()) return "--:--"
-    val patterns = listOf(
-        "M/d/yyyy h:mm:ss a",
-        "M/d/yyyy H:mm:ss",
-        "M/d/yyyy h:mm a",
-        "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
-        "yyyy-MM-dd'T'HH:mm:ss'Z'",
-        "yyyy-MM-dd'T'HH:mm:ss",
-        "yyyy-MM-dd HH:mm:ss"
-    )
-    for (p in patterns) {
-        try {
-            val sdf = SimpleDateFormat(p, Locale.US)
-            if (p.endsWith("'Z'")) sdf.timeZone = TimeZone.getTimeZone("UTC")
-            val date = sdf.parse(raw)
-            if (date != null) {
-                return SimpleDateFormat("HH:mm", Locale.getDefault()).format(date)
-            }
-        } catch (_: Exception) {}
+    val epoch = com.example.opengluco.core.model.FastDateParser.parseEpoch(raw)
+    if (epoch > 0L) {
+        return com.example.opengluco.core.model.FastDateParser.formatDisplayTime(epoch)
     }
     if (raw.contains(":")) {
         val parts = raw.split(" ")
@@ -2118,14 +2121,28 @@ fun MobileGlucoseChart(
     val activeStatusColor = com.example.opengluco.mobile.ui.theme.getGlucoseValueColor(activeValue, targetLow, targetHigh, alarms, colors)
 
     val minVal = remember(validMeasurements, alarms) {
-        val alarmMins = alarms.filter { it.enabled }.map { it.thresholdMgDl.toDouble() }
-        val allMins = validMeasurements.map { it.numericValue } + alarmMins
-        (allMins.minOrNull() ?: 60.0).coerceAtMost(50.0).toFloat()
+        var min = 60.0
+        for (i in validMeasurements.indices) {
+            val v = validMeasurements[i].numericValue
+            if (v < min) min = v
+        }
+        for (i in alarms.indices) {
+            val a = alarms[i]
+            if (a.enabled && a.thresholdMgDl < min) min = a.thresholdMgDl.toDouble()
+        }
+        min.coerceAtMost(50.0).toFloat()
     }
     val maxVal = remember(validMeasurements, alarms) {
-        val alarmMaxs = alarms.filter { it.enabled }.map { it.thresholdMgDl.toDouble() }
-        val allMaxs = validMeasurements.map { it.numericValue } + alarmMaxs
-        (allMaxs.maxOrNull() ?: 200.0).coerceAtLeast(220.0).toFloat()
+        var max = 200.0
+        for (i in validMeasurements.indices) {
+            val v = validMeasurements[i].numericValue
+            if (v > max) max = v
+        }
+        for (i in alarms.indices) {
+            val a = alarms[i]
+            if (a.enabled && a.thresholdMgDl > max) max = a.thresholdMgDl.toDouble()
+        }
+        max.coerceAtLeast(220.0).toFloat()
     }
     val valRange = remember(minVal, maxVal) {
         (maxVal - minVal).coerceAtLeast(40f)
@@ -2153,6 +2170,22 @@ fun MobileGlucoseChart(
 
     val responsive = ClinicalTheme.responsive
     val formattedValue = activeMeasurement.getFormattedValue(isMmol = unit == GlucoseUnit.MMOL) + " " + unit.label
+
+    val uniqueAxisLevels = remember(minVal, maxVal, valRange, targetLow, targetHigh) {
+        val axisStep = if (valRange > 350f) 100f else 50f
+        val axisLevels = mutableListOf<Float>()
+        var axisValue = kotlin.math.ceil(minVal / axisStep) * axisStep
+        while (axisValue <= maxVal && axisLevels.size < 20) {
+            axisLevels += axisValue
+            axisValue += axisStep
+        }
+        if (targetLow.toFloat() in minVal..maxVal) axisLevels += targetLow.toFloat()
+        if (targetHigh.toFloat() in minVal..maxVal) axisLevels += targetHigh.toFloat()
+        axisLevels.distinct().sorted()
+    }
+    val enabledAlarms = remember(alarms) { alarms.filter { it.enabled } }
+    val fillAlpha = if (colors.isDark) 0.30f else 0.20f
+    val colorListCache = remember(fillAlpha) { HashMap<Color, List<Color>>(8) }
 
     Box(
         modifier = modifier
@@ -2319,10 +2352,22 @@ fun MobileGlucoseChart(
                                 if (validMeasurements.isNotEmpty()) {
                                     val plotWidth = (size.width.toFloat() - plotLeftPx).coerceAtLeast(1f)
                                     val targetEpoch = minTime + (((xPos - plotLeftPx) / plotWidth).coerceIn(0f, 1f) * timeSpan).toLong()
-                                    validMeasurements.indices.minByOrNull { i ->
-                                        val epoch = validMeasurements[i].getEpochMillis()
-                                        if (epoch > 0) kotlin.math.abs(epoch - targetEpoch) else kotlin.math.abs((plotLeftPx + (i * (plotWidth / maxOf(1, validMeasurements.size - 1)))) - xPos).toLong()
-                                    } ?: (validMeasurements.size - 1)
+                                    var low = 0
+                                    var high = validMeasurements.size - 1
+                                    while (low <= high) {
+                                        val mid = (low + high) ushr 1
+                                        val midEpoch = validMeasurements[mid].getEpochMillis()
+                                        when {
+                                            midEpoch < targetEpoch -> low = mid + 1
+                                            midEpoch > targetEpoch -> high = mid - 1
+                                            else -> { low = mid; high = mid - 1 }
+                                        }
+                                    }
+                                    val cand1 = (low - 1).coerceIn(0, validMeasurements.size - 1)
+                                    val cand2 = low.coerceIn(0, validMeasurements.size - 1)
+                                    val diff1 = kotlin.math.abs(validMeasurements[cand1].getEpochMillis() - targetEpoch)
+                                    val diff2 = kotlin.math.abs(validMeasurements[cand2].getEpochMillis() - targetEpoch)
+                                    if (diff1 <= diff2) cand1 else cand2
                                 } else 0
                             }
                             var lastIdx = calcIndex(down.position.x)
@@ -2353,16 +2398,6 @@ fun MobileGlucoseChart(
                 val totalPoints = validMeasurements.size
                 val stepX = if (totalPoints > 1) plotWidth / (totalPoints - 1).toFloat() else 1f
 
-                val axisStep = if (valRange > 350f) 100f else 50f
-                val axisLevels = mutableListOf<Float>()
-                var axisValue = kotlin.math.ceil(minVal / axisStep) * axisStep
-                while (axisValue <= maxVal && axisLevels.size < 20) {
-                    axisLevels += axisValue
-                    axisValue += axisStep
-                }
-                if (targetLow.toFloat() in minVal..maxVal) axisLevels += targetLow.toFloat()
-                if (targetHigh.toFloat() in minVal..maxVal) axisLevels += targetHigh.toFloat()
-                val uniqueAxisLevels = axisLevels.distinct().sorted()
                 val yTargetHigh = height - ((targetHigh - minVal) / valRange * height).coerceIn(0f, height)
                 val yTargetLow = height - ((targetLow - minVal) / valRange * height).coerceIn(0f, height)
 
@@ -2400,7 +2435,6 @@ fun MobileGlucoseChart(
                 )
 
                 // 3. Lineas de Alarmas Activas Configuradas (Lineas Discontinuas)
-                val enabledAlarms = alarms.filter { it.enabled }
                 for (alarm in enabledAlarms) {
                     val threshold = alarm.thresholdMgDl.toFloat()
                     val yAlarm = height - ((threshold - minVal) / valRange * height).coerceIn(0f, height)
@@ -2424,7 +2458,11 @@ fun MobileGlucoseChart(
                     splineCache.lastWidth = width
                     splineCache.lastHeight = height
                     splineCache.lastMeasurements = validMeasurements
-                    splineCache.points = validMeasurements.mapIndexed { index, measurement ->
+                    val pts = ArrayList<Offset>(totalPoints)
+                    val xs = FloatArray(totalPoints)
+                    val ys = FloatArray(totalPoints)
+                    for (index in validMeasurements.indices) {
+                        val measurement = validMeasurements[index]
                         val mEpoch = measurement.getEpochMillis()
                         val x = if (mEpoch > 0) {
                             val frac = ((mEpoch - minTime).toFloat() / timeSpan.toFloat()).coerceIn(0f, 1f)
@@ -2433,10 +2471,12 @@ fun MobileGlucoseChart(
                             if (totalPoints > 1) (plotLeft + index * stepX) else plotLeft + plotWidth / 2f
                         }
                         val y = height - ((measurement.numericValue.toFloat() - minVal) / valRange * height).coerceIn(0f, height)
-                        Offset(x, y)
+                        pts.add(Offset(x, y))
+                        xs[index] = x
+                        ys[index] = y
                     }
-                    val pointPairs = splineCache.points.map { Pair(it.x, it.y) }
-                    splineCache.splineSegments = com.example.opengluco.core.model.CgmCurveSmoother.computeCatmullRomSpline(pointPairs)
+                    splineCache.points = pts
+                    splineCache.splineSegments = com.example.opengluco.core.model.CgmCurveSmoother.computeCatmullRomSpline(xs, ys)
                 }
                 val points = splineCache.points
                 val splineSegments = splineCache.splineSegments
@@ -2462,7 +2502,6 @@ fun MobileGlucoseChart(
                 }
 
                 // 4. Sombreado de área bajo la curva con segmentos suaves Catmull-Rom reutilizando Path
-                val fillAlpha = if (colors.isDark) 0.30f else 0.20f
                 for (i in splineSegments.indices) {
                     val seg = splineSegments[i]
                     val v0 = validMeasurements[i].numericValue
@@ -2477,8 +2516,11 @@ fun MobileGlucoseChart(
                     reusableSegmentFill.lineTo(seg.endX, height)
                     reusableSegmentFill.close()
 
+                    val gradColors = colorListCache.getOrPut(segmentColor) {
+                        listOf(segmentColor.copy(alpha = fillAlpha), Color.Transparent)
+                    }
                     val fillBrush = Brush.verticalGradient(
-                        colors = listOf(segmentColor.copy(alpha = fillAlpha), Color.Transparent),
+                        colors = gradColors,
                         startY = minOf(seg.startY, seg.endY),
                         endY = height
                     )
@@ -2490,6 +2532,7 @@ fun MobileGlucoseChart(
                 }
 
                 // 5. Trazo de curva Catmull-Rom continua y suave reutilizando Path
+                val curveStrokeStyle = Stroke(width = 2.8.dp.toPx(), cap = StrokeCap.Round)
                 for (i in splineSegments.indices) {
                     val seg = splineSegments[i]
                     val v0 = validMeasurements[i].numericValue
@@ -2503,8 +2546,8 @@ fun MobileGlucoseChart(
 
                     drawPath(
                         path = reusableSegmentStroke,
-                        brush = SolidColor(segmentColor),
-                        style = Stroke(width = 2.8.dp.toPx(), cap = StrokeCap.Round)
+                        color = segmentColor,
+                        style = curveStrokeStyle
                     )
                 }
 

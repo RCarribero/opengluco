@@ -12,9 +12,10 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.opengluco.core.model.BlockMetric
 import com.example.opengluco.core.model.DailyPatternsReport
-import com.example.opengluco.core.model.GlucoseMeasurement
+import com.example.opengluco.core.model.FastDateParser
 import com.example.opengluco.core.model.GlucoseEventMarker
 import com.example.opengluco.core.model.GlucoseEventType
+import com.example.opengluco.core.model.GlucoseMeasurement
 import com.example.opengluco.core.model.PeriodSummary
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -401,31 +402,13 @@ class UserPreferencesRepository(private val context: Context) {
 
     private fun parseTimestamp(ts: String?): Long? {
         if (ts.isNullOrBlank()) return null
-        ts.toLongOrNull()?.let { return if (it < 10_000_000_000L) it * 1000 else it }
-
-        val patterns = listOf(
-            "M/d/yyyy h:mm:ss a",
-            "M/d/yyyy H:mm:ss",
-            "M/d/yyyy h:mm a",
-            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
-            "yyyy-MM-dd'T'HH:mm:ss'Z'",
-            "yyyy-MM-dd'T'HH:mm:ss",
-            "yyyy-MM-dd HH:mm:ss"
-        )
-        for (pattern in patterns) {
-            try {
-                val sdf = SimpleDateFormat(pattern, Locale.US)
-                if (pattern.endsWith("'Z'")) {
-                    sdf.timeZone = TimeZone.getTimeZone("UTC")
-                }
-                val date = sdf.parse(ts)
-                if (date != null) return date.time
-            } catch (_: Exception) {}
-        }
-        return null
+        val epoch = FastDateParser.parseEpoch(ts)
+        return if (epoch > 0L) epoch else null
     }
 
     private fun getMeasurementTimestampMillis(m: GlucoseMeasurement): Long? {
+        val ep = m.getEpochMillis()
+        if (ep > 0L) return ep
         return parseTimestamp(m.timestamp) ?: parseTimestamp(m.factoryTimestamp)
     }
 
@@ -441,13 +424,15 @@ class UserPreferencesRepository(private val context: Context) {
         val targetPatientId = patientId ?: currentLoadedPatientId.orEmpty()
 
         // 1. Guardar y deduplicar en base de datos SQLite embebida
-        localDatabase.insertReadings(readings, targetPatientId)
-        localDatabase.purgeOldReadings(targetPatientId, 90)
+        val inserted = localDatabase.insertReadings(readings, targetPatientId)
+        if (inserted > 0) {
+            localDatabase.purgeOldReadings(targetPatientId, 90)
 
-        // 2. Notificar flujo local en memoria si aplica
-        if (targetPatientId == (currentLoadedPatientId ?: "") || currentLoadedPatientId == null) {
-            val finalList = localDatabase.getHistoricalReadingsList(90, targetPatientId)
-            _historicalReadingsFlow.value = finalList
+            // 2. Notificar flujo local en memoria si aplica
+            if (targetPatientId == (currentLoadedPatientId ?: "") || currentLoadedPatientId == null) {
+                val finalList = localDatabase.getHistoricalReadingsList(90, targetPatientId)
+                _historicalReadingsFlow.value = finalList
+            }
         }
     }
 

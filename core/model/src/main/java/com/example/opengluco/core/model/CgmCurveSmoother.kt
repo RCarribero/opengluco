@@ -13,15 +13,48 @@ object CgmCurveSmoother {
      * Consolida y deduplica lecturas temporales para evitar cúmulos de mediciones
      * en intervalos menores a [minBucketMs] (por defecto 3 minutos).
      */
+    private fun ensureSortedValid(readings: List<GlucoseMeasurement>): List<GlucoseMeasurement> {
+        if (readings.isEmpty()) return emptyList()
+        var isSortedAndValid = true
+        var prevEpoch = Long.MIN_VALUE
+        for (i in readings.indices) {
+            val item = readings[i]
+            if (item.numericValue <= 0.0) {
+                isSortedAndValid = false
+                break
+            }
+            val epoch = item.getEpochMillis()
+            if (epoch < prevEpoch) {
+                isSortedAndValid = false
+                break
+            }
+            prevEpoch = epoch
+        }
+        if (isSortedAndValid) return readings
+        val valid = ArrayList<GlucoseMeasurement>(readings.size)
+        for (i in readings.indices) {
+            val m = readings[i]
+            if (m.numericValue > 0.0) {
+                valid.add(m)
+            }
+        }
+        valid.sortBy { it.getEpochMillis() }
+        return valid
+    }
+
+    /**
+     * Consolida y deduplica lecturas temporales para evitar cúmulos de mediciones
+     * en intervalos menores a [minBucketMs] (por defecto 3 minutos).
+     */
     fun consolidateTemporalBuckets(
         readings: List<GlucoseMeasurement>,
         minBucketMs: Long = 3 * 60 * 1000L
     ): List<GlucoseMeasurement> {
-        val valid = readings.filter { it.numericValue > 0.0 }.sortedBy { it.getEpochMillis() }
+        val valid = ensureSortedValid(readings)
         if (valid.size <= 2) return valid
 
-        val consolidated = mutableListOf<GlucoseMeasurement>()
-        var currentBucket = mutableListOf<GlucoseMeasurement>()
+        val consolidated = ArrayList<GlucoseMeasurement>(valid.size)
+        var currentBucket = ArrayList<GlucoseMeasurement>(4)
         var bucketStartEpoch = valid.first().getEpochMillis()
 
         for (m in valid) {
@@ -32,7 +65,7 @@ object CgmCurveSmoother {
                 if (currentBucket.isNotEmpty()) {
                     consolidated.add(consolidateBucket(currentBucket))
                 }
-                currentBucket = mutableListOf(m)
+                currentBucket = ArrayList<GlucoseMeasurement>(4).apply { add(m) }
                 bucketStartEpoch = epoch
             }
         }
@@ -47,11 +80,17 @@ object CgmCurveSmoother {
     private fun consolidateBucket(bucket: List<GlucoseMeasurement>): GlucoseMeasurement {
         if (bucket.size == 1) return bucket.first()
         val latest = bucket.last()
-        val avgValue = bucket.map { it.numericValue }.average()
+        var sum = 0.0
+        for (i in bucket.indices) {
+            sum += bucket[i].numericValue
+        }
+        val avgValue = sum / bucket.size
         return latest.copy(
             valueInMgPerDl = avgValue,
             value = avgValue
-        )
+        ).apply {
+            setCachedTime(latest.getEpochMillis(), latest.getDisplayTime())
+        }
     }
 
     /**
@@ -66,31 +105,35 @@ object CgmCurveSmoother {
         readings: List<GlucoseMeasurement>,
         useWeightedAverage: Boolean = true
     ): List<GlucoseMeasurement> {
-        val valid = readings.filter { it.numericValue > 0.0 }.sortedBy { it.getEpochMillis() }
+        val valid = ensureSortedValid(readings)
         if (valid.size <= 3) return valid
 
-        val result = mutableListOf<GlucoseMeasurement>()
-        val chunks = valid.chunked(3)
+        val result = ArrayList<GlucoseMeasurement>((valid.size / 3) + 2)
+        val size = valid.size
+        var i = 0
+        while (i < size) {
+            val remaining = size - i
+            val isLastChunk = (i + 3 >= size)
 
-        for (i in chunks.indices) {
-            val chunk = chunks[i]
-            val isLastChunk = (i == chunks.lastIndex)
-
-            if (chunk.size == 3) {
+            if (remaining >= 3) {
                 if (useWeightedAverage && !isLastChunk) {
-                    val wAvg = (0.25 * chunk[0].numericValue) + (0.50 * chunk[1].numericValue) + (0.25 * chunk[2].numericValue)
-                    val representative = chunk[2]
+                    val wAvg = (0.25 * valid[i].numericValue) + (0.50 * valid[i + 1].numericValue) + (0.25 * valid[i + 2].numericValue)
+                    val representative = valid[i + 2]
                     result.add(
                         representative.copy(
                             valueInMgPerDl = wAvg,
                             value = wAvg
-                        )
+                        ).apply {
+                            setCachedTime(representative.getEpochMillis(), representative.getDisplayTime())
+                        }
                     )
                 } else {
-                    result.add(chunk.last())
+                    result.add(valid[i + 2])
                 }
+                i += 3
             } else {
-                result.add(chunk.last())
+                result.add(valid.last())
+                break
             }
         }
 
@@ -152,6 +195,52 @@ object CgmCurveSmoother {
     )
 
     /**
+     * Calcula los segmentos de curva cúbica Catmull-Rom con tensión controlada sobre arrays primitivos.
+     * Evita la creación de objetos Pair y el boxing de Float en rendering continuo.
+     */
+    fun computeCatmullRomSpline(
+        xs: FloatArray,
+        ys: FloatArray,
+        tension: Float = 0.35f
+    ): List<CubicBezierSegment> {
+        val n = minOf(xs.size, ys.size)
+        if (n < 2) return emptyList()
+        val segments = ArrayList<CubicBezierSegment>(n - 1)
+
+        for (i in 0 until n - 1) {
+            val p0X = if (i > 0) xs[i - 1] else xs[i]
+            val p0Y = if (i > 0) ys[i - 1] else ys[i]
+            val p1X = xs[i]
+            val p1Y = ys[i]
+            val p2X = xs[i + 1]
+            val p2Y = ys[i + 1]
+            val p3X = if (i + 2 < n) xs[i + 2] else xs[i + 1]
+            val p3Y = if (i + 2 < n) ys[i + 2] else ys[i + 1]
+
+            val cp1X = p1X + (p2X - p0X) * tension
+            val cp1Y = p1Y + (p2Y - p0Y) * tension
+
+            val cp2X = p2X - (p3X - p1X) * tension
+            val cp2Y = p2Y - (p3Y - p1Y) * tension
+
+            segments.add(
+                CubicBezierSegment(
+                    startX = p1X,
+                    startY = p1Y,
+                    cp1X = cp1X,
+                    cp1Y = cp1Y,
+                    cp2X = cp2X,
+                    cp2Y = cp2Y,
+                    endX = p2X,
+                    endY = p2Y
+                )
+            )
+        }
+
+        return segments
+    }
+
+    /**
      * Calcula los segmentos de curva cúbica Catmull-Rom con tensión controlada.
      * Elimina el aspecto escalonado o de dientes de sierra de los puntos directos.
      */
@@ -160,7 +249,7 @@ object CgmCurveSmoother {
         tension: Float = 0.35f
     ): List<CubicBezierSegment> {
         if (points.size < 2) return emptyList()
-        val segments = mutableListOf<CubicBezierSegment>()
+        val segments = ArrayList<CubicBezierSegment>(points.size - 1)
 
         val n = points.size
         for (i in 0 until n - 1) {

@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import com.example.opengluco.core.model.BlockMetric
 import com.example.opengluco.core.model.DailyPatternsReport
+import com.example.opengluco.core.model.FastDateParser
 import com.example.opengluco.core.model.GlucoseMeasurement
 import com.example.opengluco.core.model.GlucoseEventMarker
 import com.example.opengluco.core.model.GlucoseEventType
@@ -173,42 +174,8 @@ class LocalGlucoseDatabase(
 
     private fun parseTimestamp(ts: String?): Long? {
         if (ts.isNullOrBlank()) return null
-        ts.toLongOrNull()?.let { return if (it < 10_000_000_000L) it * 1000L else it }
-
-        val patterns = listOf(
-            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
-            "yyyy-MM-dd'T'HH:mm:ss'Z'",
-            "yyyy-MM-dd'T'HH:mm:ss",
-            "yyyy-MM-dd HH:mm:ss",
-            "yyyy-MM-dd HH:mm",
-            "dd-MM-yyyy HH:mm:ss",
-            "dd-MM-yyyy HH:mm",
-            "dd/MM/yyyy HH:mm:ss",
-            "dd/MM/yyyy HH:mm",
-            "yyyy/MM/dd HH:mm:ss",
-            "yyyy/MM/dd HH:mm",
-            "M/d/yyyy h:mm:ss a",
-            "M/d/yyyy hh:mm:ss a",
-            "MM/dd/yyyy hh:mm:ss a",
-            "M/d/yyyy H:mm:ss",
-            "M/d/yyyy HH:mm:ss",
-            "M/d/yyyy h:mm a",
-            "d/M/yyyy h:mm:ss a",
-            "d/M/yyyy HH:mm:ss",
-            "d/M/yyyy H:mm:ss",
-            "d/M/yyyy h:mm a"
-        )
-        for (pattern in patterns) {
-            try {
-                val sdf = SimpleDateFormat(pattern, Locale.US)
-                if (pattern.endsWith("'Z'")) {
-                    sdf.timeZone = TimeZone.getTimeZone("UTC")
-                }
-                val date = sdf.parse(ts)
-                if (date != null) return date.time
-            } catch (_: Exception) {}
-        }
-        return null
+        val epoch = FastDateParser.parseEpoch(ts)
+        return if (epoch > 0L) epoch else null
     }
 
     private fun getMeasurementEpoch(m: GlucoseMeasurement): Long? {
@@ -238,30 +205,34 @@ class LocalGlucoseDatabase(
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """.trimIndent()
                 val stmt = db.compileStatement(sql)
-                for (m in readings) {
-                    val epoch = getMeasurementEpoch(m) ?: continue
-                    val value = m.numericValue
-                    if (value <= 0.0) continue
+                try {
+                    for (m in readings) {
+                        val epoch = getMeasurementEpoch(m) ?: continue
+                        val value = m.numericValue
+                        if (value <= 0.0) continue
 
-                    stmt.clearBindings()
-                    stmt.bindString(1, targetPatientId)
-                    stmt.bindLong(2, epoch)
-                    stmt.bindDouble(3, value)
-                    stmt.bindLong(4, (m.trendArrow ?: 3).toLong())
-                    if (m.trendMessage != null) stmt.bindString(5, m.trendMessage) else stmt.bindNull(5)
-                    stmt.bindLong(6, (m.measurementColor ?: 1).toLong())
-                    stmt.bindLong(7, (m.glucoseUnits ?: 1).toLong())
-                    if (m.timestamp != null) stmt.bindString(8, m.timestamp) else stmt.bindNull(8)
-                    if (m.factoryTimestamp != null) stmt.bindString(9, m.factoryTimestamp) else stmt.bindNull(9)
-                    stmt.bindLong(10, if (m.isHigh == true || value > 180.0) 1L else 0L)
-                    stmt.bindLong(11, if (m.isLow == true || value < 70.0) 1L else 0L)
+                        stmt.clearBindings()
+                        stmt.bindString(1, targetPatientId)
+                        stmt.bindLong(2, epoch)
+                        stmt.bindDouble(3, value)
+                        stmt.bindLong(4, (m.trendArrow ?: 3).toLong())
+                        if (m.trendMessage != null) stmt.bindString(5, m.trendMessage) else stmt.bindNull(5)
+                        stmt.bindLong(6, (m.measurementColor ?: 1).toLong())
+                        stmt.bindLong(7, (m.glucoseUnits ?: 1).toLong())
+                        if (m.timestamp != null) stmt.bindString(8, m.timestamp) else stmt.bindNull(8)
+                        if (m.factoryTimestamp != null) stmt.bindString(9, m.factoryTimestamp) else stmt.bindNull(9)
+                        stmt.bindLong(10, if (m.isHigh == true || value > 180.0) 1L else 0L)
+                        stmt.bindLong(11, if (m.isLow == true || value < 70.0) 1L else 0L)
 
-                    val rowId = stmt.executeInsert()
-                    if (rowId != -1L) {
-                        insertedCount++
+                        val rowId = stmt.executeInsert()
+                        if (rowId != -1L) {
+                            insertedCount++
+                        }
                     }
+                    db.setTransactionSuccessful()
+                } finally {
+                    try { stmt.close() } catch (_: Exception) {}
                 }
-                db.setTransactionSuccessful()
             } catch (_: Exception) {
             } finally {
                 try { db.endTransaction() } catch (_: Exception) {}
@@ -282,7 +253,9 @@ class LocalGlucoseDatabase(
             }
         }
 
-        _dbUpdateEvents.tryEmit(targetPatientId)
+        if (insertedCount > 0) {
+            _dbUpdateEvents.tryEmit(targetPatientId)
+        }
         return insertedCount
     }
 
@@ -330,7 +303,9 @@ class LocalGlucoseDatabase(
             }
         }
 
-        _dbUpdateEvents.tryEmit(patientId.orEmpty())
+        if (deletedCount > 0) {
+            _dbUpdateEvents.tryEmit(patientId.orEmpty())
+        }
         return deletedCount
     }
 
@@ -364,6 +339,7 @@ class LocalGlucoseDatabase(
             try {
                 cursor = db.rawQuery(query, args)
                 if (cursor.moveToFirst()) {
+                    val idxEpoch = cursor.getColumnIndexOrThrow(COL_EPOCH_MS)
                     val idxVal = cursor.getColumnIndexOrThrow(COL_VALUE)
                     val idxArrow = cursor.getColumnIndexOrThrow(COL_TREND_ARROW)
                     val idxMsg = cursor.getColumnIndexOrThrow(COL_TREND_MESSAGE)
@@ -374,6 +350,7 @@ class LocalGlucoseDatabase(
                     val idxHigh = cursor.getColumnIndexOrThrow(COL_IS_HIGH)
                     val idxLow = cursor.getColumnIndexOrThrow(COL_IS_LOW)
 
+                    val epoch = cursor.getLong(idxEpoch)
                     return GlucoseMeasurement(
                         factoryTimestamp = cursor.getString(idxFts),
                         timestamp = cursor.getString(idxTs),
@@ -385,7 +362,9 @@ class LocalGlucoseDatabase(
                         glucoseUnits = cursor.getInt(idxUnits),
                         isHigh = cursor.getInt(idxHigh) == 1,
                         isLow = cursor.getInt(idxLow) == 1
-                    )
+                    ).apply {
+                        setCachedTime(epoch)
+                    }
                 }
             } catch (_: Exception) {
             } finally {
@@ -408,7 +387,6 @@ class LocalGlucoseDatabase(
         val db = getSafeReadableDatabase()
 
         if (db != null) {
-            val list = mutableListOf<GlucoseMeasurement>()
             val query = if (targetPatientId.isNotBlank()) {
                 """
                     SELECT $COL_PATIENT_ID, $COL_EPOCH_MS, $COL_VALUE, $COL_TREND_ARROW,
@@ -434,10 +412,14 @@ class LocalGlucoseDatabase(
                 arrayOf(startEpoch.toString(), endEpoch.toString())
             }
 
+            var list: MutableList<GlucoseMeasurement> = ArrayList()
             var cursor: Cursor? = null
             try {
                 cursor = db.rawQuery(query, args)
                 if (cursor.moveToFirst()) {
+                    val count = cursor.count
+                    list = ArrayList(if (count > 0) count else 16)
+                    val idxEpoch = cursor.getColumnIndexOrThrow(COL_EPOCH_MS)
                     val idxVal = cursor.getColumnIndexOrThrow(COL_VALUE)
                     val idxArrow = cursor.getColumnIndexOrThrow(COL_TREND_ARROW)
                     val idxMsg = cursor.getColumnIndexOrThrow(COL_TREND_MESSAGE)
@@ -449,6 +431,7 @@ class LocalGlucoseDatabase(
                     val idxLow = cursor.getColumnIndexOrThrow(COL_IS_LOW)
 
                     do {
+                        val epoch = cursor.getLong(idxEpoch)
                         list.add(
                             GlucoseMeasurement(
                                 factoryTimestamp = cursor.getString(idxFts),
@@ -461,7 +444,9 @@ class LocalGlucoseDatabase(
                                 glucoseUnits = cursor.getInt(idxUnits),
                                 isHigh = cursor.getInt(idxHigh) == 1,
                                 isLow = cursor.getInt(idxLow) == 1
-                            )
+                            ).apply {
+                                setCachedTime(epoch)
+                            }
                         )
                     } while (cursor.moveToNext())
                 }
@@ -593,16 +578,32 @@ class LocalGlucoseDatabase(
             return PeriodSummary(periodDays = periodDays)
         }
 
-        val values = readings.map { it.numericValue }
-        val avg = values.average()
-        val min = values.minOrNull() ?: 0.0
-        val max = values.maxOrNull() ?: 0.0
-        val vLow = values.count { it < 54.0 }
-        val low = values.count { it >= 54.0 && it < 70.0 }
-        val inRange = values.count { it in 70.0..180.0 }
-        val high = values.count { it > 180.0 && it <= 250.0 }
-        val vHigh = values.count { it > 250.0 }
-        val tight = values.count { it in 70.0..140.0 }
+        var sum = 0.0
+        var min = Double.MAX_VALUE
+        var max = 0.0
+        var vLow = 0
+        var low = 0
+        var inRange = 0
+        var high = 0
+        var vHigh = 0
+        var tight = 0
+
+        for (r in readings) {
+            val v = r.numericValue
+            sum += v
+            if (v < min) min = v
+            if (v > max) max = v
+            when {
+                v < 54.0 -> vLow++
+                v < 70.0 -> low++
+                v <= 180.0 -> inRange++
+                v <= 250.0 -> high++
+                else -> vHigh++
+            }
+            if (v in 70.0..140.0) tight++
+        }
+        if (min == Double.MAX_VALUE) min = 0.0
+        val avg = sum / count
 
         return buildPeriodSummary(
             periodDays = periodDays,
@@ -1050,9 +1051,9 @@ class LocalGlucoseDatabase(
         val db = getSafeReadableDatabase()
         if (db != null) {
             val query = if (patientId.isNotBlank()) {
-                "SELECT MAX($COL_EPOCH_MS) FROM $TABLE_NAME WHERE $COL_PATIENT_ID = ?"
+                "SELECT $COL_EPOCH_MS FROM $TABLE_NAME WHERE $COL_PATIENT_ID = ? ORDER BY $COL_EPOCH_MS DESC LIMIT 1"
             } else {
-                "SELECT MAX($COL_EPOCH_MS) FROM $TABLE_NAME"
+                "SELECT $COL_EPOCH_MS FROM $TABLE_NAME ORDER BY $COL_EPOCH_MS DESC LIMIT 1"
             }
             val args = if (patientId.isNotBlank()) arrayOf(patientId) else null
             var cursor: Cursor? = null

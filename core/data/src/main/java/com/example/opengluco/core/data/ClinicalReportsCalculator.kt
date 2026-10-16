@@ -6,6 +6,7 @@ import com.example.opengluco.core.model.DailyGraphReport
 import com.example.opengluco.core.model.DailyPatternsReport
 import com.example.opengluco.core.model.DataQualityReport
 import com.example.opengluco.core.model.EstimatedA1cReport
+import com.example.opengluco.core.model.FastDateParser
 import com.example.opengluco.core.model.GlucoseMeasurement
 import com.example.opengluco.core.model.HourlyPercentile
 import com.example.opengluco.core.model.LowGlucoseEvent
@@ -38,35 +39,46 @@ object ClinicalReportsCalculator {
      * Utilizado para validar si existen suficientes datos para reportes semanales, mensuales o trimestrales.
      */
     fun calculateAvailableDays(readings: List<GlucoseMeasurement>): Int {
-        val valid = readings.filter { it.numericValue > 0 }
-        if (valid.isEmpty()) return 0
+        if (readings.isEmpty()) return 0
 
-        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply {
-            timeZone = TimeZone.getDefault()
-        }
+        val tz = TimeZone.getDefault()
+        val distinctDays = HashSet<Long>(readings.size)
+        var validCount = 0
+        var minEpoch = Long.MAX_VALUE
+        var maxEpoch = Long.MIN_VALUE
 
-        val distinctDates = valid.mapNotNull { m ->
+        for (i in readings.indices) {
+            val m = readings[i]
+            if (m.numericValue <= 0.0) continue
+            validCount++
             val epoch = m.getEpochMillis()
             if (epoch > 0L) {
-                sdf.format(Date(epoch))
+                distinctDays.add((epoch + tz.getOffset(epoch)) / (24L * 3600L * 1000L))
+                if (epoch < minEpoch) minEpoch = epoch
+                if (epoch > maxEpoch) maxEpoch = epoch
             } else {
                 val ts = m.timestamp ?: m.factoryTimestamp
                 if (!ts.isNullOrBlank() && ts.length >= 10 && ts[4] == '-' && ts[7] == '-') {
-                    ts.substring(0, 10)
-                } else null
+                    val fallbackEpoch = FastDateParser.parseEpoch(ts)
+                    if (fallbackEpoch > 0L) {
+                        distinctDays.add((fallbackEpoch + tz.getOffset(fallbackEpoch)) / (24L * 3600L * 1000L))
+                        if (fallbackEpoch < minEpoch) minEpoch = fallbackEpoch
+                        if (fallbackEpoch > maxEpoch) maxEpoch = fallbackEpoch
+                    }
+                }
             }
-        }.toSet()
-
-        if (distinctDates.isNotEmpty()) {
-            return distinctDates.size
         }
 
-        val epochs = valid.mapNotNull { it.getEpochMillis().takeIf { t -> t > 0L } }
-        if (epochs.isEmpty()) return 1
-        val minT = epochs.minOrNull() ?: return 1
-        val maxT = epochs.maxOrNull() ?: return 1
-        val spanDays = ((maxT - minT) / (24 * 3600 * 1000L)).toInt() + 1
-        return maxOf(1, spanDays)
+        if (validCount == 0) return 0
+        if (distinctDays.isNotEmpty()) {
+            return distinctDays.size
+        }
+
+        if (maxEpoch >= minEpoch && minEpoch != Long.MAX_VALUE) {
+            val spanDays = ((maxEpoch - minEpoch) / (24 * 3600 * 1000L)).toInt() + 1
+            return maxOf(1, spanDays)
+        }
+        return 1
     }
 
     /**
@@ -79,20 +91,38 @@ object ClinicalReportsCalculator {
         periodDays: Int,
         anchorTimeMs: Long = System.currentTimeMillis()
     ): List<GlucoseMeasurement> {
-        val valid = readings.filter { it.numericValue > 0 }
-        if (valid.isEmpty()) return emptyList()
+        if (readings.isEmpty()) return emptyList()
 
-        val epochs = valid.mapNotNull { it.getEpochMillis().takeIf { t -> t > 0L } }
-        if (epochs.isEmpty()) return valid
-
-        val maxEpoch = epochs.maxOrNull() ?: anchorTimeMs
-        val windowMs = periodDays.toLong() * 24L * 3600L * 1000L
-        val effectiveAnchor = if (maxEpoch < anchorTimeMs - windowMs) maxEpoch else anchorTimeMs
-        val cutoffEpoch = effectiveAnchor - windowMs
-        return valid.filter {
-            val ep = it.getEpochMillis().takeIf { t -> t > 0L } ?: effectiveAnchor
-            ep in cutoffEpoch..(effectiveAnchor + 300_000L)
+        var validCount = 0
+        var maxEpoch = Long.MIN_VALUE
+        for (i in readings.indices) {
+            val m = readings[i]
+            if (m.numericValue > 0.0) {
+                validCount++
+                val ep = m.getEpochMillis()
+                if (ep > maxEpoch) maxEpoch = ep
+            }
         }
+        if (validCount == 0) return emptyList()
+
+        val effectiveMax = if (maxEpoch > 0L) maxEpoch else anchorTimeMs
+        val windowMs = periodDays.toLong() * 24L * 3600L * 1000L
+        val effectiveAnchor = if (effectiveMax < anchorTimeMs - windowMs) effectiveMax else anchorTimeMs
+        val cutoffEpoch = effectiveAnchor - windowMs
+        val endEpoch = effectiveAnchor + 300_000L
+
+        val result = ArrayList<GlucoseMeasurement>(validCount)
+        for (i in readings.indices) {
+            val m = readings[i]
+            if (m.numericValue > 0.0) {
+                val ep = m.getEpochMillis()
+                val effectiveEp = if (ep > 0L) ep else effectiveAnchor
+                if (effectiveEp in cutoffEpoch..endEpoch) {
+                    result.add(m)
+                }
+            }
+        }
+        return result
     }
 
 
@@ -116,15 +146,17 @@ object ClinicalReportsCalculator {
             timeZone = TimeZone.getDefault()
         }
 
-        for (r in valid) {
+        var sum = 0.0
+        for (i in valid.indices) {
+            val r = valid[i]
+            sum += r.numericValue
             val hour = extractHour(r, sdf)
             if (hour in 0..23) {
                 hourlyBuckets[hour].add(r.numericValue)
             }
         }
 
-        val allValues = valid.map { it.numericValue }
-        val mean = allValues.average()
+        val mean = sum / valid.size
 
         // Si algunas horas no tienen muestras, interpolar suavemente desde las horas vecinas
         for (h in 0..23) {
@@ -167,7 +199,12 @@ object ClinicalReportsCalculator {
             )
         }
 
-        val variance = allValues.map { (it - mean).pow(2) }.average()
+        var sumSqDiff = 0.0
+        for (i in valid.indices) {
+            val diff = valid[i].numericValue - mean
+            sumSqDiff += diff * diff
+        }
+        val variance = sumSqDiff / valid.size
         val sd = sqrt(variance)
         val cv = if (mean > 0) (sd / mean) * 100.0 else 0.0
         val mage = calculateMage(valid, sd)
@@ -199,55 +236,53 @@ object ClinicalReportsCalculator {
             return TimeInRangeReport(periodDays, 0, emptyBuckets, 0.0, 0.0, 0.0, 0.0, 0.0, "Sin Datos")
         }
 
-        val counts = mutableMapOf<TirCategory, Int>()
-        TirCategory.values().forEach { counts[it] = 0 }
+        var vLowCount = 0
+        var lowCount = 0
+        var inRangeCount = 0
+        var highCount = 0
+        var vHighCount = 0
+        var tightCount = 0
 
         for (r in valid) {
             val v = r.numericValue
-            val cat = when {
-                v < 54.0 -> TirCategory.VERY_LOW
-                v < 70.0 -> TirCategory.LOW
-                v <= 180.0 -> TirCategory.IN_RANGE
-                v <= 250.0 -> TirCategory.HIGH
-                else -> TirCategory.VERY_HIGH
+            when {
+                v < 54.0 -> vLowCount++
+                v < 70.0 -> lowCount++
+                v <= 180.0 -> inRangeCount++
+                v <= 250.0 -> highCount++
+                else -> vHighCount++
             }
-            counts[cat] = (counts[cat] ?: 0) + 1
+            if (v in 70.0..140.0) {
+                tightCount++
+            }
         }
 
-        // 1440 minutos en un dia. En 24h el tiempo proporcional = (count / total) * 1440 min
-        val buckets = TirCategory.values().map { cat ->
-            val c = counts[cat] ?: 0
-            val pct = (c.toDouble() / total.toDouble()) * 100.0
-            val durationMinutes = ((pct / 100.0) * 1440.0).roundToInt()
-            TirBucket(
-                category = cat,
-                count = c,
-                percentage = roundDec(pct, 1),
-                durationMinutes = durationMinutes
-            )
-        }
+        val totalD = total.toDouble()
+        val vLowPctRaw = (vLowCount.toDouble() / totalD) * 100.0
+        val lowPctRaw = (lowCount.toDouble() / totalD) * 100.0
+        val inRangePctRaw = (inRangeCount.toDouble() / totalD) * 100.0
+        val highPctRaw = (highCount.toDouble() / totalD) * 100.0
+        val vHighPctRaw = (vHighCount.toDouble() / totalD) * 100.0
 
-        val inRange = buckets.find { it.category == TirCategory.IN_RANGE }?.percentage ?: 0.0
-        val low = (buckets.find { it.category == TirCategory.LOW }?.percentage ?: 0.0) +
-                (buckets.find { it.category == TirCategory.VERY_LOW }?.percentage ?: 0.0)
-        val high = (buckets.find { it.category == TirCategory.HIGH }?.percentage ?: 0.0) +
-                (buckets.find { it.category == TirCategory.VERY_HIGH }?.percentage ?: 0.0)
+        val vLowDuration = ((vLowPctRaw / 100.0) * 1440.0).roundToInt()
+        val lowDuration = ((lowPctRaw / 100.0) * 1440.0).roundToInt()
+        val inRangeDuration = ((inRangePctRaw / 100.0) * 1440.0).roundToInt()
+        val highDuration = ((highPctRaw / 100.0) * 1440.0).roundToInt()
+        val vHighDuration = ((vHighPctRaw / 100.0) * 1440.0).roundToInt()
 
-        // Time in Tight Range (TiTR: 70 - 140 mg/dL)
-        val tightCount = valid.count { it.numericValue in 70.0..140.0 }
-        val tightRangePct = roundDec((tightCount.toDouble() / total.toDouble()) * 100.0, 1)
+        val inRange = roundDec(inRangePctRaw, 1)
+        val low = roundDec(vLowPctRaw + lowPctRaw, 1)
+        val high = roundDec(highPctRaw + vHighPctRaw, 1)
 
-        // Glycemic Risk Index (GRI: Klonoff et al. 2022) sin redondeos intermedios
-        // GRI = (3.0 * %VLow) + (2.4 * %Low) + (1.6 * %VHigh) + (0.8 * %High)
-        val vLowCount = counts[TirCategory.VERY_LOW] ?: 0
-        val lowCount = counts[TirCategory.LOW] ?: 0
-        val highCount = counts[TirCategory.HIGH] ?: 0
-        val vHighCount = counts[TirCategory.VERY_HIGH] ?: 0
+        val buckets = listOf(
+            TirBucket(TirCategory.VERY_LOW, vLowCount, roundDec(vLowPctRaw, 1), vLowDuration),
+            TirBucket(TirCategory.LOW, lowCount, roundDec(lowPctRaw, 1), lowDuration),
+            TirBucket(TirCategory.IN_RANGE, inRangeCount, inRange, inRangeDuration),
+            TirBucket(TirCategory.HIGH, highCount, roundDec(highPctRaw, 1), highDuration),
+            TirBucket(TirCategory.VERY_HIGH, vHighCount, roundDec(vHighPctRaw, 1), vHighDuration)
+        )
 
-        val vLowPctRaw = (vLowCount.toDouble() / total.toDouble()) * 100.0
-        val lowPctRaw = (lowCount.toDouble() / total.toDouble()) * 100.0
-        val highPctRaw = (highCount.toDouble() / total.toDouble()) * 100.0
-        val vHighPctRaw = (vHighCount.toDouble() / total.toDouble()) * 100.0
+        val tightRangePct = roundDec((tightCount.toDouble() / totalD) * 100.0, 1)
 
         val rawGri = (3.0 * vLowPctRaw) + (2.4 * lowPctRaw) + (1.6 * vHighPctRaw) + (0.8 * highPctRaw)
         val gri = roundDec(rawGri.coerceIn(0.0, 100.0), 1)
@@ -667,10 +702,12 @@ object ClinicalReportsCalculator {
         }
         val gapThresholdMs = cadenceMs?.let { max(it * 3L, MIN_GAP_MS) }
         val longGaps = if (gapThresholdMs == null) emptyList() else intervals.filter { it > gapThresholdMs }
-        val dateFormatter = SimpleDateFormat("yyyy-MM-dd", Locale.US).apply {
-            timeZone = TimeZone.getDefault()
+        val tz = TimeZone.getDefault()
+        val distinctDays = HashSet<Long>(epochs.size)
+        for (ep in epochs) {
+            distinctDays.add((ep + tz.getOffset(ep)) / (24L * 3600L * 1000L))
         }
-        val daysWithReadings = epochs.map { dateFormatter.format(Date(it)) }.toSet().size
+        val daysWithReadings = distinctDays.size
         val latestEpoch = epochs.last()
         val ageMinutes = ((nowEpochMs - latestEpoch).coerceAtLeast(0L) / 60_000L)
         val sufficient = daysWithReadings >= MIN_STANDARD_REPORT_DAYS && (coverage ?: 0.0) >= MIN_STANDARD_REPORT_COVERAGE
@@ -706,14 +743,14 @@ object ClinicalReportsCalculator {
         return roundDec(result, 1)
     }
 
-    private fun extractHour(timestamp: String?, sdf: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)): Int {
+    private fun extractHour(timestamp: String?, sdf: SimpleDateFormat? = null): Int {
         if (timestamp.isNullOrBlank()) return 12
         if (timestamp.length >= 13 && timestamp[4] == '-' && timestamp[7] == '-') {
             val hourSub = timestamp.substring(11, 13)
             val h = hourSub.toIntOrNull()
             if (h != null && h in 0..23) return h
         }
-        val epoch = GlucoseMeasurement(timestamp = timestamp).getEpochMillis()
+        val epoch = FastDateParser.parseEpoch(timestamp)
         if (epoch > 0L) {
             val localOffset = TimeZone.getDefault().getOffset(epoch)
             val totalSeconds = (epoch + localOffset) / 1000L
@@ -721,7 +758,10 @@ object ClinicalReportsCalculator {
             return if (hour in 0..23) hour else 12
         }
         return try {
-            val d = sdf.parse(timestamp)
+            val formatter = sdf ?: SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).apply {
+                timeZone = TimeZone.getDefault()
+            }
+            val d = formatter.parse(timestamp)
             if (d != null) {
                 val cal = Calendar.getInstance()
                 cal.time = d
@@ -732,7 +772,7 @@ object ClinicalReportsCalculator {
         }
     }
 
-    private fun extractHour(reading: GlucoseMeasurement, sdf: SimpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)): Int {
+    private fun extractHour(reading: GlucoseMeasurement, sdf: SimpleDateFormat? = null): Int {
         val epoch = reading.getEpochMillis()
         if (epoch > 0L) {
             val localOffset = TimeZone.getDefault().getOffset(epoch)

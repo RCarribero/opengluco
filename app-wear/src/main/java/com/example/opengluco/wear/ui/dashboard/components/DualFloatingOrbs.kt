@@ -17,9 +17,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -68,6 +70,11 @@ fun DualFloatingOrbs(
         else -> measurement.trendText ?: "Estable"
     }
 
+    val density = LocalDensity.current
+    val ringStroke = remember(density) {
+        Stroke(width = with(density) { 2.5.dp.toPx() }, cap = StrokeCap.Round)
+    }
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -95,7 +102,7 @@ fun DualFloatingOrbs(
                     startAngle = 135f,
                     sweepAngle = 270f,
                     useCenter = false,
-                    style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round)
+                    style = ringStroke
                 )
             }
 
