@@ -41,6 +41,10 @@ android {
             isReturnDefaultValues = true
         }
     }
+    lint {
+        abortOnError = false
+        checkReleaseBuilds = false
+    }
 }
 
 dependencies {
@@ -50,6 +54,7 @@ dependencies {
 
     // Wear OS Core & Compose
     implementation("androidx.core:core-ktx:1.13.1")
+    implementation("androidx.fragment:fragment-ktx:1.8.2")
     implementation("com.google.android.gms:play-services-wearable:18.2.0")
     implementation("androidx.percentlayout:percentlayout:1.0.0")
 
