@@ -321,4 +321,45 @@ class ClinicalReportsCalculatorTest {
         assertTrue(alert.isCritical)
         assertTrue(alert.title.contains("Sin Sensor"))
     }
+
+    @Test
+    fun testCheckSensorExpirationAlert_twoAndThreeDaysRemaining_returnsNullNoAlert() {
+        val nowSec = System.currentTimeMillis() / 1000
+
+        // Sensor con 3 días restantes de 14
+        val sensor3Days = SensorInfo(
+            deviceId = "dev-3d",
+            serialNumber = "SN-3D",
+            activatedTimestamp = nowSec - (11 * 24 * 3600),
+            lifetimeDays = 14
+        )
+        val alert3d = ClinicalReportsCalculator.checkSensorExpirationAlert(sensor3Days)
+        org.junit.Assert.assertNull(alert3d)
+
+        // Sensor con 2 días restantes de 14
+        val sensor2Days = SensorInfo(
+            deviceId = "dev-2d",
+            serialNumber = "SN-2D",
+            activatedTimestamp = nowSec - (12 * 24 * 3600),
+            lifetimeDays = 14
+        )
+        val alert2d = ClinicalReportsCalculator.checkSensorExpirationAlert(sensor2Days)
+        org.junit.Assert.assertNull(alert2d)
+    }
+
+    @Test
+    fun testCheckSensorExpirationAlert_withCustomDuration_preventsPrematureAlert() {
+        val nowSec = System.currentTimeMillis() / 1000
+        // Activado hace 13 días:
+        // En ciclo de 14 días le quedaría 1 día (generaría alerta de próximo a expirar)
+        // Con override de 15 días (ej: Libre 2 Plus), le quedan 2 días y NO debe generar alerta
+        val rawSensor = SensorInfo(
+            deviceId = "dev-override",
+            serialNumber = "SN-STD",
+            activatedTimestamp = nowSec - (13 * 24 * 3600)
+        )
+        val sensor15 = rawSensor.copy(lifetimeDays = 15)
+        val alert = ClinicalReportsCalculator.checkSensorExpirationAlert(sensor15)
+        org.junit.Assert.assertNull(alert)
+    }
 }

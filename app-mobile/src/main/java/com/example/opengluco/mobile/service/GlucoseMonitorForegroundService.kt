@@ -13,6 +13,7 @@ import com.example.opengluco.core.data.AlarmRepository
 import com.example.opengluco.core.data.OpenGlucoRepository
 import com.example.opengluco.core.data.UserPreferencesRepository
 import com.example.opengluco.core.model.GlucoseMeasurement
+import com.example.opengluco.core.model.withCustomDuration
 import com.example.opengluco.mobile.notification.MobileAlarmNotificationHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -132,7 +133,9 @@ class GlucoseMonitorForegroundService : Service() {
         } catch (_: Exception) {}
         preferencesRepository.saveHistoricalReadings(allToSave, targetPatient.patientId)
 
-        val resolvedSensor = if (graphDataObj != null) graphDataObj.resolvedSensor else targetPatient.sensor?.takeIf { it.isValid }
+        val rawSensor = if (graphDataObj != null) graphDataObj.resolvedSensor else targetPatient.sensor?.takeIf { it.isValid }
+        val customDuration = settings.sensorDurationDays.takeIf { it > 0 }
+        val resolvedSensor = rawSensor.withCustomDuration(customDuration)
         val isSensorActive = resolvedSensor != null && (resolvedSensor.getRemainingDays() ?: 0) > 0 && resolvedSensor.isSensorActive != false
 
 

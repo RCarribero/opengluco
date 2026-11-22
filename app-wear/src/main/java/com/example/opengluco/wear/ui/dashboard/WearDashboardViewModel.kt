@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.opengluco.core.model.ConnectionItem
 import com.example.opengluco.core.model.GlucoseMeasurement
 import com.example.opengluco.core.model.SensorInfo
+import com.example.opengluco.core.model.withCustomDuration
 import com.example.opengluco.core.data.GlucoseUnit
 import com.example.opengluco.core.data.OpenGlucoRepository
 import com.example.opengluco.core.data.UserPreferencesRepository
@@ -321,7 +322,9 @@ class WearDashboardViewModel(
             ?: preferencesRepository.localDatabase.getLatestReading(patient.patientId)
             ?: preferencesRepository.localDatabase.getLatestReading(null)
         val graphObj = graphResult.getOrNull()
-        val activeSensor = if (graphObj != null) graphObj.resolvedSensor else patient.sensor?.takeIf { it.isValid }
+        val rawSensor = if (graphObj != null) graphObj.resolvedSensor else patient.sensor?.takeIf { it.isValid }
+        val customDuration = userSettings.sensorDurationDays.takeIf { it > 0 }
+        val activeSensor = rawSensor.withCustomDuration(customDuration)
 
         val baseHistory = if (history.isNotEmpty()) {
             history

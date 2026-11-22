@@ -21,6 +21,7 @@ import com.example.opengluco.core.data.UserSettings
 import com.example.opengluco.core.model.ConnectionItem
 import com.example.opengluco.core.model.GlucoseMeasurement
 import com.example.opengluco.core.model.SensorLifecycleState
+import com.example.opengluco.core.model.withCustomDuration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -228,7 +229,9 @@ class GlucoseDashboardCarScreen(
         val graphRes = repository.getPatientGraph(patient.patientId)
         val history = graphRes.getOrNull()?.graphData.orEmpty()
         val graphObj = graphRes.getOrNull()
-        val resolvedSensor = if (graphObj != null) graphObj.resolvedSensor else patient.sensor?.takeIf { it.isValid }
+        val rawSensor = if (graphObj != null) graphObj.resolvedSensor else patient.sensor?.takeIf { it.isValid }
+        val customDuration = currentSettings.sensorDurationDays.takeIf { it > 0 }
+        val resolvedSensor = rawSensor.withCustomDuration(customDuration)
         currentPatient = patient.copy(sensor = resolvedSensor)
         lastMeasurement = patient.effectiveMeasurement ?: history.lastOrNull()
         lastUpdated = lastMeasurement?.getDisplayTime() ?: "Ahora"

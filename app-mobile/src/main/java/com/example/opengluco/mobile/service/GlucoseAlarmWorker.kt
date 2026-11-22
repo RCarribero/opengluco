@@ -10,6 +10,7 @@ import com.example.opengluco.core.data.AlarmEvaluator
 import com.example.opengluco.core.data.AlarmRepository
 import com.example.opengluco.core.data.OpenGlucoRepository
 import com.example.opengluco.core.data.UserPreferencesRepository
+import com.example.opengluco.core.model.withCustomDuration
 import com.example.opengluco.mobile.notification.MobileAlarmNotificationHelper
 import kotlinx.coroutines.flow.first
 import java.util.concurrent.TimeUnit
@@ -49,7 +50,9 @@ class GlucoseAlarmWorker(
 
         val graphRes = openGlucoRepo.getPatientGraph(patient.patientId)
         val graphObj = graphRes.getOrNull()
-        val sensor = if (graphObj != null) graphObj.resolvedSensor else patient.sensor?.takeIf { it.isValid }
+        val rawSensor = if (graphObj != null) graphObj.resolvedSensor else patient.sensor?.takeIf { it.isValid }
+        val customDuration = settings.sensorDurationDays.takeIf { it > 0 }
+        val sensor = rawSensor.withCustomDuration(customDuration)
         val isSensorActive = sensor != null && (sensor.getRemainingDays() ?: 0) > 0 && sensor.isSensorActive != false
 
         com.example.opengluco.core.data.ClinicalReportsCalculator.checkSensorExpirationAlert(sensor)?.let { alert ->

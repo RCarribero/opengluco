@@ -530,5 +530,97 @@ class ClinicalModelsTest {
         assertNotNull(resolved)
         assertEquals("VALID_SN", resolved!!.serialNumber)
     }
+
+    @Test
+    fun testWithCustomDuration_overridesLifetimeDays() {
+        val rawSensor = SensorInfo(
+            deviceId = "dev-custom",
+            serialNumber = "SN-STD-1234",
+            activatedTimestamp = 1700000000L,
+            lifetimeDays = null
+        )
+        assertEquals(14, rawSensor.totalLifetimeDays)
+
+        val sensor15 = rawSensor.withCustomDuration(15)
+        assertEquals(15, sensor15?.totalLifetimeDays)
+        assertEquals(15, sensor15?.lifetimeDays)
+
+        val sensor14 = rawSensor.withCustomDuration(14)
+        assertEquals(14, sensor14?.totalLifetimeDays)
+        assertEquals(14, sensor14?.lifetimeDays)
+
+        val sensorAuto = rawSensor.withCustomDuration(0)
+        assertEquals(14, sensorAuto?.totalLifetimeDays)
+        assertNull(sensorAuto?.lifetimeDays)
+
+        val sensorNull = rawSensor.withCustomDuration(null)
+        assertEquals(14, sensorNull?.totalLifetimeDays)
+        assertNull(sensorNull?.lifetimeDays)
+    }
+
+    @Test
+    fun testSensorLifecycleState_twoOrThreeDaysRemaining_isActiveNotExpired() {
+        val nowSec = 1789569196L
+        val nowMs = nowSec * 1000L
+
+        // Activado hace 11 días (quedan 3 días de vida útil en un ciclo de 14 días)
+        val sensorThreeDaysLeft = SensorInfo(
+            deviceId = "dev-3d",
+            serialNumber = "SN-3DAYS",
+            activatedTimestamp = nowSec - (11 * 24 * 3600),
+            lifetimeDays = 14
+        )
+        val stateThree = sensorThreeDaysLeft.getLifecycleState(nowMs)
+        assertTrue(stateThree is SensorLifecycleState.Active)
+        assertEquals(3, (stateThree as SensorLifecycleState.Active).remainingDays)
+        assertEquals(3, sensorThreeDaysLeft.getRemainingDays(nowMs))
+        assertTrue(stateThree.isActive)
+
+        // Activado hace 12 días (quedan 2 días de vida útil en un ciclo de 14 días)
+        val sensorTwoDaysLeft = SensorInfo(
+            deviceId = "dev-2d",
+            serialNumber = "SN-2DAYS",
+            activatedTimestamp = nowSec - (12 * 24 * 3600),
+            lifetimeDays = 14
+        )
+        val stateTwo = sensorTwoDaysLeft.getLifecycleState(nowMs)
+        assertTrue(stateTwo is SensorLifecycleState.Active)
+        assertEquals(2, (stateTwo as SensorLifecycleState.Active).remainingDays)
+        assertEquals(2, sensorTwoDaysLeft.getRemainingDays(nowMs))
+        assertTrue(stateTwo.isActive)
+    }
+
+    @Test
+    fun testAbbottActiveSensors_emptyList_withActiveConnectionSensor_doesNotForceInactive() {
+        val nowSec = System.currentTimeMillis() / 1000
+        val recentActivation = nowSec - (5 * 24 * 3600) // 5 días de antigüedad en ciclo de 14 días
+        val rawJson = """
+            {
+                "connection": {
+                    "id": "conn-active",
+                    "patientId": "p-active",
+                    "sensor": {
+                        "deviceId": "dev-live",
+                        "a": $recentActivation,
+                        "sn": "LIVE_SENSOR",
+                        "pt": 2,
+                        "l": 14
+                    }
+                },
+                "activeSensors": [],
+                "graphData": []
+            }
+        """.trimIndent()
+
+        val graphData = json.decodeFromString<GraphData>(rawJson)
+        val resolved = graphData.resolvedSensor
+        assertNotNull(resolved)
+        assertEquals("LIVE_SENSOR", resolved!!.serialNumber)
+        // No debe forzarse a inactivo ni a 0 días restantes
+        assertNotEquals(false, resolved.isSensorActive)
+        val remaining = resolved.getRemainingDays() ?: 0
+        assertTrue(remaining >= 8)
+        assertTrue(resolved.getLifecycleState() is SensorLifecycleState.Active)
+    }
 }
 

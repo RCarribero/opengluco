@@ -65,6 +65,7 @@ import androidx.compose.material.icons.filled.WarningAmber
 import com.example.opengluco.core.model.ClinicalErrorType
 import com.example.opengluco.core.model.SensorLifecycleState
 import com.example.opengluco.core.model.lifecycleState
+import com.example.opengluco.core.model.withCustomDuration
 import com.example.opengluco.core.data.NetworkException
 import com.example.opengluco.core.data.AuthExpiredException
 import com.example.opengluco.mobile.ui.qr.MobilePairingHelper
@@ -301,7 +302,8 @@ fun MobileDashboardScreen(
         val arrow = em.trendSymbol
         val name = patient.fullName.ifBlank { "Paciente" }
 
-        val activeSensor = currentSensor ?: patient.sensor?.takeIf { it.isValid }
+        val customDuration = settings?.sensorDurationDays?.takeIf { it > 0 }
+        val activeSensor = (currentSensor ?: patient.sensor?.takeIf { it.isValid }).withCustomDuration(customDuration)
         val isSensorActive = activeSensor != null && (activeSensor.getRemainingDays() ?: 0) > 0 && activeSensor.isSensorActive != false
         val isStale = em.isStale() || !isSensorActive
 
@@ -365,10 +367,12 @@ fun MobileDashboardScreen(
                     val graphData = graphDataObj.graphData
                     history = graphData
                     val resolved = graphDataObj.resolvedSensor
-                    currentSensor = resolved
+                    val customDuration = settings?.sensorDurationDays?.takeIf { it > 0 }
+                    val effectiveSensor = resolved.withCustomDuration(customDuration)
+                    currentSensor = effectiveSensor
 
                     // Actualizar alerta clínica en función del ciclo de vida del sensor
-                    val sensorState = resolved.lifecycleState()
+                    val sensorState = effectiveSensor.lifecycleState()
                     when (sensorState) {
                         is SensorLifecycleState.NoSensor -> {
                             clinicalError = ClinicalErrorType.NoSensor()
@@ -390,7 +394,7 @@ fun MobileDashboardScreen(
                     }
 
                     // Notificar alertas preventivas de expiración de sensor
-                    com.example.opengluco.core.data.ClinicalReportsCalculator.checkSensorExpirationAlert(resolved)?.let { alert ->
+                    com.example.opengluco.core.data.ClinicalReportsCalculator.checkSensorExpirationAlert(effectiveSensor)?.let { alert ->
                         MobileAlarmNotificationHelper.notifySensorExpiration(context, alert)
                     }
 
@@ -614,7 +618,7 @@ fun MobileDashboardScreen(
 
     val rawSensor = currentSensor ?: selectedPatient?.sensor?.takeIf { it.isValid }
     val customDuration = settings?.sensorDurationDays?.takeIf { it > 0 }
-    val sensor = if (customDuration != null && rawSensor != null) rawSensor.copy(lifetimeDays = customDuration) else rawSensor
+    val sensor = rawSensor.withCustomDuration(customDuration)
     val sensorState = sensor.lifecycleState()
     val sensorDays = sensor?.getRemainingDays() ?: 0
     val sensorSerial = sensor?.serialNumber ?: selectedPatient?.sensor?.serialNumber ?: "Sin Sensor"
@@ -1306,6 +1310,15 @@ fun MobileDashboardScreen(
                 onSave = { newDays ->
                     scope.launch {
                         preferencesRepository.saveSensorDurationDays(newDays)
+                        val updatedSensor = currentSensor.withCustomDuration(newDays)
+                        currentSensor = updatedSensor
+                        val state = updatedSensor.lifecycleState()
+                        if (state is SensorLifecycleState.Active && clinicalError is ClinicalErrorType.SensorExpired) {
+                            clinicalError = ClinicalErrorType.None
+                        }
+                        selectedPatient?.let { p ->
+                            loadPatientData(p)
+                        }
                     }
                     showSensorDurationDialog = false
                 }

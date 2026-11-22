@@ -74,7 +74,7 @@ fun SensorDurationDialog(
         DurationOption(
             value = 0,
             title = "Automático (Recomendado)",
-            description = "Detección inteligente por número de serie y modelo ( días para el sensor actual)"
+            description = "Detección inteligente por número de serie y modelo ($autoDetectedDays días para el sensor actual)"
         ),
         DurationOption(
             value = 15,
@@ -200,7 +200,7 @@ fun SensorDurationDialog(
                                     color = colors.textSecondary
                                 )
                                 Text(
-                                    text = " días ",
+                                    text = "$effectiveDays días",
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = colors.mint
@@ -217,7 +217,7 @@ fun SensorDurationDialog(
                                         color = colors.textSecondary
                                     )
                                     Text(
-                                        text = " días",
+                                        text = "$remainingDaysPreview días",
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = colors.textPrimary

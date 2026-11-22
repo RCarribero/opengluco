@@ -211,6 +211,12 @@ data class SensorInfo(
 fun SensorInfo?.lifecycleState(nowMs: Long = System.currentTimeMillis()): SensorLifecycleState =
     this?.getLifecycleState(nowMs) ?: SensorLifecycleState.NoSensor
 
+fun SensorInfo?.withCustomDuration(durationDays: Int?): SensorInfo? {
+    if (this == null) return null
+    val customDays = durationDays?.takeIf { it > 0 } ?: return this
+    return this.copy(lifetimeDays = customDays)
+}
+
 @Serializable
 data class DeviceInfo(
     @SerialName("did") val did: String? = null,
@@ -238,7 +244,12 @@ data class GraphData(
             if (list != null) {
                 val validEntries = list.filter { it.sensor?.isValid == true }
                 if (validEntries.isEmpty()) {
-                    return connection?.effectiveSensor?.copy(isSensorActive = false)
+                    val connSensor = connection?.effectiveSensor
+                    return if (connSensor != null && connSensor.isSensorActive != false && (connSensor.getRemainingDays() ?: 0) > 0) {
+                        connSensor
+                    } else {
+                        connSensor?.copy(isSensorActive = false)
+                    }
                 }
                 val activeOnly = validEntries.filter { it.sensor?.isSensorActive == true }
                 val chosenEntry = if (activeOnly.isNotEmpty()) {
