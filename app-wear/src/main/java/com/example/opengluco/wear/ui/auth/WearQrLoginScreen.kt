@@ -100,8 +100,7 @@ fun WearQrLoginScreen(
                 userId = session.userId,
                 phoneMac = session.phoneBluetoothMac
             )
-            // Iniciar servicio de stream continuo tras guardar sesión
-            WearBluetoothRfcommService.start(context)
+            // Iniciar sesion directa en el reloj tras confirmacion SAS del usuario
             delay(400)
             onLoginSuccess()
         }
@@ -122,7 +121,8 @@ fun WearQrLoginScreen(
         serverSocket = QrAuthHelper.startPairingServer(
             port = 8888,
             secretKeyHex = payload.secretKeyHex,
-            nonceHex = payload.nonceHex
+            nonceHex = payload.nonceHex,
+            expectedSessionId = payload.sessionId
         ) { session ->
             pendingSession = session
         }

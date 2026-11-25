@@ -55,7 +55,8 @@ data class UserSettings(
     val hapticAlertsEnabled: Boolean = true,
     val isDarkMode: Boolean = true,
     val trustedPhoneMac: String = "",
-    val sensorDurationDays: Int = 0
+    val sensorDurationDays: Int = 0,
+    val region: OpenGlucoRegion = OpenGlucoRegion.EU
 )
 
 class UserPreferencesRepository(private val context: Context) {
@@ -81,9 +82,15 @@ class UserPreferencesRepository(private val context: Context) {
     private val _historicalReadingsFlow = MutableStateFlow<List<GlucoseMeasurement>>(emptyList())
     private var currentLoadedPatientId: String? = null
 
+    companion object {
+        private val legacyMigrationDone = java.util.concurrent.atomic.AtomicBoolean(false)
+    }
+
     init {
-        repoScope.launch {
-            migrateLegacyJsonFilesAsync()
+        if (legacyMigrationDone.compareAndSet(false, true)) {
+            repoScope.launch {
+                migrateLegacyJsonFilesAsync()
+            }
         }
     }
 
@@ -175,62 +182,51 @@ class UserPreferencesRepository(private val context: Context) {
         val IS_DARK_MODE = booleanPreferencesKey("is_dark_mode")
         val TRUSTED_PHONE_MAC = stringPreferencesKey("trusted_phone_mac")
         val SENSOR_DURATION_DAYS = intPreferencesKey("sensor_duration_days")
+        val REGION = stringPreferencesKey("libreview_region")
     }
 
-    @Volatile private var cachedRawEmail: String? = null
-    @Volatile private var cachedDecryptedEmail: String = ""
-    @Volatile private var cachedRawToken: String? = null
-    @Volatile private var cachedDecryptedToken: String = ""
-    @Volatile private var cachedRawUserId: String? = null
-    @Volatile private var cachedDecryptedUserId: String = ""
-    @Volatile private var cachedRawMac: String? = null
-    @Volatile private var cachedDecryptedMac: String = ""
+    @Volatile private var emailCache: Pair<String, String>? = null
+    @Volatile private var tokenCache: Pair<String, String>? = null
+    @Volatile private var userIdCache: Pair<String, String>? = null
+    @Volatile private var macCache: Pair<String, String>? = null
 
     private fun getDecryptedEmail(raw: String): String {
         if (raw.isBlank()) return ""
-        if (raw == cachedRawEmail) return cachedDecryptedEmail
+        emailCache?.let { if (it.first == raw) return it.second }
         val dec = KeystoreCryptoHelper.decrypt(raw)
-        cachedRawEmail = raw
-        cachedDecryptedEmail = dec
+        emailCache = raw to dec
         return dec
     }
 
     private fun getDecryptedToken(raw: String): String {
         if (raw.isBlank()) return ""
-        if (raw == cachedRawToken) return cachedDecryptedToken
+        tokenCache?.let { if (it.first == raw) return it.second }
         val dec = KeystoreCryptoHelper.decrypt(raw)
-        cachedRawToken = raw
-        cachedDecryptedToken = dec
+        tokenCache = raw to dec
         return dec
     }
 
     private fun getDecryptedUserId(raw: String): String {
         if (raw.isBlank()) return ""
-        if (raw == cachedRawUserId) return cachedDecryptedUserId
+        userIdCache?.let { if (it.first == raw) return it.second }
         val dec = KeystoreCryptoHelper.decrypt(raw)
-        cachedRawUserId = raw
-        cachedDecryptedUserId = dec
+        userIdCache = raw to dec
         return dec
     }
 
     private fun getDecryptedMac(raw: String): String {
         if (raw.isBlank()) return ""
-        if (raw == cachedRawMac) return cachedDecryptedMac
+        macCache?.let { if (it.first == raw) return it.second }
         val dec = KeystoreCryptoHelper.decrypt(raw)
-        cachedRawMac = raw
-        cachedDecryptedMac = dec
+        macCache = raw to dec
         return dec
     }
 
     private fun clearDecryptedCache() {
-        cachedRawEmail = null
-        cachedDecryptedEmail = ""
-        cachedRawToken = null
-        cachedDecryptedToken = ""
-        cachedRawUserId = null
-        cachedDecryptedUserId = ""
-        cachedRawMac = null
-        cachedDecryptedMac = ""
+        emailCache = null
+        tokenCache = null
+        userIdCache = null
+        macCache = null
     }
 
     val userSettingsFlow: Flow<UserSettings> = context.dataStore.data.map { preferences ->
@@ -241,6 +237,8 @@ class UserPreferencesRepository(private val context: Context) {
         val rawToken = preferences[PreferencesKeys.TOKEN] ?: ""
         val rawUserId = preferences[PreferencesKeys.USER_ID] ?: ""
         val rawMac = preferences[PreferencesKeys.TRUSTED_PHONE_MAC] ?: ""
+        val regionStr = preferences[PreferencesKeys.REGION] ?: OpenGlucoRegion.EU.name
+        val region = try { OpenGlucoRegion.valueOf(regionStr.uppercase()) } catch (_: Exception) { OpenGlucoRegion.EU }
 
         UserSettings(
             email = getDecryptedEmail(rawEmail),
@@ -255,7 +253,8 @@ class UserPreferencesRepository(private val context: Context) {
             hapticAlertsEnabled = preferences[PreferencesKeys.HAPTIC_ALERTS] ?: true,
             isDarkMode = preferences[PreferencesKeys.IS_DARK_MODE] ?: true,
             trustedPhoneMac = getDecryptedMac(rawMac),
-            sensorDurationDays = preferences[PreferencesKeys.SENSOR_DURATION_DAYS] ?: 0
+            sensorDurationDays = preferences[PreferencesKeys.SENSOR_DURATION_DAYS] ?: 0,
+            region = region
         )
     }.distinctUntilChanged()
 
@@ -264,16 +263,23 @@ class UserPreferencesRepository(private val context: Context) {
     }.distinctUntilChanged()
 
     val hasSessionFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        val token = preferences[PreferencesKeys.TOKEN] ?: ""
-        token.isNotBlank()
+        val rawToken = preferences[PreferencesKeys.TOKEN] ?: ""
+        if (rawToken.isBlank()) false else getDecryptedToken(rawToken).isNotBlank()
     }.distinctUntilChanged()
 
-    suspend fun saveAuthSession(email: String, token: String, userId: String, phoneMac: String? = null) {
+    suspend fun saveAuthSession(
+        email: String,
+        token: String,
+        userId: String,
+        phoneMac: String? = null,
+        region: OpenGlucoRegion = OpenGlucoRegion.EU
+    ) {
         clearDecryptedCache()
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.EMAIL] = KeystoreCryptoHelper.encrypt(email)
             preferences[PreferencesKeys.TOKEN] = KeystoreCryptoHelper.encrypt(token)
             preferences[PreferencesKeys.USER_ID] = KeystoreCryptoHelper.encrypt(userId)
+            preferences[PreferencesKeys.REGION] = region.name
             if (!phoneMac.isNullOrBlank()) {
                 preferences[PreferencesKeys.TRUSTED_PHONE_MAC] = KeystoreCryptoHelper.encrypt(phoneMac.trim().uppercase())
             }
@@ -354,7 +360,7 @@ class UserPreferencesRepository(private val context: Context) {
         loadPatientHistory(patientId)
     }
 
-    suspend fun clearSession() {
+    suspend fun clearSession(clearHistory: Boolean = false) {
         clearDecryptedCache()
         context.dataStore.edit { preferences ->
             preferences.remove(PreferencesKeys.EMAIL)
@@ -365,8 +371,11 @@ class UserPreferencesRepository(private val context: Context) {
             preferences.remove(PreferencesKeys.LAST_GLUCOSE)
             preferences.remove(PreferencesKeys.LAST_TREND)
             preferences.remove(PreferencesKeys.LAST_TIMESTAMP)
+            preferences.remove(PreferencesKeys.REGION)
         }
-        clearAllHistoricalData(null)
+        if (clearHistory) {
+            clearAllHistoricalData(null)
+        }
     }
 
     suspend fun clearAllHistoricalData(patientId: String? = null) = withContext(Dispatchers.IO) {
@@ -391,7 +400,13 @@ class UserPreferencesRepository(private val context: Context) {
 
 
     suspend fun purgeAllLocalData() = withContext(Dispatchers.IO) {
+        clearDecryptedCache()
         clearAllHistoricalData(null)
+        try {
+            File(context.filesDir, "custom_alarms").deleteRecursively()
+            File(context.cacheDir, "exports").deleteRecursively()
+            File(context.cacheDir, "updates").deleteRecursively()
+        } catch (_: Exception) {}
         context.dataStore.edit { preferences ->
             preferences.clear()
         }

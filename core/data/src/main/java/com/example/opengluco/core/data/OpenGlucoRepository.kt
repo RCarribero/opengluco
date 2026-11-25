@@ -328,5 +328,6 @@ class OpenGlucoRepository(
 
     fun getSessionToken(): String? = sessionToken
     fun getUserId(): String? = userId
+    fun getRegion(): OpenGlucoRegion = region
 }
 

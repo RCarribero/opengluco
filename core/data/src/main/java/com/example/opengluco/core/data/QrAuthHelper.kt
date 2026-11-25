@@ -144,6 +144,7 @@ object QrAuthHelper {
         email: String,
         token: String,
         userId: String,
+        region: String = "eu",
         phoneBluetoothMac: String? = null
     ): String {
         val exchange = QrSessionExchange(
@@ -151,6 +152,7 @@ object QrAuthHelper {
             email = email,
             token = token,
             userId = userId,
+            region = region,
             phoneBluetoothMac = phoneBluetoothMac
         )
         return json.encodeToString(exchange)
@@ -161,6 +163,18 @@ object QrAuthHelper {
             json.decodeFromString<QrSessionExchange>(rawContent)
         } catch (e: Exception) {
             null
+        }
+    }
+
+    private const val MAX_PAIRING_BODY_BYTES = 32 * 1024
+
+    fun isPrivateOrLocalAddress(host: String): Boolean {
+        if (host.isBlank()) return false
+        return try {
+            val addr = java.net.InetAddress.getByName(host.trim())
+            addr.isLoopbackAddress || addr.isSiteLocalAddress || addr.isLinkLocalAddress
+        } catch (_: Exception) {
+            false
         }
     }
 
@@ -176,6 +190,9 @@ object QrAuthHelper {
             // Rechazo estricto: prohibido transmitir credenciales en texto plano por la red local
             return@withContext false
         }
+        if (targetPort !in 1024..65535 || !isPrivateOrLocalAddress(targetIp)) {
+            return@withContext false
+        }
         try {
             val encryptedDataHex = encryptAesGcm(sessionJson, secretKeyHex, nonceHex)
             val encryptedModel = com.example.opengluco.core.model.QrEncryptedPayload(
@@ -184,17 +201,27 @@ object QrAuthHelper {
                 ivHex = nonceHex
             )
             val bodyPayload = json.encodeToString(encryptedModel)
+            val bodyBytes = bodyPayload.toByteArray(Charsets.UTF_8)
 
-            val mediaType = "application/json; charset=utf-8".toMediaType()
-            val body = bodyPayload.toRequestBody(mediaType)
-            val request = Request.Builder()
-                .url("http://$targetIp:$targetPort/auth")
-                .post(body)
-                .build()
+            // Usar socket TCP directo para IPs privadas LAN (el payload ya va cifrado con AES-256-GCM)
+            java.net.Socket().use { socket ->
+                socket.connect(java.net.InetSocketAddress(targetIp.trim(), targetPort), 5000)
+                socket.soTimeout = 5000
+                val out = socket.getOutputStream()
+                val headers = "POST /auth HTTP/1.1\r\n" +
+                    "Host: $targetIp:$targetPort\r\n" +
+                    "Content-Type: application/json; charset=utf-8\r\n" +
+                    "Content-Length: ${bodyBytes.size}\r\n" +
+                    "Connection: close\r\n\r\n"
+                out.write(headers.toByteArray(Charsets.US_ASCII))
+                out.write(bodyBytes)
+                out.flush()
 
-            val response = httpClient.newCall(request).execute()
-            response.isSuccessful
-        } catch (e: Exception) {
+                val reader = BufferedReader(InputStreamReader(socket.getInputStream(), Charsets.US_ASCII))
+                val statusLine = reader.readLine() ?: return@withContext false
+                statusLine.contains("200")
+            }
+        } catch (_: Exception) {
             false
         }
     }
@@ -203,6 +230,7 @@ object QrAuthHelper {
         port: Int = 8888,
         secretKeyHex: String? = null,
         nonceHex: String? = null,
+        expectedSessionId: String? = null,
         onSessionReceived: (QrSessionExchange) -> Unit
     ): ServerSocket? {
         return try {
@@ -213,50 +241,94 @@ object QrAuthHelper {
                         val client = serverSocket.accept()
                         Thread {
                             try {
-                                val reader = BufferedReader(InputStreamReader(client.getInputStream()))
-                                var line: String?
-                                var contentLength = 0
+                                client.soTimeout = 5000
+                                val input = client.getInputStream()
+                                val headerBytes = java.io.ByteArrayOutputStream()
+                                var prev = -1
+                                var crlfCount = 0
+                                while (headerBytes.size() < 4096) {
+                                    val b = input.read()
+                                    if (b == -1) break
+                                    headerBytes.write(b)
+                                    if (prev == '\r'.code && b == '\n'.code) {
+                                        crlfCount++
+                                        if (crlfCount == 2) break
+                                    } else if (b != '\r'.code) {
+                                        crlfCount = 0
+                                    }
+                                    prev = b
+                                }
 
-                                while (reader.readLine().also { line = it } != null) {
-                                    if (line!!.isEmpty()) break
-                                    if (line!!.lowercase().startsWith("content-length:")) {
-                                        contentLength = line!!.substringAfter(":").trim().toIntOrNull() ?: 0
+                                val headerText = headerBytes.toString(Charsets.US_ASCII.name())
+                                val contentLength = headerText.lines()
+                                    .firstOrNull { it.lowercase().startsWith("content-length:") }
+                                    ?.substringAfter(":")
+                                    ?.trim()
+                                    ?.toIntOrNull() ?: 0
+
+                                if (contentLength <= 0 || contentLength > MAX_PAIRING_BODY_BYTES) {
+                                    val out = client.getOutputStream()
+                                    val resp = if (contentLength > MAX_PAIRING_BODY_BYTES) {
+                                        "HTTP/1.1 413 Payload Too Large\r\nContent-Length: 0\r\n\r\n"
+                                    } else {
+                                        "HTTP/1.1 400 Bad Request\r\nContent-Length: 0\r\n\r\n"
+                                    }
+                                    out.write(resp.toByteArray(Charsets.US_ASCII))
+                                    out.flush()
+                                    client.close()
+                                    return@Thread
+                                }
+
+                                val bodyBuffer = ByteArray(contentLength)
+                                var totalRead = 0
+                                while (totalRead < contentLength) {
+                                    val read = input.read(bodyBuffer, totalRead, contentLength - totalRead)
+                                    if (read == -1) break
+                                    totalRead += read
+                                }
+                                if (totalRead != contentLength) {
+                                    client.close()
+                                    return@Thread
+                                }
+                                val rawBody = String(bodyBuffer, Charsets.UTF_8)
+
+                                var session: QrSessionExchange? = null
+                                if (!secretKeyHex.isNullOrBlank() && !nonceHex.isNullOrBlank()) {
+                                    try {
+                                        val encPayload = json.decodeFromString<com.example.opengluco.core.model.QrEncryptedPayload>(rawBody)
+                                        val ivMatches = encPayload.ivHex.equals(nonceHex, ignoreCase = true)
+                                        val outerSessionMatches = expectedSessionId.isNullOrBlank() || encPayload.sessionId == expectedSessionId
+                                        if (ivMatches && outerSessionMatches) {
+                                            val decryptedJson = decryptAesGcm(encPayload.encryptedDataHex, secretKeyHex, nonceHex)
+                                            val parsed = parseSessionExchange(decryptedJson)
+                                            if (parsed != null && (expectedSessionId.isNullOrBlank() || parsed.sessionId == expectedSessionId)) {
+                                                session = parsed
+                                            }
+                                        }
+                                    } catch (_: Exception) {
+                                        session = null
                                     }
                                 }
 
-                                if (contentLength > 0) {
-                                    val buffer = CharArray(contentLength)
-                                    reader.read(buffer, 0, contentLength)
-                                    val rawBody = String(buffer)
-
-                                    var session: QrSessionExchange? = null
-                                    if (!secretKeyHex.isNullOrBlank() && !nonceHex.isNullOrBlank()) {
-                                        try {
-                                            val encPayload = json.decodeFromString<com.example.opengluco.core.model.QrEncryptedPayload>(rawBody)
-                                            val decryptedJson = decryptAesGcm(encPayload.encryptedDataHex, secretKeyHex, encPayload.ivHex)
-                                            session = parseSessionExchange(decryptedJson)
-                                        } catch (_: Exception) {
-                                            session = null
-                                        }
-                                    }
-
-                                    if (session != null) {
-                                        val out = client.getOutputStream()
-                                        val httpResponse = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 15\r\n\r\n{\"status\":\"ok\"}"
-                                        out.write(httpResponse.toByteArray(Charsets.UTF_8))
-                                        out.flush()
-                                        client.close()
-                                        onSessionReceived(session)
-                                        return@Thread
-                                    } else {
-                                        val out = client.getOutputStream()
-                                        val errorResponse = "HTTP/1.1 401 Unauthorized\r\nContent-Type: application/json\r\nContent-Length: 26\r\n\r\n{\"error\":\"unauthorized\"}"
-                                        out.write(errorResponse.toByteArray(Charsets.UTF_8))
-                                        out.flush()
-                                    }
+                                if (session != null) {
+                                    val out = client.getOutputStream()
+                                    val httpResponse = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: 15\r\n\r\n{\"status\":\"ok\"}"
+                                    out.write(httpResponse.toByteArray(Charsets.UTF_8))
+                                    out.flush()
+                                    client.close()
+                                    try { serverSocket.close() } catch (_: Exception) {}
+                                    onSessionReceived(session)
+                                    return@Thread
+                                } else {
+                                    val out = client.getOutputStream()
+                                    val errorResponse = "HTTP/1.1 401 Unauthorized\r\nContent-Type: application/json\r\nContent-Length: 26\r\n\r\n{\"error\":\"unauthorized\"}"
+                                    out.write(errorResponse.toByteArray(Charsets.UTF_8))
+                                    out.flush()
                                 }
                                 client.close()
-                            } catch (_: Exception) {}
+                            } catch (_: Exception) {
+                                try { client.close() } catch (_: Exception) {}
+                            }
                         }.start()
                     }
                 } catch (_: Exception) {}

@@ -210,7 +210,8 @@ fun MobileLoginScreen(
                                         preferencesRepository.saveAuthSession(
                                             email = email.trim(),
                                             token = data.authTicket?.token.orEmpty(),
-                                            userId = data.user?.id.orEmpty()
+                                            userId = data.user?.id.orEmpty(),
+                                            region = repository.getRegion()
                                         )
                                         isLoading = false
                                         onLoginSuccess()

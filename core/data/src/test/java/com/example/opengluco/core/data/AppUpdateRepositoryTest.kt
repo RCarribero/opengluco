@@ -25,4 +25,13 @@ class AppUpdateRepositoryTest {
         assertFalse(repository.isVersionNewer("", "1.0.0"))
         assertFalse(repository.isVersionNewer("1.0.0", ""))
     }
+
+    @Test
+    fun testAllowedGitHubUrls() {
+        assertTrue(repository.isAllowedGitHubUrl("https://github.com/RCarribero/opengluco/releases/download/v1.3.0/OpenGluco-Mobile-v1.3.0.apk"))
+        assertTrue(repository.isAllowedGitHubUrl("https://objects.githubusercontent.com/github-production-release-asset/12345"))
+        assertFalse(repository.isAllowedGitHubUrl("http://github.com/RCarribero/opengluco/releases/download/v1.3.0/app.apk"))
+        assertFalse(repository.isAllowedGitHubUrl("https://evil.example.com/OpenGluco-Mobile-v1.3.0.apk"))
+        assertFalse(repository.isAllowedGitHubUrl(""))
+    }
 }

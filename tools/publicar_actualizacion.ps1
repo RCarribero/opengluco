@@ -1,4 +1,4 @@
-# Asistente Guiado de Publicacion de Actualizaciones OpenGluco (100% Local - Coste Cero)
+﻿# Asistente Guiado de Publicacion de Actualizaciones OpenGluco (100% Local - Coste Cero)
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $ErrorActionPreference = "Stop"
 
@@ -58,7 +58,7 @@ Write-Host "============================================================" -Foreg
 Write-Host " COMPILANDO APKS Y VERIFICANDO TESTS EN TU ORDENADOR...     " -ForegroundColor Yellow
 Write-Host "============================================================" -ForegroundColor Cyan
 
-.\gradlew assembleDebug testDebugUnitTest
+.\gradlew assembleRelease testDebugUnitTest
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Error durante la compilacion. Abortando." -ForegroundColor Red
@@ -75,9 +75,9 @@ $apkMobile = "$outputDir\OpenGluco-Mobile-$versionTag.apk"
 $apkWear = "$outputDir\OpenGluco-WearOS-$versionTag.apk"
 $apkAuto = "$outputDir\OpenGluco-AndroidAuto-$versionTag.apk"
 
-Copy-Item "app-mobile\build\outputs\apk\debug\app-mobile-debug.apk" $apkMobile -Force
-Copy-Item "app-wear\build\outputs\apk\debug\app-wear-debug.apk" $apkWear -Force
-Copy-Item "app-auto\build\outputs\apk\debug\app-auto-debug.apk" $apkAuto -Force
+Copy-Item "app-mobile\build\outputs\apk\release\app-mobile-release.apk" $apkMobile -Force
+Copy-Item "app-wear\build\outputs\apk\release\app-wear-release.apk" $apkWear -Force
+Copy-Item "app-auto\build\outputs\apk\release\app-auto-release.apk" $apkAuto -Force
 
 Write-Host ""
 Write-Host "APKs generados con exito en:" -ForegroundColor Green

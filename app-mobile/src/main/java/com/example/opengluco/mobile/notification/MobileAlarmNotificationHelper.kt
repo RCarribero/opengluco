@@ -295,7 +295,7 @@ object MobileAlarmNotificationHelper {
 
         val arrowText = if (trendArrow.isNotBlank()) " $trendArrow" else ""
         val contentText = "Glucosa actual: ${glucoseValueMgDl.toInt()}$arrowText mg/dL. Umbral: ${alarm.thresholdMgDl} mg/dL."
-        val notificationId = alarm.id.hashCode()
+        val notificationId = 10_000 + (alarm.id.hashCode() and 0x0FFFFFFF)
 
         val dismissIntent = Intent(context, AlarmDismissReceiver::class.java).apply {
             action = AlarmDismissReceiver.ACTION_DISMISS_ALARM
@@ -393,6 +393,12 @@ object MobileAlarmNotificationHelper {
                 }
                 prepare()
                 start()
+                setOnCompletionListener { mp ->
+                    mp.release()
+                    if (emergencyMediaPlayer === mp) {
+                        emergencyMediaPlayer = null
+                    }
+                }
             }
         } catch (_: Exception) {}
     }
@@ -408,7 +414,8 @@ object MobileAlarmNotificationHelper {
     fun dismissAlarm(context: Context, alarmId: String) {
         stopEmergencyAlarmSound()
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.cancel(alarmId.hashCode())
+        val notificationId = 10_000 + (alarmId.hashCode() and 0x0FFFFFFF)
+        notificationManager.cancel(notificationId)
 
         // Notificar cancelacion / silenciado a los relojes Wear OS conectados
         com.example.opengluco.mobile.service.MobileAlarmSyncHelper.sendAlarmDismissToWear(context, alarmId)

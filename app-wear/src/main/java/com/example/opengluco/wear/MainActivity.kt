@@ -33,7 +33,6 @@ class MainActivity : ComponentActivity() {
     private val appPermissionsLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { _ ->
-        checkAndStartRfcommService()
         requestAlarmsSyncFromMobile()
     }
 
@@ -75,8 +74,6 @@ class MainActivity : ComponentActivity() {
 
         if (needed.isNotEmpty()) {
             appPermissionsLauncher.launch(needed.toTypedArray())
-        } else {
-            checkAndStartRfcommService()
         }
     }
 

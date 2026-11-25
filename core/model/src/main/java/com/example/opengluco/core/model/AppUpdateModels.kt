@@ -13,5 +13,7 @@ data class AppReleaseInfo(
     val apkDownloadUrl: String,
     val htmlUrl: String,
     val isUpdateAvailable: Boolean,
-    val publishedAt: String = ""
+    val publishedAt: String = "",
+    val apkSha256: String = "",
+    val apkAssetName: String = ""
 )

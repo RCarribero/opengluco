@@ -10,13 +10,25 @@ import androidx.car.app.model.PaneTemplate
 import androidx.car.app.model.Row
 import androidx.car.app.model.Template
 import androidx.core.graphics.drawable.IconCompat
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import com.example.opengluco.auto.AutoMobileSyncHelper
 import com.example.opengluco.core.data.QrAuthHelper
+import com.example.opengluco.core.data.UserPreferencesRepository
 import com.example.opengluco.core.model.QrDeviceType
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.net.ServerSocket
 
 class QrLoginCarScreen(carContext: CarContext) : Screen(carContext) {
 
     private var qrBitmap: Bitmap? = null
     private var pairingPayloadJson: String = ""
+    private var serverSocket: ServerSocket? = null
+    private val prefsRepo = UserPreferencesRepository(carContext)
+    private val scope = CoroutineScope(Dispatchers.Main)
 
     init {
         val payload = QrAuthHelper.createPairingPayload(
@@ -25,6 +37,41 @@ class QrLoginCarScreen(carContext: CarContext) : Screen(carContext) {
         )
         pairingPayloadJson = QrAuthHelper.serializePairingPayload(payload)
         qrBitmap = QrAuthHelper.generateQrBitmap(pairingPayloadJson, sizePx = 400)
+
+        lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onStart(owner: LifecycleOwner) {
+                if (serverSocket == null || serverSocket?.isClosed == true) {
+                    serverSocket = QrAuthHelper.startPairingServer(
+                        port = payload.port ?: 8888,
+                        secretKeyHex = payload.secretKeyHex,
+                        nonceHex = payload.nonceHex,
+                        expectedSessionId = payload.sessionId
+                    ) { session ->
+                        scope.launch {
+                            withContext(Dispatchers.IO) {
+                                prefsRepo.saveAuthSession(
+                                    email = session.email,
+                                    token = session.token,
+                                    userId = session.userId,
+                                    phoneMac = session.phoneBluetoothMac
+                                )
+                            }
+                            screenManager.push(GlucoseDashboardCarScreen(carContext))
+                        }
+                    }
+                }
+            }
+
+            override fun onStop(owner: LifecycleOwner) {
+                try { serverSocket?.close() } catch (_: Exception) {}
+                serverSocket = null
+            }
+
+            override fun onDestroy(owner: LifecycleOwner) {
+                try { serverSocket?.close() } catch (_: Exception) {}
+                serverSocket = null
+            }
+        })
     }
 
     override fun onGetTemplate(): Template {
@@ -52,7 +99,10 @@ class QrLoginCarScreen(carContext: CarContext) : Screen(carContext) {
             Action.Builder()
                 .setTitle("Comprobar conexión")
                 .setOnClickListener {
-                    screenManager.push(GlucoseDashboardCarScreen(carContext))
+                    scope.launch {
+                        AutoMobileSyncHelper.syncSessionFromMobile(carContext, prefsRepo)
+                        screenManager.push(GlucoseDashboardCarScreen(carContext))
+                    }
                 }
                 .build()
         )

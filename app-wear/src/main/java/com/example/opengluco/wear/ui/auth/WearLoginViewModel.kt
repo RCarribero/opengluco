@@ -40,7 +40,7 @@ class WearLoginViewModel(
                     val userId = loginData.user?.id.orEmpty()
 
                     // Guardar sesión para auto-login
-                    preferencesRepository.saveAuthSession(email.trim(), token, userId)
+                    preferencesRepository.saveAuthSession(email.trim(), token, userId, region = repository.getRegion())
 
                     _uiState.value = WearLoginUiState.Success
                 },

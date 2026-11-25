@@ -102,6 +102,16 @@ class WearBluetoothRfcommService : Service() {
     @SuppressLint("MissingPermission")
     private fun startRfcommListener() {
         serviceScope.launch {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                androidx.core.content.ContextCompat.checkSelfPermission(
+                    this@WearBluetoothRfcommService,
+                    android.Manifest.permission.BLUETOOTH_CONNECT
+                ) != android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) {
+                Log.w(TAG, "Permiso BLUETOOTH_CONNECT no concedido; deteniendo servicio RFCOMM")
+                stopSelf()
+                return@launch
+            }
             val adapter = BluetoothAdapter.getDefaultAdapter()
             if (adapter == null || !adapter.isEnabled) {
                 Log.w(TAG, "Bluetooth no disponible o desactivado")
@@ -169,12 +179,10 @@ class WearBluetoothRfcommService : Service() {
 
     private suspend fun processStreamPayload(rawPayload: String) {
         try {
-            val decryptedPayload = if (rawPayload.startsWith("ENC:")) {
-                KeystoreCryptoHelper.decrypt(rawPayload)
-            } else {
-                rawPayload
+            if (!rawPayload.startsWith("ENC:")) {
+                return
             }
-
+            val decryptedPayload = KeystoreCryptoHelper.decrypt(rawPayload)
             if (decryptedPayload.isBlank()) return
 
             // Parsear como medición individual

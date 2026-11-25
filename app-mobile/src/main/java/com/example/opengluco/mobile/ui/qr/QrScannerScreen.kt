@@ -231,8 +231,16 @@ fun QrScannerScreen(
                                     onClick = {
                                         val payload = scannedPayload
                                         if (payload != null) {
-                                            transferSessionToDevice(context, payload, userEmail, userToken, userId) {
-                                                syncSuccess = true
+                                            transferSessionToDevice(context, payload, userEmail, userToken, userId) { ok ->
+                                                if (ok) {
+                                                    syncSuccess = true
+                                                } else {
+                                                    android.widget.Toast.makeText(
+                                                        context,
+                                                        "No se pudo entregar la vinculación al dispositivo.",
+                                                        android.widget.Toast.LENGTH_SHORT
+                                                    ).show()
+                                                }
                                             }
                                         }
                                     },
@@ -333,9 +341,9 @@ private fun transferSessionToDevice(
     email: String,
     token: String,
     userId: String,
-    onSuccess: () -> Unit
+    onResult: (Boolean) -> Unit
 ) {
-    MobilePairingHelper.transferSessionToDevice(context, payload, email, token, userId, onSuccess)
+    MobilePairingHelper.transferSessionToDevice(context, payload, email, token, userId, onResult = onResult)
 }
 
 @Composable

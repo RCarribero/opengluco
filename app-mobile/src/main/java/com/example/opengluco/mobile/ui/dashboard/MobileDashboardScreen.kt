@@ -213,6 +213,7 @@ fun MobileDashboardScreen(
     var showReportsScreen by remember { mutableStateOf(false) }
     var showAlarmsManagementDialog by remember { mutableStateOf(false) }
     var currentSensor by remember { mutableStateOf<com.example.opengluco.core.model.SensorInfo?>(null) }
+    var rawSensorState by remember { mutableStateOf<com.example.opengluco.core.model.SensorInfo?>(null) }
     var selectedChartTimeframe by remember { mutableStateOf(DashboardTimeframe.H24) }
     var showTargetRangeDialog by remember { mutableStateOf(false) }
     var showSensorDurationDialog by remember { mutableStateOf(false) }
@@ -367,6 +368,7 @@ fun MobileDashboardScreen(
                     val graphData = graphDataObj.graphData
                     history = graphData
                     val resolved = graphDataObj.resolvedSensor
+                    rawSensorState = resolved
                     val customDuration = settings?.sensorDurationDays?.takeIf { it > 0 }
                     val effectiveSensor = resolved.withCustomDuration(customDuration)
                     currentSensor = effectiveSensor
@@ -684,6 +686,11 @@ fun MobileDashboardScreen(
             },
             onRequestDeleteData = {
                 scope.launch {
+                    GlucoseMonitorForegroundService.stopService(context)
+                    com.example.opengluco.mobile.service.GlucoseAlarmWorker.cancel(context)
+                    MobileAlarmNotificationHelper.stopEmergencyAlarmSound()
+                    (context.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as? android.app.NotificationManager)?.cancelAll()
+                    alarmRepo.purgeAll()
                     preferencesRepository.purgeAllLocalData()
                     onLogout()
                 }
@@ -691,7 +698,12 @@ fun MobileDashboardScreen(
             onCheckUpdates = { checkAppUpdates(manual = true) },
             onLogout = {
                 scope.launch {
-                    preferencesRepository.clearSession()
+                    GlucoseMonitorForegroundService.stopService(context)
+                    com.example.opengluco.mobile.service.GlucoseAlarmWorker.cancel(context)
+                    MobileAlarmNotificationHelper.stopEmergencyAlarmSound()
+                    (context.getSystemService(android.content.Context.NOTIFICATION_SERVICE) as? android.app.NotificationManager)
+                        ?.cancel(MobileAlarmNotificationHelper.NOTIFICATION_ID_LIVE_STATUS)
+                    preferencesRepository.clearSession(clearHistory = false)
                     onLogout()
                 }
             },
@@ -788,7 +800,9 @@ fun MobileDashboardScreen(
                                 clinicalError = clinicalError,
                                 onReconnect = {
                                     scope.launch {
-                                        preferencesRepository.clearSession()
+                                        GlucoseMonitorForegroundService.stopService(context)
+                                        com.example.opengluco.mobile.service.GlucoseAlarmWorker.cancel(context)
+                                        preferencesRepository.clearSession(clearHistory = false)
                                         onLogout()
                                     }
                                 },
@@ -893,7 +907,9 @@ fun MobileDashboardScreen(
                                 clinicalError = clinicalError,
                                 onReconnect = {
                                     scope.launch {
-                                        preferencesRepository.clearSession()
+                                        GlucoseMonitorForegroundService.stopService(context)
+                                        com.example.opengluco.mobile.service.GlucoseAlarmWorker.cancel(context)
+                                        preferencesRepository.clearSession(clearHistory = false)
                                         onLogout()
                                     }
                                 },
@@ -1136,9 +1152,14 @@ fun MobileDashboardScreen(
                                                 payload = payload,
                                                 email = settings!!.email,
                                                 token = settings!!.token,
-                                                userId = settings!!.userId
-                                            ) {
-                                                autoPairingSuccess = true
+                                                userId = settings!!.userId,
+                                                region = settings!!.region.name
+                                            ) { ok ->
+                                                if (ok) {
+                                                    autoPairingSuccess = true
+                                                } else {
+                                                    Toast.makeText(context, "No se pudo completar la transferencia al reloj", Toast.LENGTH_SHORT).show()
+                                                }
                                             }
                                         }
                                     },
@@ -1303,14 +1324,15 @@ fun MobileDashboardScreen(
 
         // Modal de Configuración de Duración del Sensor
         if (showSensorDurationDialog) {
+            val baseRawSensor = rawSensorState ?: selectedPatient?.sensor?.takeIf { it.isValid }
             SensorDurationDialog(
                 currentDurationDays = settings?.sensorDurationDays ?: 0,
-                sensor = sensor,
+                sensor = baseRawSensor,
                 onDismiss = { showSensorDurationDialog = false },
                 onSave = { newDays ->
                     scope.launch {
                         preferencesRepository.saveSensorDurationDays(newDays)
-                        val updatedSensor = currentSensor.withCustomDuration(newDays)
+                        val updatedSensor = if (newDays > 0) baseRawSensor.withCustomDuration(newDays) else baseRawSensor
                         currentSensor = updatedSensor
                         val state = updatedSensor.lifecycleState()
                         if (state is SensorLifecycleState.Active && clinicalError is ClinicalErrorType.SensorExpired) {
@@ -1681,8 +1703,8 @@ private fun MobileSettingsScreen(
 
             val currentAppVersion = remember {
                 try {
-                    context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "1.1.1"
-                } catch (_: Exception) { "1.1.1" }
+                    context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "--"
+                } catch (_: Exception) { "--" }
             }
             Text(
                 text = "OpenGluco v$currentAppVersion",

@@ -76,7 +76,6 @@ class OpenGlucoProvider : ContentProvider() {
                             if (settings.isDarkMode) 1 else 0,
                             settings.sensorDurationDays
                         ))
-                        Log.d("OpenGlucoProvider", "Providing session: token present=${settings.token.isNotBlank()}, user=${settings.userId}")
                     }
                 } catch (e: Exception) {
                     Log.e("OpenGlucoProvider", "Error reading session in provider", e)
@@ -112,7 +111,6 @@ class OpenGlucoProvider : ContentProvider() {
                     if (finalReading != null && finalReading.numericValue > 0.0) {
                         val epoch = finalReading.getEpochMillis()
                         val displayTime = finalReading.getDisplayTime()
-                        Log.d("OpenGlucoProvider", "Providing latest reading: ${finalReading.numericValue} mg/dL, arrow=${finalReading.trendArrow}, time=$displayTime, epoch=$epoch")
                         cursor.addRow(arrayOf(
                             finalReading.numericValue,
                             finalReading.trendArrow ?: 3,

@@ -20,8 +20,12 @@ object KeystoreCryptoHelper {
     @Volatile
     private var jvmFallbackKey: SecretKey? = null
 
+    private fun isAndroidKeystoreAvailable(): Boolean {
+        return java.security.Security.getProvider(ANDROID_KEYSTORE) != null
+    }
+
     private fun getOrCreateSecretKey(): SecretKey {
-        return try {
+        if (isAndroidKeystoreAvailable()) {
             val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
             if (keyStore.containsAlias(KEY_ALIAS)) {
                 val entry = keyStore.getEntry(KEY_ALIAS, null) as? KeyStore.SecretKeyEntry
@@ -42,19 +46,19 @@ object KeystoreCryptoHelper {
                 .build()
 
             keyGenerator.init(spec)
-            keyGenerator.generateKey()
-        } catch (_: Throwable) {
-            // Entorno JVM / Unit Tests sin AndroidKeyStore: clave en memoria AES-256
-            val existing = jvmFallbackKey
-            if (existing != null) {
-                existing
-            } else {
-                val keyGen = KeyGenerator.getInstance("AES")
-                keyGen.init(256)
-                val newKey = keyGen.generateKey()
-                jvmFallbackKey = newKey
-                newKey
-            }
+            return keyGenerator.generateKey()
+        }
+
+        // Entorno JVM / Unit Tests sin AndroidKeyStore: clave en memoria AES-256
+        val existing = jvmFallbackKey
+        return if (existing != null) {
+            existing
+        } else {
+            val keyGen = KeyGenerator.getInstance("AES")
+            keyGen.init(256)
+            val newKey = keyGen.generateKey()
+            jvmFallbackKey = newKey
+            newKey
         }
     }
 

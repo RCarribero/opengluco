@@ -111,9 +111,10 @@ fun MobileAppNavigation(
 
     val startDestination = if (hasInitialSession) "dashboard" else "login"
 
-    LaunchedEffect(settings?.token, settings?.userId) {
+    LaunchedEffect(settings?.token, settings?.userId, settings?.region) {
         val t = settings?.token.orEmpty()
         val u = settings?.userId.orEmpty()
+        settings?.region?.let { repository.setRegion(it) }
         if (t.isNotBlank()) {
             repository.setSession(t, u)
         }

@@ -30,6 +30,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -40,15 +41,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.example.opengluco.core.model.AppReleaseInfo
 import com.example.opengluco.mobile.ui.theme.ClinicalTheme
 import com.example.opengluco.mobile.updater.AppUpdateInstaller
+import com.example.opengluco.mobile.updater.InstallOutcome
 import kotlinx.coroutines.launch
+import java.io.File
 
 @Composable
 fun UpdateAvailableDialog(
@@ -62,6 +68,52 @@ fun UpdateAvailableDialog(
     var isDownloading by remember { mutableStateOf(false) }
     var downloadProgress by remember { mutableIntStateOf(0) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var pendingApkFile by remember { mutableStateOf<File?>(null) }
+    var waitingPermission by remember { mutableStateOf(false) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    fun handleInstall(apkFile: File) {
+        when (val outcome = AppUpdateInstaller.installApk(context, apkFile, releaseInfo.apkSha256)) {
+            is InstallOutcome.Launched -> {
+                waitingPermission = false
+                onDismiss()
+            }
+            is InstallOutcome.NeedsInstallPermission -> {
+                pendingApkFile = apkFile
+                waitingPermission = true
+                errorMessage = "Concede el permiso para instalar aplicaciones y vuelve a OpenGluco."
+            }
+            is InstallOutcome.InvalidPackage -> {
+                pendingApkFile = null
+                errorMessage = "El paquete APK descargado no es válido."
+            }
+            is InstallOutcome.SignatureMismatch -> {
+                pendingApkFile = null
+                errorMessage = "La firma del APK no coincide con la versión instalada. Si actualizas desde una build previa de desarrollo, desinstala primero la versión anterior."
+            }
+            is InstallOutcome.ChecksumMismatch -> {
+                pendingApkFile = null
+                errorMessage = "Error de integridad SHA-256 en el paquete descargado."
+            }
+            is InstallOutcome.LaunchError -> {
+                errorMessage = outcome.message
+            }
+        }
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME && waitingPermission) {
+                val cached = pendingApkFile
+                if (cached != null && cached.exists() && AppUpdateInstaller.canRequestInstalls(context)) {
+                    waitingPermission = false
+                    handleInstall(cached)
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     Dialog(
         onDismissRequest = { if (!isDownloading) onDismiss() },
@@ -189,27 +241,37 @@ fun UpdateAvailableDialog(
 
                         Button(
                             onClick = {
+                                val cached = pendingApkFile
+                                if (cached != null && cached.exists()) {
+                                    handleInstall(cached)
+                                    return@Button
+                                }
                                 if (releaseInfo.apkDownloadUrl.isNotBlank()) {
+                                    if (!AppUpdateInstaller.canRequestInstalls(context)) {
+                                        AppUpdateInstaller.openInstallPermissionSettings(context)
+                                        errorMessage = "Concede primero el permiso para instalar actualizaciones."
+                                        return@Button
+                                    }
                                     isDownloading = true
                                     errorMessage = null
                                     scope.launch {
                                         val result = AppUpdateInstaller.downloadApk(
                                             context = context,
                                             apkUrl = releaseInfo.apkDownloadUrl,
+                                            expectedSha256 = releaseInfo.apkSha256,
                                             onProgress = { p -> downloadProgress = p }
                                         )
                                         isDownloading = false
                                         result.fold(
                                             onSuccess = { apkFile ->
-                                                AppUpdateInstaller.installApk(context, apkFile)
-                                                onDismiss()
+                                                handleInstall(apkFile)
                                             },
                                             onFailure = { err ->
                                                 errorMessage = "Error al descargar: ${err.message}"
                                             }
                                         )
                                     }
-                                } else if (releaseInfo.htmlUrl.isNotBlank()) {
+                                } else if (releaseInfo.htmlUrl.startsWith("https://", ignoreCase = true)) {
                                     val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(releaseInfo.htmlUrl)).apply {
                                         flags = Intent.FLAG_ACTIVITY_NEW_TASK
                                     }

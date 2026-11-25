@@ -116,7 +116,7 @@ object GlucoseWidgetUpdater {
 
         if (measurement != null && measurement.numericValue > 0.0) {
             val isStale = !isSensorActive || measurement.isStale()
-            val timeFormatted = formatTime24h(measurement.timestamp)
+            val timeFormatted = measurement.getDisplayTime()
 
             if (isStale) {
                 val mutedColor = 0xFF94A3B8.toInt()
@@ -134,7 +134,7 @@ object GlucoseWidgetUpdater {
             } else {
                 val mgDl = measurement.numericValue
                 val displayValue = if (unit == GlucoseUnit.MMOL) {
-                    String.format(Locale.US, "%.1f", mgDl / 18.0)
+                    String.format(Locale.US, "%.1f", mgDl / 18.0182)
                 } else {
                     mgDl.toInt().toString()
                 }
@@ -205,7 +205,7 @@ object GlucoseWidgetUpdater {
 
         if (measurement != null && measurement.numericValue > 0.0) {
             val isStale = !isSensorActive || measurement.isStale()
-            val timeFormatted = formatTime24h(measurement.timestamp)
+            val timeFormatted = measurement.getDisplayTime()
 
             if (isStale) {
                 val mutedColor = 0xFF94A3B8.toInt()
@@ -224,7 +224,7 @@ object GlucoseWidgetUpdater {
             } else {
                 val mgDl = measurement.numericValue
                 val displayValue = if (unit == GlucoseUnit.MMOL) {
-                    String.format(Locale.US, "%.1f", mgDl / 18.0)
+                    String.format(Locale.US, "%.1f", mgDl / 18.0182)
                 } else {
                     mgDl.toInt().toString()
                 }

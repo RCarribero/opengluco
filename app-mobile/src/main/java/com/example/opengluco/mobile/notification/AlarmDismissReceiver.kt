@@ -9,8 +9,12 @@ class AlarmDismissReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == ACTION_DISMISS_ALARM) {
+            val alarmId = intent.getStringExtra(EXTRA_ALARM_ID)
             val notificationId = intent.getIntExtra(EXTRA_NOTIFICATION_ID, -1)
-            
+
+            if (!alarmId.isNullOrBlank()) {
+                MobileAlarmNotificationHelper.dismissAlarm(context, alarmId)
+            }
             if (notificationId != -1) {
                 val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                 notificationManager.cancel(notificationId)

@@ -23,22 +23,6 @@ class WearAuthMessageListenerService : WearableListenerService() {
 
     override fun onMessageReceived(messageEvent: MessageEvent) {
         when (messageEvent.path) {
-            "/opengluco_auth_sync" -> {
-                val rawJson = String(messageEvent.data, Charsets.UTF_8)
-                val session = QrAuthHelper.parseSessionExchange(rawJson)
-                if (session != null) {
-                    val prefs = UserPreferencesRepository(applicationContext)
-                    CoroutineScope(Dispatchers.IO).launch {
-                        prefs.saveAuthSession(
-                            email = session.email,
-                            token = session.token,
-                            userId = session.userId,
-                            phoneMac = session.phoneBluetoothMac
-                        )
-                        WearBluetoothRfcommService.start(applicationContext)
-                    }
-                }
-            }
             "/opengluco_alarms_sync" -> {
                 val rawJson = String(messageEvent.data, Charsets.UTF_8)
                 if (rawJson.isNotBlank()) {
@@ -51,7 +35,6 @@ class WearAuthMessageListenerService : WearableListenerService() {
             "/opengluco_alarm_trigger" -> {
                 val rawJson = String(messageEvent.data, Charsets.UTF_8)
                 if (rawJson.isNotBlank()) {
-                    Log.i(TAG, "Disparo de alarma recibido desde el móvil: $rawJson")
                     CoroutineScope(Dispatchers.IO).launch {
                         try {
                             val payload = json.decodeFromString<AlarmTriggerPayload>(rawJson)

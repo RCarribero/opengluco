@@ -1,11 +1,36 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
 }
 
+val keystoreProps = Properties().apply {
+    val propsFile = rootProject.file("keystore.properties")
+    if (propsFile.exists()) {
+        propsFile.inputStream().use { load(it) }
+    }
+}
+
 android {
     namespace = "com.example.opengluco.auto"
     compileSdk = 35
+
+    signingConfigs {
+        create("release") {
+            val storePath = keystoreProps.getProperty("storeFile")
+                ?: System.getenv("OPENGLUCO_KEYSTORE_PATH")
+            if (!storePath.isNullOrBlank()) {
+                storeFile = file(storePath)
+            }
+            storePassword = keystoreProps.getProperty("storePassword")
+                ?: System.getenv("OPENGLUCO_KEYSTORE_PASSWORD")
+            keyAlias = keystoreProps.getProperty("keyAlias")
+                ?: System.getenv("OPENGLUCO_KEY_ALIAS")
+            keyPassword = keystoreProps.getProperty("keyPassword")
+                ?: System.getenv("OPENGLUCO_KEY_PASSWORD")
+        }
+    }
 
     defaultConfig {
         applicationId = "com.example.opengluco.auto"
@@ -17,6 +42,10 @@ android {
 
     buildTypes {
         release {
+            val releaseSigning = signingConfigs.getByName("release")
+            if (releaseSigning.storeFile != null && releaseSigning.storeFile!!.exists()) {
+                signingConfig = releaseSigning
+            }
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

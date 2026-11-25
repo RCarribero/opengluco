@@ -90,6 +90,7 @@ class WearDashboardViewModel(
                 userSettings = settings
 
                 if (settings.token.isNotBlank() && settings.userId.isNotBlank()) {
+                    repository.setRegion(settings.region)
                     repository.setSession(settings.token, settings.userId)
                     val authChanged = previousToken != settings.token || previousUserId != settings.userId
 

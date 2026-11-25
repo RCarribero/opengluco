@@ -98,6 +98,7 @@ class GlucoseMonitorForegroundService : Service() {
             return
         }
 
+        openGlucoRepository.setRegion(settings.region)
         openGlucoRepository.setSession(settings.token, settings.userId)
         val connectionsRes = openGlucoRepository.getConnections()
         val patients = connectionsRes.getOrNull().orEmpty()
@@ -189,7 +190,6 @@ class GlucoseMonitorForegroundService : Service() {
 
         val triggered = result.triggeredAlarm
         if (triggered != null) {
-            Log.w(TAG, "ALARMA DISPARADA: ${triggered.id} ($value mg/dL)")
             MobileAlarmNotificationHelper.triggerAlarm(
                 context = applicationContext,
                 alarm = triggered,

@@ -128,4 +128,13 @@ class QrAuthHelperTest {
         assertNull(QrAuthHelper.parsePairingPayload(invalid1))
         assertNull(QrAuthHelper.parsePairingPayload(invalid2))
     }
+
+    @Test
+    fun testIsPrivateOrLocalAddress_rejectsPublicIpsAndAllowsLocal() {
+        assertTrue(QrAuthHelper.isPrivateOrLocalAddress("127.0.0.1"))
+        assertTrue(QrAuthHelper.isPrivateOrLocalAddress("192.168.1.50"))
+        assertTrue(QrAuthHelper.isPrivateOrLocalAddress("10.0.0.12"))
+        assertFalse(QrAuthHelper.isPrivateOrLocalAddress("8.8.8.8"))
+        assertFalse(QrAuthHelper.isPrivateOrLocalAddress(""))
+    }
 }

@@ -35,7 +35,7 @@ class GlucoseAlarmWorker(
             return Result.success()
         }
 
-        val openGlucoRepo = OpenGlucoRepository()
+        val openGlucoRepo = OpenGlucoRepository(settings.region)
         openGlucoRepo.setSession(settings.token, settings.userId)
 
         val connectionsResult = openGlucoRepo.getConnections()

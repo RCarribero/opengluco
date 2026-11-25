@@ -50,8 +50,8 @@ Guia maestra de desarrollo para el ecosistema OpenGluco (`app-mobile`, `app-wear
   1. Confirmar número de versión (`versionName`) y notas de la versión.
   2. Actualizar versiones en `build.gradle.kts` de `app-mobile`, `app-wear` y `app-auto`.
   3. Ejecutar tests locales (`.\gradlew testDebugUnitTest`).
-  4. Compilar APKs locales (`.\gradlew assembleDebug`).
-  5. Empaquetar y organizar los APKs en `releases/vX.Y.Z/`.
+  4. Compilar APKs locales firmados (`.\gradlew assembleRelease`).
+  5. Empaquetar, verificar firma con `apksigner` y organizar los APKs en `releases/vX.Y.Z/`.
   6. Crear commit y tag de Git en local y sincronizar.
   7. Publicar la release con los APKs adjuntos.
 

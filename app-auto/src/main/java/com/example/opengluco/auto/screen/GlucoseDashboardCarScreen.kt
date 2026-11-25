@@ -161,6 +161,7 @@ class GlucoseDashboardCarScreen(
 
             // 2. SINCRONIZACIÓN DE RED EN SEGUNDO PLANO (Pacientes, historial, sensor)
             if (settings.token.isNotBlank() && settings.userId.isNotBlank()) {
+                repository.setRegion(settings.region)
                 repository.setSession(settings.token, settings.userId)
 
                 val connRes = repository.getConnections()
@@ -279,8 +280,6 @@ class GlucoseDashboardCarScreen(
         val unitLabel = currentSettings.unit.label
         val lowThreshold = currentSettings.lowThreshold
         val highThreshold = currentSettings.highThreshold
-
-        Log.d(TAG, "onGetTemplate: measurement=${measurement?.numericValue} mg/dL, epoch=${measurement?.getEpochMillis()}, isSensorActive=$isSensorActive, isStale=$isStale, displayValue=$displayValue")
 
         val paneBuilder = Pane.Builder()
 

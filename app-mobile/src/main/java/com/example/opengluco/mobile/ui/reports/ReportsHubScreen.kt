@@ -94,10 +94,15 @@ fun ReportsHubScreen(
         }
     }
 
-    // Calcular el rango real de días con datos disponibles
-    val availableDays = remember(effectiveHistoricalReadings, patient?.patientId) {
-        val repoDays = preferencesRepository?.getAvailableDays(patient?.patientId) ?: 0
-        if (repoDays > 0) repoDays else ClinicalReportsCalculator.calculateAvailableDays(effectiveHistoricalReadings).coerceAtLeast(1)
+    // Calcular el rango real de días con datos disponibles en segundo plano
+    val availableDays by produceState(
+        initialValue = ClinicalReportsCalculator.calculateAvailableDays(effectiveHistoricalReadings).coerceAtLeast(1),
+        effectiveHistoricalReadings, patient?.patientId
+    ) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            val repoDays = preferencesRepository?.getAvailableDays(patient?.patientId) ?: 0
+            if (repoDays > 0) repoDays else ClinicalReportsCalculator.calculateAvailableDays(effectiveHistoricalReadings).coerceAtLeast(1)
+        }
     }
 
     // Opciones de periodos estándar

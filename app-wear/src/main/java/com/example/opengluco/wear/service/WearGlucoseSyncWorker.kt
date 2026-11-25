@@ -28,7 +28,7 @@ class WearGlucoseSyncWorker(
             return Result.success()
         }
 
-        val repository = OpenGlucoRepository()
+        val repository = OpenGlucoRepository(settings.region)
         repository.setSession(settings.token, settings.userId)
 
         val connectionsRes = repository.getConnections()
@@ -38,6 +38,9 @@ class WearGlucoseSyncWorker(
             val patient = patients.find { it.patientId == settings.selectedPatientId } ?: patients.first()
             val graphRes = repository.getPatientGraph(patient.patientId)
             val history = graphRes.getOrNull()?.graphData.orEmpty()
+            if (history.isNotEmpty()) {
+                prefsRepo.saveHistoricalReadings(history, patient.patientId)
+            }
             val latest = patient.effectiveMeasurement ?: history.lastOrNull()
             val graphObj = graphRes.getOrNull()
             val rawSensor = if (graphObj != null) graphObj.resolvedSensor else patient.sensor?.takeIf { it.isValid }

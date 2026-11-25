@@ -7,8 +7,9 @@ La seguridad y la confidencialidad de los datos de salud son fundamentales en es
 ## 1. Arquitectura de Seguridad y Privacidad
 
 - **Cifrado en Reposo:**
-  - Todas las credenciales sensibles (token de autenticacion, ID de usuario, correos electronicos, alarmas e historial de telemetria) se cifran mediante **AES-256-GCM** respaldado por hardware en el **Android KeyStore** (`opengluco_master_keystore_key_v1`).
+  - Todas las credenciales sensibles (token de autenticacion, ID de usuario, correos electronicos, MAC de confianza, alarmas y notas clinicas de eventos) se cifran mediante **AES-256-GCM** respaldado por hardware en el **Android KeyStore** (`opengluco_master_keystore_key_v1`).
   - Formato de almacenamiento: `ENC:` + Base64(IV + Ciphertext + Tag).
+  - Las series numericas indexadas de telemetria en SQLite (`opengluco_glucose.db`) se protegen en el almacenamiento privado aislado de la aplicacion con cifrado basado en archivos del sistema operativo (FBE, Android 10+), `android:allowBackup="false"` y purga completa RGPD Art. 17.
 - **Cifrado en Transito:**
   - Forzado estricto de HTTPS / TLS mediante `network_security_config.xml` con `cleartextTrafficPermitted="false"`.
 - **Proteccion de Respaldos:**

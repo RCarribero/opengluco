@@ -7,9 +7,6 @@
     <uses-permission android:name="androidx.car.app.ACCESS_SURFACE" />
 
     <!-- Permiso de firma para consumo de telemetria segura desde OpenGluco Mobile -->
-    <permission
-        android:name="com.example.opengluco.permission.READ_GLUCOSE_DATA"
-        android:protectionLevel="signature" />
     <uses-permission android:name="com.example.opengluco.permission.READ_GLUCOSE_DATA" />
 
     <queries>
